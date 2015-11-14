@@ -89,24 +89,25 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
             return ServiceTypeSelector.As(selector);
         }
 
-        public void WithSingletonLifetime()
+        public IImplementationTypeSelector WithSingletonLifetime()
         {
-            WithLifetime(ServiceLifetime.Singleton);
+            return WithLifetime(ServiceLifetime.Singleton);
         }
 
-        public void WithScopedLifetime()
+        public IImplementationTypeSelector WithScopedLifetime()
         {
-            WithLifetime(ServiceLifetime.Scoped);
+            return WithLifetime(ServiceLifetime.Scoped);
         }
 
-        public void WithTransientLifetime()
+        public IImplementationTypeSelector WithTransientLifetime()
         {
-            WithLifetime(ServiceLifetime.Transient);
+            return WithLifetime(ServiceLifetime.Transient);
         }
 
-        public void WithLifetime(ServiceLifetime lifetime)
+        public IImplementationTypeSelector WithLifetime(ServiceLifetime lifetime)
         {
             Lifetime = lifetime;
+            return this;
         }
 
         internal void Populate(IServiceCollection services)

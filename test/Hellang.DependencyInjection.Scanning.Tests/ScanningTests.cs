@@ -11,7 +11,9 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning.Tests
             var collection = new ServiceCollection();
 
             collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>()));
+                .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime());
 
             var service1 = collection.GetDescriptor<TransientService1>();
             var service2 = collection.GetDescriptor<TransientService2>();

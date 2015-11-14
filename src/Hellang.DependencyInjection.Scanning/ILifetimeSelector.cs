@@ -7,21 +7,21 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
         /// <summary>
         /// Registers each matching concrete type with <see cref="ServiceLifetime.Singleton"/> lifetime.
         /// </summary>
-        void WithSingletonLifetime();
+        IImplementationTypeSelector WithSingletonLifetime();
 
         /// <summary>
         /// Registers each matching concrete type with <see cref="ServiceLifetime.Scoped"/> lifetime.
         /// </summary>
-        void WithScopedLifetime();
+        IImplementationTypeSelector WithScopedLifetime();
 
         /// <summary>
         /// Registers each matching concrete type with <see cref="ServiceLifetime.Transient"/> lifetime.
         /// </summary>
-        void WithTransientLifetime();
+        IImplementationTypeSelector WithTransientLifetime();
 
         /// <summary>
         /// Registers each matching concrete type with the specified <paramref name="lifetime"/>.
         /// </summary>
-        void WithLifetime(ServiceLifetime lifetime);
+        IImplementationTypeSelector WithLifetime(ServiceLifetime lifetime);
     }
 }

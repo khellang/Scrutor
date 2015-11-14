@@ -1,5 +1,5 @@
 ﻿{
-  "version": "1.1.0-*",
+  "version": "1.1.1-*",
   "description": "Hellang.DependencyInjection.Scanning.Tests",
   "authors": [ "Kristian" ],
   "tags": [ "" ],
@@ -7,7 +7,7 @@
   "licenseUrl": "",
 
   "dependencies": {
-    "Hellang.DependencyInjection.Scanning": "1.1.0-*",
+    "Hellang.DependencyInjection.Scanning": "1.1.1-*",
     "Microsoft.Framework.DependencyInjection": "1.0.0-beta8",
     "xunit": "2.1.0",
     "xunit.runner.dnx": "2.1.0-*"

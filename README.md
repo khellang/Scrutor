@@ -1,10 +1,10 @@
-# DependencyInjection.Scanning
+# Scrutor
 
 Assembly scanning extensions for Microsoft.Extensions.DependencyInjection
 
 ## Installation
 
-Install the [Hellang.DependencyInjection.Scanning NuGet Package](https://www.nuget.org/packages/Hellang.DependencyInjection.Scanning).
+Install the [Scrutor NuGet Package](https://www.nuget.org/packages/Scrutor).
 
 ## Usage
 

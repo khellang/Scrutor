@@ -90,7 +90,7 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning.Tests
         {
             var collection = new ServiceCollection();
 
-            collection.Scan(scan => scan.FromAssemblyOf<ITransientService>().AddAttributes());
+            collection.Scan(scan => scan.FromAssemblyOf<ITransientService>().AddFromAttributes());
 
             var service = collection.GetDescriptor<ITransientService>();
 

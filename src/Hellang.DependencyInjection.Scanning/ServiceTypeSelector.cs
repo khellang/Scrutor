@@ -46,9 +46,9 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
             return ImplementationTypeSelector.FromAssemblies(assemblies);
         }
 
-        public void AddAttributes()
+        public void AddFromAttributes()
         {
-            ImplementationTypeSelector.AddAttributes();
+            ImplementationTypeSelector.AddFromAttributes();
         }
 
         public IServiceTypeSelector AddClasses()

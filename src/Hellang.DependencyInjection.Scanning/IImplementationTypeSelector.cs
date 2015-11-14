@@ -9,7 +9,7 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
         /// Adds all non-abstract classes from the selected assemblies that are annotated with
         /// the <see cref="ServiceDescriptorAttribute"/> to the <see cref="IServiceCollection"/>.
         /// </summary>
-        void AddAttributes();
+        void AddFromAttributes();
 
         /// <summary>
         /// Adds all non-abstract classes from the selected assemblies to the <see cref="IServiceCollection"/>.

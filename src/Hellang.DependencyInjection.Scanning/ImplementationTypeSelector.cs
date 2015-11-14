@@ -46,7 +46,7 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
             return AssemblySelector.FromAssemblies(assemblies);
         }
 
-        public void AddAttributes()
+        public void AddFromAttributes()
         {
             Selectors.Add(new AttributeSelector(Types.Where(t => t.IsNonAbstractClass())));
         }

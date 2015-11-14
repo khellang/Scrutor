@@ -70,7 +70,7 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
 
         private IImplementationTypeSelector AddSelector(IEnumerable<Type> types)
         {
-            var selector = new ImplementationTypeSelector(types);
+            var selector = new ImplementationTypeSelector(this, types);
 
             Selectors.Add(selector);
 

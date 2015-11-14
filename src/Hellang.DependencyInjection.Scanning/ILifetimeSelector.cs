@@ -2,7 +2,7 @@
 
 namespace Microsoft.Extensions.DependencyInjection.Scanning
 {
-    public interface ILifetimeSelector : IFluentInterface
+    public interface ILifetimeSelector : IServiceTypeSelector
     {
         /// <summary>
         /// Registers each matching concrete type with <see cref="ServiceLifetime.Singleton"/> lifetime.

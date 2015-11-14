@@ -3,7 +3,7 @@ using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.Extensions.DependencyInjection.Scanning
 {
-    public interface IImplementationTypeSelector : IFluentInterface
+    public interface IImplementationTypeSelector : IAssemblySelector
     {
         /// <summary>
         /// Adds all non-abstract classes from the selected assemblies that are annotated with

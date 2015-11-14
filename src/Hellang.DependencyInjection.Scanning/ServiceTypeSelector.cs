@@ -8,8 +8,9 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
 {
     internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
     {
-        public ServiceTypeSelector(IEnumerable<Type> types)
+        public ServiceTypeSelector(IImplementationTypeSelector implementationTypeSelector, IEnumerable<Type> types)
         {
+            ImplementationTypeSelector = implementationTypeSelector;
             Types = types;
             Selectors = new List<LifetimeSelector>();
         }
@@ -17,6 +18,48 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
         private IEnumerable<Type> Types { get; }
 
         private List<LifetimeSelector> Selectors { get; }
+
+        private IImplementationTypeSelector ImplementationTypeSelector { get; }
+
+        public IImplementationTypeSelector FromAssemblyOf<T>()
+        {
+            return ImplementationTypeSelector.FromAssemblyOf<T>();
+        }
+
+        public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
+        {
+            return ImplementationTypeSelector.FromAssembliesOf(types);
+        }
+
+        public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
+        {
+            return ImplementationTypeSelector.FromAssembliesOf(types);
+        }
+
+        public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
+        {
+            return ImplementationTypeSelector.FromAssemblies(assemblies);
+        }
+
+        public IImplementationTypeSelector FromAssemblies(IEnumerable<Assembly> assemblies)
+        {
+            return ImplementationTypeSelector.FromAssemblies(assemblies);
+        }
+
+        public void AddAttributes()
+        {
+            ImplementationTypeSelector.AddAttributes();
+        }
+
+        public IServiceTypeSelector AddClasses()
+        {
+            return ImplementationTypeSelector.AddClasses();
+        }
+
+        public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action)
+        {
+            return ImplementationTypeSelector.AddClasses(action);
+        }
 
         public ILifetimeSelector AsSelf()
         {
@@ -78,7 +121,7 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
 
         private ILifetimeSelector AddSelector(IEnumerable<Tuple<Type, IEnumerable<Type>>> types)
         {
-            var lifetimeSelector = new LifetimeSelector(types);
+            var lifetimeSelector = new LifetimeSelector(this, types);
 
             Selectors.Add(lifetimeSelector);
 

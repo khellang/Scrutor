@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.Extensions.DependencyInjection.Scanning
 {
     internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelector
     {
-        public ImplementationTypeSelector(IEnumerable<Type> types)
+        public ImplementationTypeSelector(IAssemblySelector assemblySelector, IEnumerable<Type> types)
         {
+            AssemblySelector = assemblySelector;
             Types = types;
             Selectors = new List<ISelector>();
         }
@@ -16,6 +18,33 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
         private IEnumerable<Type> Types { get; }
 
         private List<ISelector> Selectors { get; }
+
+        private IAssemblySelector AssemblySelector { get; }
+
+        public IImplementationTypeSelector FromAssemblyOf<T>()
+        {
+            return AssemblySelector.FromAssemblyOf<T>();
+        }
+
+        public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
+        {
+            return AssemblySelector.FromAssembliesOf(types);
+        }
+
+        public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
+        {
+            return AssemblySelector.FromAssembliesOf(types);
+        }
+
+        public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
+        {
+            return AssemblySelector.FromAssemblies(assemblies);
+        }
+
+        public IImplementationTypeSelector FromAssemblies(IEnumerable<Assembly> assemblies)
+        {
+            return AssemblySelector.FromAssemblies(assemblies);
+        }
 
         public void AddAttributes()
         {
@@ -56,7 +85,7 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
 
         private IServiceTypeSelector AddSelector(IEnumerable<Type> types)
         {
-            var selector = new ServiceTypeSelector(types);
+            var selector = new ServiceTypeSelector(this, types);
 
             Selectors.Add(selector);
 

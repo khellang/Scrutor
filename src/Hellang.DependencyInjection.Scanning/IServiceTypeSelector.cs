@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.Extensions.DependencyInjection.Scanning
 {
-    public interface IServiceTypeSelector : IFluentInterface
+    public interface IServiceTypeSelector : IImplementationTypeSelector
     {
         /// <summary>
         /// Registers each matching concrete type as itself.

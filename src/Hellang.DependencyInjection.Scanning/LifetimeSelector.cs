@@ -1,19 +1,93 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.Extensions.DependencyInjection.Scanning
 {
     internal class LifetimeSelector : ILifetimeSelector
     {
-        public LifetimeSelector(IEnumerable<Tuple<Type, IEnumerable<Type>>> types)
+        public LifetimeSelector(IServiceTypeSelector serviceTypeSelector, IEnumerable<Tuple<Type, IEnumerable<Type>>> types)
         {
+            ServiceTypeSelector = serviceTypeSelector;
             Types = types;
         }
 
         private IEnumerable<Tuple<Type, IEnumerable<Type>>> Types { get; }
 
         private ServiceLifetime? Lifetime { get; set; }
+
+        private IServiceTypeSelector ServiceTypeSelector { get; }
+
+        public IImplementationTypeSelector FromAssemblyOf<T>()
+        {
+            return ServiceTypeSelector.FromAssemblyOf<T>();
+        }
+
+        public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
+        {
+            return ServiceTypeSelector.FromAssembliesOf(types);
+        }
+
+        public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
+        {
+            return ServiceTypeSelector.FromAssembliesOf(types);
+        }
+
+        public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
+        {
+            return ServiceTypeSelector.FromAssemblies(assemblies);
+        }
+
+        public IImplementationTypeSelector FromAssemblies(IEnumerable<Assembly> assemblies)
+        {
+            return ServiceTypeSelector.FromAssemblies(assemblies);
+        }
+
+        public void AddAttributes()
+        {
+            ServiceTypeSelector.AddAttributes();
+        }
+
+        public IServiceTypeSelector AddClasses()
+        {
+            return ServiceTypeSelector.AddClasses();
+        }
+
+        public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action)
+        {
+            return ServiceTypeSelector.AddClasses(action);
+        }
+
+        public ILifetimeSelector AsSelf()
+        {
+            return ServiceTypeSelector.AsSelf();
+        }
+
+        public ILifetimeSelector As<T>()
+        {
+            return ServiceTypeSelector.As<T>();
+        }
+
+        public ILifetimeSelector As(params Type[] types)
+        {
+            return ServiceTypeSelector.As(types);
+        }
+
+        public ILifetimeSelector As(IEnumerable<Type> types)
+        {
+            return ServiceTypeSelector.As(types);
+        }
+
+        public ILifetimeSelector AsImplementedInterfaces()
+        {
+            return ServiceTypeSelector.AsImplementedInterfaces();
+        }
+
+        public ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector)
+        {
+            return ServiceTypeSelector.As(selector);
+        }
 
         public void WithSingletonLifetime()
         {

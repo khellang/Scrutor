@@ -1,5 +1,7 @@
 # Scrutor
 
+> From scrūta, as the original sense of the verb was to search through trash. - https://en.wiktionary.org/wiki/scrutor
+
 Assembly scanning extensions for Microsoft.Extensions.DependencyInjection
 
 ## Installation

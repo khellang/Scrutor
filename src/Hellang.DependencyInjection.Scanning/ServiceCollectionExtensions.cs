@@ -5,6 +5,14 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
 {
     public static class ServiceCollectionExtensions
     {
+        /// <summary>
+        /// Adds registrations to the <paramref name="services"/> collection using
+        /// conventions specified using the <paramref name="action"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="action">The configuration action.</param>
+        /// <exception cref="System.ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="action"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Scan(this IServiceCollection services, Action<IAssemblySelector> action)
         {
             if (services == null)

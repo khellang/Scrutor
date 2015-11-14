@@ -13,6 +13,8 @@ The library adds a single extension method, `Scan`, to `IServiceCollection`. Thi
 ### Example
 
 ```csharp
+var collection = new ServiceCollection();
+
 collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
     .AddClasses(classes => classes.AssignableTo<ITransientService>())
         .AsImplementedInterfaces()

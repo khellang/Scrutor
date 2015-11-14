@@ -84,10 +84,25 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning.Tests
             Assert.Equal(ServiceLifetime.Scoped, service.Lifetime);
             Assert.Equal(typeof(QueryHandler), service.ImplementationType);
         }
+
+        [Fact]
+        public static void CanScanUsingAttributes()
+        {
+            var collection = new ServiceCollection();
+
+            collection.Scan(scan => scan.FromAssemblyOf<ITransientService>().AddAttributes());
+
+            var service = collection.GetDescriptor<ITransientService>();
+
+            Assert.NotNull(service);
+            Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
+            Assert.Equal(typeof(TransientService1), service.ImplementationType);
+        }
     }
 
     public interface ITransientService { }
 
+    [ServiceDescriptor(typeof(ITransientService))]
     public class TransientService1 : ITransientService { }
 
     public class TransientService2 : ITransientService { }

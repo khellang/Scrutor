@@ -6,7 +6,7 @@ using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.Extensions.DependencyInjection.Scanning
 {
-    internal class ServiceTypeSelector : IServiceTypeSelector
+    internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
     {
         public ServiceTypeSelector(IEnumerable<Type> types)
         {
@@ -63,7 +63,7 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
             return AddSelector(Types.Select(t => Tuple.Create(t, selector(t))));
         }
 
-        internal void Populate(IServiceCollection services)
+        public void Populate(IServiceCollection services)
         {
             if (Selectors.Count == 0)
             {

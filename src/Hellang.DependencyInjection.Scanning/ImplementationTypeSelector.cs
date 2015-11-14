@@ -5,17 +5,22 @@ using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.Extensions.DependencyInjection.Scanning
 {
-    internal class ImplementationTypeSelector : IImplementationTypeSelector
+    internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelector
     {
         public ImplementationTypeSelector(IEnumerable<Type> types)
         {
             Types = types;
-            Selectors = new List<ServiceTypeSelector>();
+            Selectors = new List<ISelector>();
         }
 
         private IEnumerable<Type> Types { get; }
 
-        private List<ServiceTypeSelector> Selectors { get; }
+        private List<ISelector> Selectors { get; }
+
+        public void AddAttributes()
+        {
+            Selectors.Add(new AttributeSelector(Types.Where(t => t.IsNonAbstractClass())));
+        }
 
         public IServiceTypeSelector AddClasses()
         {
@@ -32,7 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
             return AddFilter(Types.Where(t => t.IsNonAbstractClass()), action);
         }
 
-        internal void Populate(IServiceCollection services)
+        public void Populate(IServiceCollection services)
         {
             foreach (var selector in Selectors)
             {

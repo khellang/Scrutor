@@ -6,14 +6,14 @@ using Microsoft.Framework.DependencyInjection;
 
 namespace Microsoft.Extensions.DependencyInjection.Scanning
 {
-    internal class AssemblySelector : IAssemblySelector
+    internal class AssemblySelector : IAssemblySelector, ISelector
     {
         public AssemblySelector()
         {
-            Selectors = new List<ImplementationTypeSelector>();
+            Selectors = new List<ISelector>();
         }
 
-        private List<ImplementationTypeSelector> Selectors { get; }
+        private List<ISelector> Selectors { get; }
 
         public IImplementationTypeSelector FromAssemblyOf<T>()
         {
@@ -60,7 +60,7 @@ namespace Microsoft.Extensions.DependencyInjection.Scanning
             return AddSelector(assemblies.SelectMany(asm => asm.ExportedTypes));
         }
 
-        internal void Populate(IServiceCollection services)
+        public void Populate(IServiceCollection services)
         {
             foreach (var selector in Selectors)
             {

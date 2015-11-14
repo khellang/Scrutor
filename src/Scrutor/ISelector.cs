@@ -1,6 +1,6 @@
 using Microsoft.Framework.DependencyInjection;
 
-namespace Microsoft.Extensions.DependencyInjection.Scanning
+namespace Scrutor
 {
     internal interface ISelector
     {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Microsoft.Extensions.DependencyInjection.Scanning
+namespace Scrutor
 {
     public interface IAssemblySelector : IFluentInterface
     {

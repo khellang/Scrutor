@@ -1,7 +1,7 @@
 ﻿using Microsoft.Framework.DependencyInjection;
 using Xunit;
 
-namespace Microsoft.Extensions.DependencyInjection.Scanning.Tests
+namespace Scrutor.Tests
 {
     public static class ScanningTests
     {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.Extensions.DependencyInjection.Scanning
+namespace Scrutor
 {
     internal class ImplementationTypeFilter : IImplementationTypeFilter
     {

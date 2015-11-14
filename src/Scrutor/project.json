@@ -1,10 +1,10 @@
 ﻿{
-  "version": "3.0.0-*",
+  "version": "1.0.0-*",
   "description": "Hellang.DependencyInjection.Scanning",
   "authors": [ "Kristian Hellang" ],
   "tags": [ "DependencyInjection", "DI", "Scanning" ],
-  "projectUrl": "https://github.com/khellang/DependencyInjection.Scanning",
-  "licenseUrl": "https://raw.githubusercontent.com/khellang/DependencyInjection.Scanning/master/LICENSE",
+  "projectUrl": "https://github.com/khellang/Scrutor",
+  "licenseUrl": "https://raw.githubusercontent.com/khellang/Scrutor/master/LICENSE",
 
   "dependencies": {
     "Microsoft.Framework.DependencyInjection.Abstractions": "1.0.0-beta8"

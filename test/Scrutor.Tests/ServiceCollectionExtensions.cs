@@ -2,7 +2,7 @@
 using System.Linq;
 using Microsoft.Framework.DependencyInjection;
 
-namespace Microsoft.Extensions.DependencyInjection.Scanning.Tests
+namespace Scrutor.Tests
 {
     internal static class ServiceCollectionExtensions
     {

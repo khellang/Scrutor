@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Framework.DependencyInjection;
 
-namespace Microsoft.Extensions.DependencyInjection.Scanning
+namespace Scrutor
 {
     internal class AttributeSelector : ISelector
     {

@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel;
 
-namespace Microsoft.Extensions.DependencyInjection.Scanning
+namespace Scrutor
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     public interface IFluentInterface

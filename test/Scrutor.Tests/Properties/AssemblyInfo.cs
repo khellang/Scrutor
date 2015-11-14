@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Hellang.DependencyInjection.Scanning.Tests")]
+[assembly: AssemblyTitle("Scrutor.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Hellang.DependencyInjection.Scanning.Tests")]
+[assembly: AssemblyProduct("Scrutor.Tests")]
 [assembly: AssemblyCopyright("Copyright © Kristian Hellang 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

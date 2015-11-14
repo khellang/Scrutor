@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
-namespace Microsoft.Extensions.DependencyInjection.Scanning
+namespace Scrutor
 {
     internal static class ReflectionExtensions
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Framework.DependencyInjection;
 
-namespace Microsoft.Extensions.DependencyInjection.Scanning
+namespace Scrutor
 {
     public static class ServiceCollectionExtensions
     {

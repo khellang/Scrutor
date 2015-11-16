@@ -1,5 +1,6 @@
 # Scrutor
 
+> Scrutor - I search or examine thoroughly; I probe, investigate or scrutinize  
 > From scrūta, as the original sense of the verb was to search through trash. - https://en.wiktionary.org/wiki/scrutor
 
 Assembly scanning extensions for Microsoft.Extensions.DependencyInjection

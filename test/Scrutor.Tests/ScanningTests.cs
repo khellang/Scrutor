@@ -1,5 +1,6 @@
-﻿using Microsoft.Framework.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+
 
 namespace Scrutor.Tests
 {
@@ -15,6 +16,7 @@ namespace Scrutor.Tests
                     .AsImplementedInterfaces()
                     .WithScopedLifetime());
 
+            // This fails!!!!!!!
             var service1 = collection.GetDescriptor<TransientService1>();
             var service2 = collection.GetDescriptor<TransientService2>();
 

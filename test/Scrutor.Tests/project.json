@@ -1,7 +1,7 @@
 {
-	"version": "1.0.0-*",
-	"description": "Scrutor.Tests",
-	"authors": [ "Kristian Hellang" ],
+    "version": "1.0.0-*",
+    "description": "Scrutor.Tests",
+    "authors": [ "Kristian Hellang" ],
 
     "dependencies": {
         "Microsoft.Extensions.DependencyInjection": "1.0.0-rc1-final",
@@ -10,20 +10,20 @@
         "xunit.runner.dnx": "2.1.0-*"
     },
 
-	"frameworks": {
-		"dnx451": { },
-		"dnxcore50": {
-			"dependencies": {
-				"Microsoft.CSharp": "4.0.1-beta-23516",
-				"System.Collections": "4.0.11-beta-23516",
-				"System.Linq": "4.0.1-beta-23516",
-				"System.Runtime": "4.0.21-beta-23516",
-				"System.Threading": "4.0.11-beta-23516"
-			}
-		}
-	},
+    "frameworks": {
+        "dnx451": { },
+        "dnxcore50": {
+            "dependencies": {
+                "Microsoft.CSharp": "4.0.1-beta-23516",
+                "System.Collections": "4.0.11-beta-23516",
+                "System.Linq": "4.0.1-beta-23516",
+                "System.Runtime": "4.0.21-beta-23516",
+                "System.Threading": "4.0.11-beta-23516"
+            }
+        }
+    },
 
-	"commands": {
-		"test": "xunit.runner.dnx"
-	}
+    "commands": {
+        "test": "xunit.runner.dnx"
+    }
 }

@@ -1,9 +1,10 @@
-using Microsoft.Framework.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace Scrutor
 {
-    internal interface ISelector
-    {
-        void Populate(IServiceCollection services);
-    }
+	internal interface ISelector
+	{
+		void Populate(IServiceCollection services);
+	}
 }

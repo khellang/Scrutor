@@ -1,38 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Microsoft.Framework.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace Scrutor
 {
-    internal class AttributeSelector : ISelector
-    {
-        public AttributeSelector(IEnumerable<Type> types)
-        {
-            Types = types;
-        }
+	internal class AttributeSelector : ISelector
+	{
+		public AttributeSelector(IEnumerable<Type> types)
+		{
+			Types = types;
+		}
 
-        private IEnumerable<Type> Types { get; }
+		private IEnumerable<Type> Types { get; }
 
-        void ISelector.Populate(IServiceCollection services)
-        {
-            foreach (var type in Types)
-            {
-                var typeInfo = type.GetTypeInfo();
+		void ISelector.Populate(IServiceCollection services)
+		{
+			foreach (var type in Types)
+			{
+				var typeInfo = type.GetTypeInfo();
 
-                var attribute = typeInfo.GetCustomAttribute<ServiceDescriptorAttribute>();
+				var attribute = typeInfo.GetCustomAttribute<ServiceDescriptorAttribute>();
 
-                if (attribute == null)
-                {
-                    continue;
-                }
+				if (attribute == null)
+				{
+					continue;
+				}
 
-                var serviceType = attribute.ServiceType ?? type;
+				var serviceType = attribute.ServiceType ?? type;
 
-                var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
+				var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
 
-                services.Add(descriptor);
-            }
-        }
-    }
+				services.Add(descriptor);
+			}
+		}
+	}
 }

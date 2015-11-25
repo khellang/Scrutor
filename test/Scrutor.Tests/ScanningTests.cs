@@ -1,18 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Scrutor.Tests
 {
     public class ScanningTests
     {
-        public ScanningTests(ITestOutputHelper output)
-        {
-            Output = output;
-        }
-
-        public ITestOutputHelper Output { get; }
-
         [Fact]
         public void CanFilterTypesToScan()
         {
@@ -22,8 +14,6 @@ namespace Scrutor.Tests
                 .AddClasses(classes => classes.AssignableTo<ITransientService>())
                     .AsImplementedInterfaces()
                     .WithTransientLifetime());
-
-            Output.WriteLine(string.Join(", ", collection));
 
             var services = collection.GetDescriptors<ITransientService>();
 

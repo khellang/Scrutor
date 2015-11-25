@@ -1,38 +1,43 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-
+using Xunit.Abstractions;
 
 namespace Scrutor.Tests
 {
-    public static class ScanningTests
+    public class ScanningTests
     {
+        public ScanningTests(ITestOutputHelper output)
+        {
+            Output = output;
+        }
+
+        public ITestOutputHelper Output { get; }
+
         [Fact]
-        public static void CanFilterTypesToScan()
+        public void CanFilterTypesToScan()
         {
             var collection = new ServiceCollection();
 
             collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
                 .AddClasses(classes => classes.AssignableTo<ITransientService>())
                     .AsImplementedInterfaces()
-                    .WithScopedLifetime());
+                    .WithTransientLifetime());
 
-            // This fails!!!!!!!
-            var service1 = collection.GetDescriptor<TransientService1>();
-            var service2 = collection.GetDescriptor<TransientService2>();
+            Output.WriteLine(string.Join(", ", collection));
 
-            var services = new[] { service1, service2 };
+            var services = collection.GetDescriptors<ITransientService>();
 
             Assert.Equal(services, collection);
 
             Assert.All(services, service =>
             {
                 Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
-                Assert.Equal(service.ImplementationType, service.ServiceType);
+                Assert.Equal(typeof(ITransientService), service.ServiceType);
             });
         }
 
         [Fact]
-        public static void CanRegisterAsSpecificType()
+        public void CanRegisterAsSpecificType()
         {
             var collection = new ServiceCollection();
 
@@ -52,7 +57,7 @@ namespace Scrutor.Tests
         }
 
         [Fact]
-        public static void CanSpecifyLifetime()
+        public void CanSpecifyLifetime()
         {
             var collection = new ServiceCollection();
 
@@ -73,7 +78,7 @@ namespace Scrutor.Tests
         }
 
         [Fact]
-        public static void CanRegisterGenericTypes()
+        public void CanRegisterGenericTypes()
         {
             var collection = new ServiceCollection();
 
@@ -90,7 +95,7 @@ namespace Scrutor.Tests
         }
 
         [Fact]
-        public static void CanScanUsingAttributes()
+        public void CanScanUsingAttributes()
         {
             var collection = new ServiceCollection();
 

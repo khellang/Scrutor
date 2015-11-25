@@ -1,18 +1,17 @@
 using System;
 
-
 namespace Scrutor
 {
     public interface IImplementationTypeSelector : IAssemblySelector
     {
         /// <summary>
         /// Adds all non-abstract classes from the selected assemblies that are annotated with
-        /// the <see cref="ServiceDescriptorAttribute"/> to the <see cref="IServiceCollection"/>.
+        /// the <see cref="ServiceDescriptorAttribute"/> to the <see cref="Microsoft.Extensions.DependencyInjection.IServiceCollection"/>.
         /// </summary>
         void AddFromAttributes();
 
         /// <summary>
-        /// Adds all non-abstract classes from the selected assemblies to the <see cref="IServiceCollection"/>.
+        /// Adds all non-abstract classes from the selected assemblies to the <see cref="Microsoft.Extensions.DependencyInjection.IServiceCollection"/>.
         /// </summary>
         IServiceTypeSelector AddClasses();
 

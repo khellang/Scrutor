@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-
 namespace Scrutor
 {
     public interface ILifetimeSelector : IServiceTypeSelector

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 
-
 namespace Scrutor
 {
     internal interface ISelector

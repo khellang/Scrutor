@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
-
 namespace Scrutor
 {
     internal class AttributeSelector : ISelector
@@ -15,7 +14,7 @@ namespace Scrutor
 
         private IEnumerable<Type> Types { get; }
 
-        void ISelector.Populate(IServiceCollection services)
+        public void Populate(IServiceCollection services)
         {
             foreach (var type in Types)
             {

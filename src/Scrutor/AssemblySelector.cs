@@ -8,12 +8,7 @@ namespace Scrutor
 {
     internal class AssemblySelector : IAssemblySelector, ISelector
     {
-        public AssemblySelector()
-        {
-            Selectors = new List<ISelector>();
-        }
-
-        private List<ISelector> Selectors { get; }
+        private List<ISelector> Selectors { get; } = new List<ISelector>();
 
         public IImplementationTypeSelector FromAssemblyOf<T>()
         {

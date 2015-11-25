@@ -5,7 +5,7 @@
 
     "dependencies": {
         "Microsoft.Extensions.DependencyInjection": "1.0.0-rc1-final",
-        "Scrutor": "1.1.0-*",
+        "Scrutor": { "target": "project" },
         "xunit": "2.1.0",
         "xunit.runner.dnx": "2.1.0-*"
     },

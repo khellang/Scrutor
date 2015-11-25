@@ -1,7 +1,5 @@
-﻿
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
-
 
 namespace Scrutor.Tests
 {
@@ -9,7 +7,7 @@ namespace Scrutor.Tests
     {
         internal static ServiceDescriptor GetDescriptor<T>(this IServiceCollection services)
         {
-            return services.GetDescriptors<T>().SingleOrDefault();
+            return services.GetDescriptors<T>().Single();
         }
 
         internal static ServiceDescriptor[] GetDescriptors<T>(this IServiceCollection services)

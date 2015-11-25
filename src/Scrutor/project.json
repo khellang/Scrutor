@@ -2,7 +2,7 @@
     "version": "1.1.0-*",
     "description": "Hellang.DependencyInjection.Scanning",
     "authors": [ "Kristian Hellang" ],
-    "tags": [ "DependencyInjection", "DI", "Scanning" ],
+    "tags": [ "Dependency", "Injection", "DI", "Scanning" ],
     "projectUrl": "https://github.com/khellang/Scrutor",
     "licenseUrl": "https://raw.githubusercontent.com/khellang/Scrutor/master/LICENSE",
 

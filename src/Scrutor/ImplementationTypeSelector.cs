@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
-
 namespace Scrutor
 {
     internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelector

@@ -1,6 +1,6 @@
 ﻿{
     "version": "1.1.1-*",
-    "description": "Hellang.DependencyInjection.Scanning",
+    "description": "Register services using assembly scanning and a fluent API.",
     "authors": [ "Kristian Hellang" ],
     "tags": [ "Dependency", "Injection", "DI", "Scanning" ],
     "projectUrl": "https://github.com/khellang/Scrutor",

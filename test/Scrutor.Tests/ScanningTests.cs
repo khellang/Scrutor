@@ -101,13 +101,13 @@ namespace Scrutor.Tests
 
 
         [Fact]
-        public void AutoRegisterWithMatchingInterface()
+        public void AutoRegisterAsMatchingInterface()
         {
             var collection = new ServiceCollection();
 
             collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
                 .AddClasses()
-                    .WithMatchingInterface()
+                    .AsMatchingInterface()
                     .WithTransientLifetime());
 
             Assert.Equal(2, collection.Count);
@@ -123,13 +123,13 @@ namespace Scrutor.Tests
         }
 
         [Fact]
-        public void AutoRegisterWithMatchingInterfaceSameNamespaceOnly()
+        public void AutoRegisterAsMatchingInterfaceSameNamespaceOnly()
         {
             var collection = new ServiceCollection();
 
             collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
                 .AddClasses()
-                    .WithMatchingInterface((t, x) => x.InNamespaces(t.Namespace))
+                    .AsMatchingInterface((t, x) => x.InNamespaces(t.Namespace))
                     .WithTransientLifetime());
 
             Assert.Equal(1, collection.Count);

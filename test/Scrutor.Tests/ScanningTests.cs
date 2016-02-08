@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Scrutor.Tests;
 using Xunit;
 
 namespace Scrutor.Tests
@@ -97,6 +98,48 @@ namespace Scrutor.Tests
             Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
             Assert.Equal(typeof(TransientService1), service.ImplementationType);
         }
+
+
+        [Fact]
+        public void AutoRegisterAsMatchingInterface()
+        {
+            var collection = new ServiceCollection();
+
+            collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
+                .AddClasses()
+                    .AsMatchingInterface()
+                    .WithTransientLifetime());
+
+            Assert.Equal(2, collection.Count);
+
+            var services = collection.GetDescriptors<ITransientService>();
+
+            Assert.NotNull(services);
+            Assert.All(services, s =>
+            {
+                Assert.Equal(ServiceLifetime.Transient, s.Lifetime);
+                Assert.Equal(typeof(ITransientService), s.ServiceType);
+            });
+        }
+
+        [Fact]
+        public void AutoRegisterAsMatchingInterfaceSameNamespaceOnly()
+        {
+            var collection = new ServiceCollection();
+
+            collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
+                .AddClasses()
+                    .AsMatchingInterface((t, x) => x.InNamespaces(t.Namespace))
+                    .WithTransientLifetime());
+
+            Assert.Equal(1, collection.Count);
+
+            var service = collection.GetDescriptor<ITransientService>();
+
+            Assert.NotNull(service);
+            Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
+            Assert.Equal(typeof(TransientService), service.ImplementationType);
+        }
     }
 
     public interface ITransientService { }
@@ -105,6 +148,7 @@ namespace Scrutor.Tests
     public class TransientService1 : ITransientService { }
 
     public class TransientService2 : ITransientService { }
+    public class TransientService : ITransientService { }
 
     public interface IScopedService { }
 
@@ -115,4 +159,11 @@ namespace Scrutor.Tests
     public interface IQueryHandler<TQuery, TResult> { }
 
     public class QueryHandler : IQueryHandler<string, int> { }
+}
+
+namespace UnwantedNamespace
+{
+    public class TransientService : ITransientService
+    {
+    }
 }

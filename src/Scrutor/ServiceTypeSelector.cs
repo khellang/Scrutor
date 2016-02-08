@@ -132,5 +132,15 @@ namespace Scrutor
         {
             return As(t => selector(t.GetTypeInfo()));
         }
+
+        public ILifetimeSelector AsMatchingInterface()
+        {
+            return AsMatchingInterface(null);
+        }
+
+        public ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action)
+        {
+            return AsTypeInfo(t => t.FindMatchingInterface(action));
+        }
     }
 }

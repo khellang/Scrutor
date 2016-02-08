@@ -84,6 +84,16 @@ namespace Scrutor
             return ServiceTypeSelector.AsImplementedInterfaces();
         }
 
+        public ILifetimeSelector AsMatchingInterface()
+        {
+            return ServiceTypeSelector.AsMatchingInterface();
+        }
+
+        public ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action)
+        {
+            return ServiceTypeSelector.AsMatchingInterface(action);
+        }
+
         public ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector)
         {
             return ServiceTypeSelector.As(selector);

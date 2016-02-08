@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Scrutor
 {
@@ -42,5 +43,18 @@ namespace Scrutor
         /// <param name="selector">A function to select service types based on implementation types.</param>
         /// <exception cref="ArgumentNullException">If the <paramref name="selector"/> argument is <c>null</c>.</exception>
         ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector);
+
+        /// <summary>
+        /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName)
+        /// </summary>
+        /// <returns></returns>
+        ILifetimeSelector AsMatchingInterface();
+
+        /// <summary>
+        /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName) 
+        /// </summary>
+        /// <param name="action">Filter for matching the Type to an implementing interface</param>
+        /// <returns></returns>
+        ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action);
     }
 }

@@ -26,10 +26,14 @@ namespace Scrutor
 
             if (typeSubNamespace.Equals(@namespace, StringComparison.Ordinal))
             {
-                var inSameNamespace = typeNamespace.Length == @namespace.Length;
+                if (typeNamespace.Length == @namespace.Length)
+                {
+                    //exactly the same
+                    return true;
+                }
+                //is a subnamespace?
                 var inSameSubNamespace = typeNamespace[@namespace.Length] == '.';
-
-                return inSameNamespace || inSameSubNamespace;
+                return inSameSubNamespace;
             }
 
             return false;

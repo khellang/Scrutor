@@ -161,7 +161,7 @@ namespace Scrutor.Tests
     public class QueryHandler : IQueryHandler<string, int> { }
 }
 
-namespace Scrutor.UnwantedNamespace
+namespace UnwantedNamespace
 {
     public class TransientService : ITransientService
     {

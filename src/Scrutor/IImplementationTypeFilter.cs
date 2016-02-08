@@ -135,12 +135,5 @@ namespace Scrutor
         /// <param name="predicate">The predicate to match types.</param>
         /// <exception cref="ArgumentNullException">If the <paramref name="predicate" /> argument is <c>null</c>.</exception>
         IImplementationTypeFilter Where(Func<Type, bool> predicate);
-
-        /// <summary>
-        /// Filter out types where the namespace is not or a child of the provided one.
-        /// </summary>
-        /// <param name="namespace">The namespace to filter by</param>
-        /// <returns></returns>
-        IImplementationTypeFilter SameNamespaceOnly(string @namespace);
     }
 }

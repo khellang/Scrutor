@@ -178,10 +178,5 @@ namespace Scrutor
             Types = Types.Where(predicate);
             return this;
         }
-
-        public IImplementationTypeFilter SameNamespaceOnly(string @namespace)
-        {
-            return Where(t => t.Namespace.StartsWith(@namespace));
-        }
     }
 }

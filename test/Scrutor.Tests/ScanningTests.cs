@@ -129,7 +129,7 @@ namespace Scrutor.Tests
 
             collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
                 .AddClasses()
-                    .WithMatchingInterface((t, x) => x.SameNamespaceOnly(t.Namespace))
+                    .WithMatchingInterface((t, x) => x.InNamespaces(t.Namespace))
                     .WithTransientLifetime());
 
             Assert.Equal(1, collection.Count);

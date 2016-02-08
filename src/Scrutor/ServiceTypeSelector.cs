@@ -140,70 +140,7 @@ namespace Scrutor
 
         public ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action)
         {
-            return AsTypeInfo(t => FindMatchingInterface(t, action));
-        }
-
-        private static IEnumerable<Type> FindMatchingInterface(TypeInfo t, Action<TypeInfo, IImplementationTypeFilter> action)
-        {
-            string matchingInterfaceName = "I" + t.Name;
-            var matchedInterfaces = GetImplementedInterfacesToMap(t).Where(x => string.Equals(x.Name, matchingInterfaceName, StringComparison.Ordinal));
-            Type type;
-            if (action != null)
-            {
-                var filter = new ImplementationTypeFilter(matchedInterfaces);
-                action(t, filter);
-                type = filter.Types.FirstOrDefault();
-            }
-            else
-            {
-                type = matchedInterfaces.FirstOrDefault();
-            }
-            if (type != null)
-            {
-                yield return type;
-            }
-        }
-
-        private static IEnumerable<Type> GetImplementedInterfacesToMap(TypeInfo typeInfo)
-        {
-            if (!typeInfo.IsGenericType)
-            {
-                return typeInfo.ImplementedInterfaces;
-            }
-            if (!typeInfo.IsGenericTypeDefinition)
-            {
-                return typeInfo.ImplementedInterfaces;
-            }
-            return FilterMatchingGenericInterfaces(typeInfo);
-        }
-
-        private static IEnumerable<Type> FilterMatchingGenericInterfaces(TypeInfo typeInfo)
-        {
-            var genericTypeParameters = typeInfo.GenericTypeParameters;
-            foreach (Type current in typeInfo.ImplementedInterfaces)
-            {
-                var currentTypeInfo = current.GetTypeInfo();
-                if (currentTypeInfo.IsGenericType && currentTypeInfo.ContainsGenericParameters && GenericParametersMatch(genericTypeParameters, currentTypeInfo.GenericTypeArguments))
-                {
-                    yield return currentTypeInfo.GetGenericTypeDefinition();
-                }
-            }
-        }
-
-        private static bool GenericParametersMatch(Type[] parameters, Type[] interfaceArguments)
-        {
-            if (parameters.Length != interfaceArguments.Length)
-            {
-                return false;
-            }
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                if (parameters[i] != interfaceArguments[i])
-                {
-                    return false;
-                }
-            }
-            return true;
+            return AsTypeInfo(t => t.FindMatchingInterface(action));
         }
     }
 }

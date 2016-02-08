@@ -133,17 +133,31 @@ namespace Scrutor
             return As(t => selector(t.GetTypeInfo()));
         }
 
-
-
         public ILifetimeSelector WithMatchingInterface()
         {
-            return AsTypeInfo(FindMatchingInterface);
+            return WithMatchingInterface(null);
         }
 
-        private static IEnumerable<Type> FindMatchingInterface(TypeInfo t)
+        public ILifetimeSelector WithMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action)
+        {
+            return AsTypeInfo(t => FindMatchingInterface(t, action));
+        }
+
+        private static IEnumerable<Type> FindMatchingInterface(TypeInfo t, Action<TypeInfo, IImplementationTypeFilter> action)
         {
             string matchingInterfaceName = "I" + t.Name;
-            var type = GetImplementedInterfacesToMap(t).FirstOrDefault(x => string.Equals(x.Name, matchingInterfaceName, StringComparison.Ordinal));
+            var matchedInterfaces = GetImplementedInterfacesToMap(t).Where(x => string.Equals(x.Name, matchingInterfaceName, StringComparison.Ordinal));
+            Type type;
+            if (action != null)
+            {
+                var filter = new ImplementationTypeFilter(matchedInterfaces);
+                action(t, filter);
+                type = filter.Types.FirstOrDefault();
+            }
+            else
+            {
+                type = matchedInterfaces.FirstOrDefault();
+            }
             if (type != null)
             {
                 yield return type;

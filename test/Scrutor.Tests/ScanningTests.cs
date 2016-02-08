@@ -112,11 +112,14 @@ namespace Scrutor.Tests
 
             Assert.Equal(2, collection.Count);
 
-            var service = collection.GetDescriptors<ITransientService>();
+            var services = collection.GetDescriptors<ITransientService>();
 
-            Assert.NotNull(service);
-            Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
-            Assert.Equal(typeof(TransientService), service.ImplementationType);
+            Assert.NotNull(services);
+            Assert.All(services, s =>
+            {
+                Assert.Equal(ServiceLifetime.Transient, s.Lifetime);
+                Assert.Equal(typeof(ITransientService), s.ServiceType);
+            });
         }
 
         [Fact]
@@ -126,15 +129,15 @@ namespace Scrutor.Tests
 
             collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
                 .AddClasses()
-                    .WithMatchingInterface()
-                    .WithScopedLifetime());
+                    .WithMatchingInterface((t, x) => x.SameNamespaceOnly(t.Namespace))
+                    .WithTransientLifetime());
 
             Assert.Equal(1, collection.Count);
 
             var service = collection.GetDescriptor<ITransientService>();
 
             Assert.NotNull(service);
-            Assert.Equal(ServiceLifetime.Scoped, service.Lifetime);
+            Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
             Assert.Equal(typeof(TransientService), service.ImplementationType);
         }
     }

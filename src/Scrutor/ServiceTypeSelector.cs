@@ -132,5 +132,64 @@ namespace Scrutor
         {
             return As(t => selector(t.GetTypeInfo()));
         }
+
+
+
+        public ILifetimeSelector WithMatchingInterface()
+        {
+            return AsTypeInfo(FindMatchingInterface);
+        }
+
+        private static IEnumerable<Type> FindMatchingInterface(TypeInfo t)
+        {
+            string matchingInterfaceName = "I" + t.Name;
+            var type = GetImplementedInterfacesToMap(t).FirstOrDefault(x => string.Equals(x.Name, matchingInterfaceName, StringComparison.Ordinal));
+            if (type != null)
+            {
+                yield return type;
+            }
+        }
+
+        private static IEnumerable<Type> GetImplementedInterfacesToMap(TypeInfo typeInfo)
+        {
+            if (!typeInfo.IsGenericType)
+            {
+                return typeInfo.ImplementedInterfaces;
+            }
+            if (!typeInfo.IsGenericTypeDefinition)
+            {
+                return typeInfo.ImplementedInterfaces;
+            }
+            return FilterMatchingGenericInterfaces(typeInfo);
+        }
+
+        private static IEnumerable<Type> FilterMatchingGenericInterfaces(TypeInfo typeInfo)
+        {
+            var genericTypeParameters = typeInfo.GenericTypeParameters;
+            foreach (Type current in typeInfo.ImplementedInterfaces)
+            {
+                var currentTypeInfo = current.GetTypeInfo();
+                if (currentTypeInfo.IsGenericType && currentTypeInfo.ContainsGenericParameters && GenericParametersMatch(genericTypeParameters, currentTypeInfo.GenericTypeArguments))
+                {
+                    yield return currentTypeInfo.GetGenericTypeDefinition();
+                }
+            }
+        }
+
+        private static bool GenericParametersMatch(Type[] parameters, Type[] interfaceArguments)
+        {
+            if (parameters.Length != interfaceArguments.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i] != interfaceArguments[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }

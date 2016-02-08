@@ -42,5 +42,7 @@ namespace Scrutor
         /// <param name="selector">A function to select service types based on implementation types.</param>
         /// <exception cref="ArgumentNullException">If the <paramref name="selector"/> argument is <c>null</c>.</exception>
         ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector);
+
+        ILifetimeSelector WithMatchingInterface();
     }
 }

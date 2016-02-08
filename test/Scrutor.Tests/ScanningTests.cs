@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Scrutor.Tests;
 using Xunit;
 
 namespace Scrutor.Tests
@@ -97,6 +98,45 @@ namespace Scrutor.Tests
             Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
             Assert.Equal(typeof(TransientService1), service.ImplementationType);
         }
+
+
+        [Fact]
+        public void AutoRegisterWithMatchingInterface()
+        {
+            var collection = new ServiceCollection();
+
+            collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
+                .AddClasses()
+                    .WithMatchingInterface()
+                    .WithTransientLifetime());
+
+            Assert.Equal(2, collection.Count);
+
+            var service = collection.GetDescriptors<ITransientService>();
+
+            Assert.NotNull(service);
+            Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
+            Assert.Equal(typeof(TransientService), service.ImplementationType);
+        }
+
+        [Fact]
+        public void AutoRegisterWithMatchingInterfaceSameNamespaceOnly()
+        {
+            var collection = new ServiceCollection();
+
+            collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
+                .AddClasses()
+                    .WithMatchingInterface()
+                    .WithScopedLifetime());
+
+            Assert.Equal(1, collection.Count);
+
+            var service = collection.GetDescriptor<ITransientService>();
+
+            Assert.NotNull(service);
+            Assert.Equal(ServiceLifetime.Scoped, service.Lifetime);
+            Assert.Equal(typeof(TransientService), service.ImplementationType);
+        }
     }
 
     public interface ITransientService { }
@@ -105,6 +145,7 @@ namespace Scrutor.Tests
     public class TransientService1 : ITransientService { }
 
     public class TransientService2 : ITransientService { }
+    public class TransientService : ITransientService { }
 
     public interface IScopedService { }
 
@@ -115,4 +156,11 @@ namespace Scrutor.Tests
     public interface IQueryHandler<TQuery, TResult> { }
 
     public class QueryHandler : IQueryHandler<string, int> { }
+}
+
+namespace Scrutor.UnwantedNamespace
+{
+    public class TransientService : ITransientService
+    {
+    }
 }

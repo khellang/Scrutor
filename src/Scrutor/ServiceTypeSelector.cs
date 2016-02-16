@@ -108,6 +108,11 @@ namespace Scrutor
 
         public void Populate(IServiceCollection services)
         {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
             if (Selectors.Count == 0)
             {
                 AsSelf();

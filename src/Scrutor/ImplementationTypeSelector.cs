@@ -68,6 +68,11 @@ namespace Scrutor
 
         public void Populate(IServiceCollection services)
         {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
             foreach (var selector in Selectors)
             {
                 selector.Populate(services);

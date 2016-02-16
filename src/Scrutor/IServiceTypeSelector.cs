@@ -47,14 +47,12 @@ namespace Scrutor
         /// <summary>
         /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName)
         /// </summary>
-        /// <returns></returns>
         ILifetimeSelector AsMatchingInterface();
 
         /// <summary>
         /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName) 
         /// </summary>
         /// <param name="action">Filter for matching the Type to an implementing interface</param>
-        /// <returns></returns>
         ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action);
     }
 }

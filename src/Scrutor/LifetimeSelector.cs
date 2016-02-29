@@ -49,14 +49,29 @@ namespace Scrutor
             ServiceTypeSelector.AddFromAttributes();
         }
 
+        public void AddFromAttributes(bool publicOnly)
+        {
+            ServiceTypeSelector.AddFromAttributes(publicOnly);
+        }
+
         public IServiceTypeSelector AddClasses()
         {
             return ServiceTypeSelector.AddClasses();
         }
 
+        public IServiceTypeSelector AddClasses(bool publicOnly)
+        {
+            return ServiceTypeSelector.AddClasses(publicOnly);
+        }
+
         public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action)
         {
             return ServiceTypeSelector.AddClasses(action);
+        }
+
+        public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action, bool publicOnly)
+        {
+            return ServiceTypeSelector.AddClasses(action, publicOnly);
         }
 
         public ILifetimeSelector AsSelf()

@@ -48,22 +48,37 @@ namespace Scrutor
 
         public void AddFromAttributes()
         {
-            Selectors.Add(new AttributeSelector(Types.Where(t => t.IsNonAbstractClass())));
+            AddFromAttributes(publicOnly: false);
+        }
+
+        public void AddFromAttributes(bool publicOnly)
+        {
+            Selectors.Add(new AttributeSelector(Types.Where(t => t.IsNonAbstractClass(publicOnly))));
         }
 
         public IServiceTypeSelector AddClasses()
         {
-            return AddSelector(Types.Where(t => t.IsNonAbstractClass()));
+            return AddClasses(publicOnly: false);
+        }
+
+        public IServiceTypeSelector AddClasses(bool publicOnly)
+        {
+            return AddSelector(Types.Where(t => t.IsNonAbstractClass(publicOnly)));
         }
 
         public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action)
+        {
+            return AddClasses(action, publicOnly: false);
+        }
+
+        public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action, bool publicOnly)
         {
             if (action == null)
             {
                 throw new ArgumentNullException(nameof(action));
             }
 
-            return AddFilter(Types.Where(t => t.IsNonAbstractClass()), action);
+            return AddFilter(Types.Where(t => t.IsNonAbstractClass(publicOnly)), action);
         }
 
         public void Populate(IServiceCollection services)

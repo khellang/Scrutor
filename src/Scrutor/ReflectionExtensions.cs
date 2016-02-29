@@ -7,11 +7,21 @@ namespace Scrutor
 {
     internal static class ReflectionExtensions
     {
-        public static bool IsNonAbstractClass(this Type type)
+        public static bool IsNonAbstractClass(this Type type, bool publicOnly)
         {
             var typeInfo = type.GetTypeInfo();
 
-            return typeInfo.IsClass && !typeInfo.IsAbstract;
+            if (typeInfo.IsClass && !typeInfo.IsAbstract)
+            {
+                if (publicOnly)
+                {
+                    return typeInfo.IsPublic || typeInfo.IsNestedPublic;
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         public static bool IsInNamespace(this Type type, string @namespace)

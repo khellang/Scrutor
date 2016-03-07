@@ -13,6 +13,11 @@ namespace Scrutor
 
             if (typeInfo.IsClass && !typeInfo.IsAbstract)
             {
+                if (typeInfo.IsGenericType && typeInfo.ContainsGenericParameters)
+                {
+                    return false;
+                }
+
                 if (publicOnly)
                 {
                     return typeInfo.IsPublic || typeInfo.IsNestedPublic;

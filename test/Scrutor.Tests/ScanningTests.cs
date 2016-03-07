@@ -140,6 +140,20 @@ namespace Scrutor.Tests
             Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
             Assert.Equal(typeof(TransientService), service.ImplementationType);
         }
+
+        [Fact]
+        public void ShouldNotRegisterGenericTypesWithMissingParameters()
+        {
+            var collection = new ServiceCollection();
+
+            collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(x => x.AssignableTo(typeof(BaseQueryHandler<>)))
+                    .AsImplementedInterfaces());
+
+            // This would throw if generic type definitions were registered.
+            collection.BuildServiceProvider();
+        }
     }
 
     public interface ITransientService { }
@@ -159,6 +173,8 @@ namespace Scrutor.Tests
     public interface IQueryHandler<TQuery, TResult> { }
 
     public class QueryHandler : IQueryHandler<string, int> { }
+
+    public class BaseQueryHandler<T> : IQueryHandler<T, int> { }
 }
 
 namespace UnwantedNamespace

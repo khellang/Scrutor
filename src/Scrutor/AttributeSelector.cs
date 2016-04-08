@@ -20,18 +20,14 @@ namespace Scrutor
             {
                 var typeInfo = type.GetTypeInfo();
 
-                var attribute = typeInfo.GetCustomAttribute<ServiceDescriptorAttribute>();
-
-                if (attribute == null)
+                foreach (var attribute in typeInfo.GetCustomAttributes<ServiceDescriptorAttribute>())
                 {
-                    continue;
+                    var serviceType = attribute.ServiceType ?? type;
+
+                    var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
+
+                    services.Add(descriptor);
                 }
-
-                var serviceType = attribute.ServiceType ?? type;
-
-                var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
-
-                services.Add(descriptor);
             }
         }
     }

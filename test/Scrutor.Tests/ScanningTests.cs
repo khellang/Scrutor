@@ -99,6 +99,31 @@ namespace Scrutor.Tests
             Assert.Equal(typeof(TransientService1), service.ImplementationType);
         }
 
+        [Fact]
+        public void CanHandleMultipleAttributes()
+        {
+            var collection = new ServiceCollection();
+
+            collection.Scan(scan => scan.FromAssemblyOf<ITransientServiceToCombine>().AddFromAttributes());
+
+            var transientService = collection.GetDescriptor<ITransientServiceToCombine>();
+
+            Assert.NotNull(transientService);
+            Assert.Equal(ServiceLifetime.Transient, transientService.Lifetime);
+            Assert.Equal(typeof(CombinedService), transientService.ImplementationType);
+
+            var scopedService = collection.GetDescriptor<IScopedServiceToCombine>();
+
+            Assert.NotNull(scopedService);
+            Assert.Equal(ServiceLifetime.Scoped, scopedService.Lifetime);
+            Assert.Equal(typeof(CombinedService), scopedService.ImplementationType);
+
+            var singletonService = collection.GetDescriptor<ISingletonServiceToCombine>();
+
+            Assert.NotNull(singletonService);
+            Assert.Equal(ServiceLifetime.Singleton, singletonService.Lifetime);
+            Assert.Equal(typeof(CombinedService), singletonService.ImplementationType);
+        }
 
         [Fact]
         public void AutoRegisterAsMatchingInterface()
@@ -175,6 +200,15 @@ namespace Scrutor.Tests
     public class QueryHandler : IQueryHandler<string, int> { }
 
     public class BaseQueryHandler<T> : IQueryHandler<T, int> { }
+
+    public interface ITransientServiceToCombine { }
+    public interface IScopedServiceToCombine { }
+    public interface ISingletonServiceToCombine { }
+
+    [ServiceDescriptor(typeof(ITransientServiceToCombine))]
+    [ServiceDescriptor(typeof(IScopedServiceToCombine), ServiceLifetime.Scoped)]
+    [ServiceDescriptor(typeof(ISingletonServiceToCombine), ServiceLifetime.Singleton)]
+    public class CombinedService : ITransientServiceToCombine, IScopedServiceToCombine, ISingletonServiceToCombine { }
 }
 
 namespace UnwantedNamespace

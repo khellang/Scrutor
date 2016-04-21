@@ -53,7 +53,28 @@ namespace Scrutor
 
         public void AddFromAttributes(bool publicOnly)
         {
-            Selectors.Add(new AttributeSelector(Types.Where(t => t.IsNonAbstractClass(publicOnly))));
+            Selectors.Add(new AttributeSelector(GetNonAbstractClasses(publicOnly)));
+        }
+
+        public void AddFromAttributes(Action<IImplementationTypeFilter> action)
+        {
+            AddFromAttributes(action, publicOnly: false);
+        }
+
+        public void AddFromAttributes(Action<IImplementationTypeFilter> action, bool publicOnly)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            var filter = new ImplementationTypeFilter(GetNonAbstractClasses(publicOnly));
+
+            action(filter);
+
+            var selector = new AttributeSelector(filter.Types);
+
+            Selectors.Add(selector);
         }
 
         public IServiceTypeSelector AddClasses()
@@ -63,7 +84,11 @@ namespace Scrutor
 
         public IServiceTypeSelector AddClasses(bool publicOnly)
         {
-            return AddSelector(Types.Where(t => t.IsNonAbstractClass(publicOnly)));
+            var selector = new ServiceTypeSelector(this, GetNonAbstractClasses(publicOnly));
+
+            Selectors.Add(selector);
+
+            return selector;
         }
 
         public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action)
@@ -78,7 +103,15 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(action));
             }
 
-            return AddFilter(Types.Where(t => t.IsNonAbstractClass(publicOnly)), action);
+            var filter = new ImplementationTypeFilter(GetNonAbstractClasses(publicOnly));
+
+            action(filter);
+
+            var selector = new ServiceTypeSelector(this, filter.Types);
+
+            Selectors.Add(selector);
+
+            return selector;
         }
 
         public void Populate(IServiceCollection services)
@@ -94,22 +127,9 @@ namespace Scrutor
             }
         }
 
-        private IServiceTypeSelector AddFilter(IEnumerable<Type> types, Action<IImplementationTypeFilter> action)
+        private IEnumerable<Type> GetNonAbstractClasses(bool publicOnly)
         {
-            var filter = new ImplementationTypeFilter(types);
-
-            action(filter);
-
-            return AddSelector(filter.Types);
-        }
-
-        private IServiceTypeSelector AddSelector(IEnumerable<Type> types)
-        {
-            var selector = new ServiceTypeSelector(this, types);
-
-            Selectors.Add(selector);
-
-            return selector;
+            return Types.Where(t => t.IsNonAbstractClass(publicOnly));
         }
     }
 }

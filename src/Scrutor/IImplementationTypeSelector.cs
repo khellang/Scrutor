@@ -19,6 +19,23 @@ namespace Scrutor
         void AddFromAttributes(bool publicOnly);
 
         /// <summary>
+        /// Adds all public, non-abstract classes from the selected assemblies that are annotated with
+        /// the <see cref="ServiceDescriptorAttribute"/> and that matches the requirements specified
+        /// in the <paramref name="action"/> to the <see cref="Microsoft.Extensions.DependencyInjection.IServiceCollection"/>.
+        /// </summary>
+        /// <param name="action">The filtering action.</param>
+        void AddFromAttributes(Action<IImplementationTypeFilter> action);
+
+        /// <summary>
+        /// Adds all non-abstract classes from the selected assemblies that are annotated with
+        /// the <see cref="ServiceDescriptorAttribute"/> and that matches the requirements specified
+        /// in the <paramref name="action"/> to the <see cref="Microsoft.Extensions.DependencyInjection.IServiceCollection"/>.
+        /// </summary>
+        /// <param name="action">The filtering action.</param>
+        /// <param name="publicOnly">Specifies whether too look at public types only.</param>
+        void AddFromAttributes(Action<IImplementationTypeFilter> action, bool publicOnly);
+
+        /// <summary>
         /// Adds all public, non-abstract classes from the selected assemblies to the <see cref="Microsoft.Extensions.DependencyInjection.IServiceCollection"/>.
         /// </summary>
         IServiceTypeSelector AddClasses();

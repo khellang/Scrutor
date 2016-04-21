@@ -76,6 +76,16 @@ namespace Scrutor
             return ImplementationTypeSelector.AddClasses(action, publicOnly);
         }
 
+        public void AddFromAttributes(Action<IImplementationTypeFilter> action)
+        {
+            ImplementationTypeSelector.AddFromAttributes(action);
+        }
+
+        public void AddFromAttributes(Action<IImplementationTypeFilter> action, bool publicOnly)
+        {
+            ImplementationTypeSelector.AddFromAttributes(action, publicOnly);
+        }
+
         public ILifetimeSelector AsSelf()
         {
             return As(t => new[] { t });

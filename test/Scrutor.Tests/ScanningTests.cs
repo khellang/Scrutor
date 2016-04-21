@@ -92,6 +92,25 @@ namespace Scrutor.Tests
 
             collection.Scan(scan => scan.FromAssemblyOf<ITransientService>().AddFromAttributes());
 
+            Assert.Equal(collection.Count, 4);
+
+            var service = collection.GetDescriptor<ITransientService>();
+
+            Assert.NotNull(service);
+            Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
+            Assert.Equal(typeof(TransientService1), service.ImplementationType);
+        }
+
+        [Fact]
+        public void CanFilterAttributeTypes()
+        {
+            var collection = new ServiceCollection();
+
+            collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
+                .AddFromAttributes(t => t.AssignableTo<ITransientService>()));
+
+            Assert.Equal(collection.Count, 1);
+
             var service = collection.GetDescriptor<ITransientService>();
 
             Assert.NotNull(service);

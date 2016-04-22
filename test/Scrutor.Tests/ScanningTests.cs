@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Scrutor.Tests;
 using System;
+using System.Linq;
 using Xunit;
 
 namespace Scrutor.Tests
@@ -119,6 +120,28 @@ namespace Scrutor.Tests
             Assert.NotNull(service);
             Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
             Assert.Equal(typeof(TransientService1), service.ImplementationType);
+        }
+
+        [Fact]
+        public void CanCreateDefault()
+        {
+            var types = new[]
+            {
+                typeof(IDefault1),
+                typeof(IDefault2),
+                typeof(IDefault3),
+                typeof(Default3)
+            };
+
+            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
+                .AddClasses(t => t.AssignableToAny(types))
+                    .UsingAttributes());
+
+            Assert.Equal(5, Collection.Count);
+            var remainingSetOfTypes = Collection.Select(descriptor => descriptor.ServiceType)
+                .Except(types.Concat(new[] {typeof(DefaultAttributes)}));
+            Assert.Equal(0, remainingSetOfTypes.Count());
+
         }
 
         [Fact]
@@ -270,6 +293,17 @@ namespace Scrutor.Tests
     [ServiceDescriptor(typeof(IDuplicateInheritance))]
     [ServiceDescriptor(typeof(IDuplicateInheritance))]
     public class DuplicateInheritance : IDuplicateInheritance, IOtherInheritance { }
+    
+    public interface IDefault1 {}
+
+    public interface IDefault2 {}
+
+    public interface IDefault3 {}
+
+    public interface Default3 : IDefault3 { }
+
+    [ServiceDescriptor]
+    public class DefaultAttributes : Default3, IDefault1, IDefault2 {}
 }
 
 namespace UnwantedNamespace

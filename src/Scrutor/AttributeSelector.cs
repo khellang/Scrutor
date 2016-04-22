@@ -40,22 +40,27 @@ namespace Scrutor
 
                 foreach (var attribute in attributes)
                 {
-                    var serviceType = GetServiceType(type, attribute);
+                    var serviceTypes = GetServiceType(type, attribute);
 
-                    var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
+                    foreach (var serviceType in serviceTypes)
+                    {
+                        var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
 
-                    services.Add(descriptor);
+                        services.Add(descriptor);
+                    }
                 }
             }
         }
 
-        private static Type GetServiceType(Type type, ServiceDescriptorAttribute attribute)
+        private static IEnumerable<Type> GetServiceType(Type type, ServiceDescriptorAttribute attribute)
         {
             var serviceType = attribute.ServiceType;
 
-            if (serviceType == null)
+            if (serviceType==null)
             {
-                return type;
+                return type.GetInterfaces()
+                    .Concat(new [] {type, type.GetTypeInfo().BaseType})
+                        .Except(new [] {typeof(Object), null});
             }
 
             if (!serviceType.IsAssignableFrom(type))
@@ -63,7 +68,7 @@ namespace Scrutor
                 throw new InvalidOperationException($@"Type ""{type.FullName}"" is not assignable to ""${serviceType.FullName}"".");
             }
 
-            return serviceType;
+            return new [] { serviceType };
         }
     }
 }

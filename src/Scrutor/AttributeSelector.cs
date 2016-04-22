@@ -40,7 +40,7 @@ namespace Scrutor
 
                 foreach (var attribute in attributes)
                 {
-                    var serviceTypes = GetServiceType(type, attribute);
+                    var serviceTypes = GetServiceTypes(type, attribute);
 
                     foreach (var serviceType in serviceTypes)
                     {
@@ -52,15 +52,22 @@ namespace Scrutor
             }
         }
 
-        private static IEnumerable<Type> GetServiceType(Type type, ServiceDescriptorAttribute attribute)
+        private static IEnumerable<Type> GetServiceTypes(Type type, ServiceDescriptorAttribute attribute)
         {
             var serviceType = attribute.ServiceType;
 
             if (serviceType == null)
             {
-                return type.GetInterfaces()
-                    .Concat(new [] {type, type.GetTypeInfo().BaseType})
-                        .Except(new [] {typeof(Object), null});
+                var typeInfo = type.GetTypeInfo();
+                yield return type;
+                foreach (var implementedInterface in typeInfo.ImplementedInterfaces)
+                {
+                    yield return implementedInterface;
+                }
+                if(typeInfo.BaseType != null && typeInfo.BaseType != typeof(object))
+                    yield return typeInfo.BaseType;
+
+                yield break;
             }
 
             if (!serviceType.IsAssignableFrom(type))
@@ -68,7 +75,7 @@ namespace Scrutor
                 throw new InvalidOperationException($@"Type ""{type.FullName}"" is not assignable to ""${serviceType.FullName}"".");
             }
 
-            return new [] { serviceType };
+            yield return serviceType;
         }
     }
 }

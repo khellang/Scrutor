@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Scrutor.Tests;
+using System;
 using Xunit;
 
 namespace Scrutor.Tests
@@ -119,6 +120,29 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void ThrowsOnWrongInheritance()
+        {
+            var collection = new ServiceCollection();
+
+            var ex = Assert.Throws<InvalidOperationException>(()=>
+                collection.Scan(scan => scan.FromAssemblyOf<IWrongInheritanceA>().AddFromAttributes()));
+
+            Assert.Equal("Type \"Scrutor.Tests.WrongInheritance\" does not inherit or implement \"$Scrutor.Tests.IWrongInheritanceA\".", ex.Message);
+        }
+
+        [Fact]
+        public void ThrowsOnDuplicate()
+        {
+            var collection = new ServiceCollection();
+
+            var ex = Assert.Throws<InvalidOperationException>(()=>
+                collection.Scan(scan => scan.FromAssemblyOf<IDuplicateInheritance>()
+                    .AddFromAttributes(t => t.AssignableTo<IDuplicateInheritance>())));
+
+            Assert.Equal("Type \"Scrutor.Tests.DuplicateInheritance\" has multiple ServiceDescriptors specified with the same service type.", ex.Message);
+        }
+
+        [Fact]
         public void CanHandleMultipleAttributes()
         {
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientServiceToCombine>()
@@ -151,7 +175,7 @@ namespace Scrutor.Tests
                     .AsMatchingInterface()
                     .WithTransientLifetime());
 
-            Assert.Equal(2, Collection.Count);
+            Assert.Equal(3, Collection.Count);
 
             var services = Collection.GetDescriptors<ITransientService>();
 
@@ -171,7 +195,7 @@ namespace Scrutor.Tests
                     .AsMatchingInterface((t, x) => x.InNamespaces(t.Namespace))
                     .WithTransientLifetime());
 
-            Assert.Equal(1, Collection.Count);
+            Assert.Equal(2, Collection.Count);
 
             var service = Collection.GetDescriptor<ITransientService>();
 
@@ -224,6 +248,21 @@ namespace Scrutor.Tests
     [ServiceDescriptor(typeof(IScopedServiceToCombine), ServiceLifetime.Scoped)]
     [ServiceDescriptor(typeof(ISingletonServiceToCombine), ServiceLifetime.Singleton)]
     public class CombinedService : ITransientServiceToCombine, IScopedServiceToCombine, ISingletonServiceToCombine { }
+
+    public interface IWrongInheritanceA { }
+    public interface IWrongInheritanceB { }
+
+    [ServiceDescriptor(typeof(IWrongInheritanceA))]
+    public class WrongInheritance : IWrongInheritanceB { }
+
+
+    public interface IDuplicateInheritance { }
+    public interface IOtherInheritance { }
+
+    [ServiceDescriptor(typeof(IOtherInheritance))]
+    [ServiceDescriptor(typeof(IDuplicateInheritance))]
+    [ServiceDescriptor(typeof(IDuplicateInheritance))]
+    public class DuplicateInheritance : IDuplicateInheritance, IOtherInheritance { }
 }
 
 namespace UnwantedNamespace

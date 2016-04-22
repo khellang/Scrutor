@@ -82,9 +82,19 @@ namespace Scrutor.Tests
         [Fact]
         public void CanScanUsingAttributes()
         {
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>().AddFromAttributes());
+            var interfaces = new []
+                {
+                    typeof(ITransientService),
+                    typeof(ITransientServiceToCombine),
+                    typeof(IScopedServiceToCombine),
+                    typeof(ISingletonServiceToCombine),
 
-            Assert.Equal(Collection.Count, 4);
+                };
+            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
+                    .AddFromAttributes(t => t.AssignableToAny(interfaces)));
+
+
+            Assert.Equal(4, Collection.Count);
 
             var service = Collection.GetDescriptor<ITransientService>();
 
@@ -111,7 +121,8 @@ namespace Scrutor.Tests
         [Fact]
         public void CanHandleMultipleAttributes()
         {
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientServiceToCombine>().AddFromAttributes());
+            Collection.Scan(scan => scan.FromAssemblyOf<ITransientServiceToCombine>()
+                .AddFromAttributes(t => t.AssignableTo<ITransientServiceToCombine>()));
 
             var transientService = Collection.GetDescriptor<ITransientServiceToCombine>();
 

@@ -29,7 +29,7 @@ namespace Scrutor
 
             action(selector);
 
-            selector.Populate(services);
+            ((ISelector) selector).Populate(services);
 
             return services;
         }

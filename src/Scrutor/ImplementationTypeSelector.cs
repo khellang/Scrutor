@@ -114,7 +114,7 @@ namespace Scrutor
             return selector;
         }
 
-        public void Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services)
         {
             if (services == null)
             {

@@ -7,13 +7,13 @@ namespace Scrutor
 {
     internal class LifetimeSelector : ILifetimeSelector, ISelector
     {
-        public LifetimeSelector(IServiceTypeSelector serviceTypeSelector, IEnumerable<Tuple<Type, IEnumerable<Type>>> types)
+        public LifetimeSelector(IServiceTypeSelector serviceTypeSelector, IEnumerable<TypeMap> typeMaps)
         {
             ServiceTypeSelector = serviceTypeSelector;
-            Types = types;
+            TypeMaps = typeMaps;
         }
 
-        private IEnumerable<Tuple<Type, IEnumerable<Type>>> Types { get; }
+        private IEnumerable<TypeMap> TypeMaps { get; }
 
         private ServiceLifetime? Lifetime { get; set; }
 
@@ -152,16 +152,21 @@ namespace Scrutor
 
         void ISelector.Populate(IServiceCollection services)
         {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
             if (!Lifetime.HasValue)
             {
                 Lifetime = ServiceLifetime.Transient;
             }
 
-            foreach (var tuple in Types)
+            foreach (var typeMap in TypeMaps)
             {
-                foreach (var serviceType in tuple.Item2)
+                foreach (var serviceType in typeMap.ServiceTypes)
                 {
-                    var implementationType = tuple.Item1;
+                    var implementationType = typeMap.ImplementationType;
 
                     var descriptor = new ServiceDescriptor(serviceType, implementationType, Lifetime.Value);
 

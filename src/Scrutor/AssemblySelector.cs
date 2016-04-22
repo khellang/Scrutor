@@ -55,7 +55,7 @@ namespace Scrutor
             return AddSelector(assemblies.SelectMany(asm => asm.GetTypes()));
         }
 
-        public void Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services)
         {
             if (services == null)
             {

@@ -113,7 +113,7 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(types));
             }
 
-            return AddSelector(Types.Select(t => Tuple.Create(t, types)));
+            return AddSelector(Types.Select(t => new TypeMap(t, types)));
         }
 
         public ILifetimeSelector AsImplementedInterfaces()
@@ -128,7 +128,7 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(selector));
             }
 
-            return AddSelector(Types.Select(t => Tuple.Create(t, selector(t))));
+            return AddSelector(Types.Select(t => new TypeMap(t, selector(t))));
         }
 
         void ISelector.Populate(IServiceCollection services)
@@ -149,7 +149,7 @@ namespace Scrutor
             }
         }
 
-        private ILifetimeSelector AddSelector(IEnumerable<Tuple<Type, IEnumerable<Type>>> types)
+        private ILifetimeSelector AddSelector(IEnumerable<TypeMap> types)
         {
             var lifetimeSelector = new LifetimeSelector(this, types);
 

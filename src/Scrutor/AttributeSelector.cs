@@ -56,7 +56,7 @@ namespace Scrutor
         {
             var serviceType = attribute.ServiceType;
 
-            if (serviceType==null)
+            if (serviceType == null)
             {
                 return type.GetInterfaces()
                     .Concat(new [] {type, type.GetTypeInfo().BaseType})

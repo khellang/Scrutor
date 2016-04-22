@@ -83,17 +83,17 @@ namespace Scrutor.Tests
         [Fact]
         public void CanScanUsingAttributes()
         {
-            var interfaces = new []
-                {
-                    typeof(ITransientService),
-                    typeof(ITransientServiceToCombine),
-                    typeof(IScopedServiceToCombine),
-                    typeof(ISingletonServiceToCombine),
+            var interfaces = new[]
+            {
+                typeof(ITransientService),
+                typeof(ITransientServiceToCombine),
+                typeof(IScopedServiceToCombine),
+                typeof(ISingletonServiceToCombine),
 
-                };
+            };
+
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                    .AddFromAttributes(t => t.AssignableToAny(interfaces)));
-
+                .AddFromAttributes(t => t.AssignableToAny(interfaces)));
 
             Assert.Equal(4, Collection.Count);
 
@@ -124,8 +124,9 @@ namespace Scrutor.Tests
         {
             var collection = new ServiceCollection();
 
-            var ex = Assert.Throws<InvalidOperationException>(()=>
-                collection.Scan(scan => scan.FromAssemblyOf<IWrongInheritanceA>().AddFromAttributes()));
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+                collection.Scan(scan => scan.FromAssemblyOf<IWrongInheritanceA>()
+                    .AddFromAttributes()));
 
             Assert.Equal("Type \"Scrutor.Tests.WrongInheritance\" does not inherit or implement \"$Scrutor.Tests.IWrongInheritanceA\".", ex.Message);
         }
@@ -135,7 +136,7 @@ namespace Scrutor.Tests
         {
             var collection = new ServiceCollection();
 
-            var ex = Assert.Throws<InvalidOperationException>(()=>
+            var ex = Assert.Throws<InvalidOperationException>(() =>
                 collection.Scan(scan => scan.FromAssemblyOf<IDuplicateInheritance>()
                     .AddFromAttributes(t => t.AssignableTo<IDuplicateInheritance>())));
 
@@ -250,13 +251,14 @@ namespace Scrutor.Tests
     public class CombinedService : ITransientServiceToCombine, IScopedServiceToCombine, ISingletonServiceToCombine { }
 
     public interface IWrongInheritanceA { }
+
     public interface IWrongInheritanceB { }
 
     [ServiceDescriptor(typeof(IWrongInheritanceA))]
     public class WrongInheritance : IWrongInheritanceB { }
 
-
     public interface IDuplicateInheritance { }
+
     public interface IOtherInheritance { }
 
     [ServiceDescriptor(typeof(IOtherInheritance))]

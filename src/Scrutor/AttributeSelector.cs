@@ -22,11 +22,15 @@ namespace Scrutor
                 var typeInfo = type.GetTypeInfo();
 
                 var attributes = typeInfo.GetCustomAttributes<ServiceDescriptorAttribute>().ToArray();
-                // check whether they have the same service type
-                var duplicates = attributes.GroupBy(s => s).SelectMany(grp => grp.Skip(1));
+
+                // Check if the type has multiple attributes with same ServiceType.
+                var duplicates = attributes
+                    .GroupBy(s => s.ServiceType)
+                    .SelectMany(grp => grp.Skip(1));
+
                 if (duplicates.Any())
                 {
-                    throw new InvalidOperationException($"Type \"{type.FullName}\" has multiple ServiceDescriptors specified with the same service type.");
+                    throw new InvalidOperationException($@"Type ""{type.FullName}"" has multiple ServiceDescriptor attributes with the same service type.");
                 }
 
                 foreach (var attribute in attributes)
@@ -40,22 +44,21 @@ namespace Scrutor
             }
         }
 
-        private Type GetServiceType(Type type, ServiceDescriptorAttribute attribute)
+        private static Type GetServiceType(Type type, ServiceDescriptorAttribute attribute)
         {
             var serviceType = attribute.ServiceType;
-            if (ReferenceEquals(null, serviceType))
+
+            if (serviceType == null)
             {
                 return type;
             }
 
             if (!serviceType.IsAssignableFrom(type))
             {
-                throw new InvalidOperationException($"Type \"{type.FullName}\" does not inherit or implement \"${serviceType}\".");
+                throw new InvalidOperationException($@"Type ""{type.FullName}"" is not assignable to ""${serviceType.FullName}"".");
             }
 
             return serviceType;
-
         }
-
     }
 }

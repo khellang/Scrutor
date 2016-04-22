@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor
 {
-    internal class LifetimeSelector : ILifetimeSelector
+    internal class LifetimeSelector : ILifetimeSelector, ISelector
     {
         public LifetimeSelector(IServiceTypeSelector serviceTypeSelector, IEnumerable<Tuple<Type, IEnumerable<Type>>> types)
         {
@@ -46,12 +46,12 @@ namespace Scrutor
 
         public void AddFromAttributes()
         {
-            ServiceTypeSelector.AddFromAttributes();
+            ServiceTypeSelector.AddClasses().UsingAttributes();
         }
 
         public void AddFromAttributes(bool publicOnly)
         {
-            ServiceTypeSelector.AddFromAttributes(publicOnly);
+            ServiceTypeSelector.AddClasses(publicOnly).UsingAttributes();
         }
 
         public IServiceTypeSelector AddClasses()
@@ -76,12 +76,12 @@ namespace Scrutor
 
         public void AddFromAttributes(Action<IImplementationTypeFilter> action)
         {
-            ServiceTypeSelector.AddFromAttributes(action);
+            ServiceTypeSelector.AddClasses(action).UsingAttributes();
         }
 
         public void AddFromAttributes(Action<IImplementationTypeFilter> action, bool publicOnly)
         {
-            ServiceTypeSelector.AddFromAttributes(action, publicOnly);
+            ServiceTypeSelector.AddClasses(action, publicOnly).UsingAttributes();
         }
 
         public ILifetimeSelector AsSelf()
@@ -119,6 +119,11 @@ namespace Scrutor
             return ServiceTypeSelector.AsMatchingInterface(action);
         }
 
+        public IImplementationTypeSelector UsingAttributes()
+        {
+            return ServiceTypeSelector.UsingAttributes();
+        }
+
         public ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector)
         {
             return ServiceTypeSelector.As(selector);
@@ -145,7 +150,7 @@ namespace Scrutor
             return this;
         }
 
-        internal void Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services)
         {
             if (!Lifetime.HasValue)
             {

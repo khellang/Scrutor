@@ -15,8 +15,13 @@ namespace Scrutor
 
         private IEnumerable<Type> Types { get; }
 
-        public void Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services)
         {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
             foreach (var type in Types)
             {
                 var typeInfo = type.GetTypeInfo();

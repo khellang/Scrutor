@@ -12,12 +12,12 @@ namespace Scrutor
         {
             ImplementationTypeSelector = implementationTypeSelector;
             Types = types;
-            Selectors = new List<LifetimeSelector>();
+            Selectors = new List<ISelector>();
         }
 
         private IEnumerable<Type> Types { get; }
 
-        private List<LifetimeSelector> Selectors { get; }
+        private List<ISelector> Selectors { get; }
 
         private IImplementationTypeSelector ImplementationTypeSelector { get; }
 
@@ -48,12 +48,12 @@ namespace Scrutor
 
         public void AddFromAttributes()
         {
-            ImplementationTypeSelector.AddFromAttributes();
+            ImplementationTypeSelector.AddClasses().UsingAttributes();
         }
 
         public void AddFromAttributes(bool publicOnly)
         {
-            ImplementationTypeSelector.AddFromAttributes(publicOnly);
+            ImplementationTypeSelector.AddClasses(publicOnly).UsingAttributes();
         }
 
         public IServiceTypeSelector AddClasses()
@@ -78,12 +78,12 @@ namespace Scrutor
 
         public void AddFromAttributes(Action<IImplementationTypeFilter> action)
         {
-            ImplementationTypeSelector.AddFromAttributes(action);
+            ImplementationTypeSelector.AddClasses(action).UsingAttributes();
         }
 
         public void AddFromAttributes(Action<IImplementationTypeFilter> action, bool publicOnly)
         {
-            ImplementationTypeSelector.AddFromAttributes(action, publicOnly);
+            ImplementationTypeSelector.AddClasses(action, publicOnly).UsingAttributes();
         }
 
         public ILifetimeSelector AsSelf()
@@ -131,7 +131,7 @@ namespace Scrutor
             return AddSelector(Types.Select(t => Tuple.Create(t, selector(t))));
         }
 
-        public void Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services)
         {
             if (services == null)
             {
@@ -171,6 +171,15 @@ namespace Scrutor
         public ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action)
         {
             return AsTypeInfo(t => t.FindMatchingInterface(action));
+        }
+
+        public IImplementationTypeSelector UsingAttributes()
+        {
+            var selector = new AttributeSelector(Types);
+
+            Selectors.Add(selector);
+
+            return ImplementationTypeSelector;
         }
     }
 }

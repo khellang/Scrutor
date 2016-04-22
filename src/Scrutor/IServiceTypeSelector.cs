@@ -54,5 +54,10 @@ namespace Scrutor
         /// </summary>
         /// <param name="action">Filter for matching the Type to an implementing interface</param>
         ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action);
+
+        /// <summary>
+        /// Registers each matching concrete type according to their <see cref="ServiceDescriptorAttribute"/>.
+        /// </summary>
+        IImplementationTypeSelector UsingAttributes();
     }
 }

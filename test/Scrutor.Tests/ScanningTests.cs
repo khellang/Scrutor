@@ -93,7 +93,8 @@ namespace Scrutor.Tests
             };
 
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddFromAttributes(t => t.AssignableToAny(interfaces)));
+                .AddClasses(t => t.AssignableToAny(interfaces))
+                    .UsingAttributes());
 
             Assert.Equal(4, Collection.Count);
 
@@ -108,7 +109,8 @@ namespace Scrutor.Tests
         public void CanFilterAttributeTypes()
         {
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddFromAttributes(t => t.AssignableTo<ITransientService>()));
+                .AddClasses(t => t.AssignableTo<ITransientService>())
+                    .UsingAttributes());
 
             Assert.Equal(Collection.Count, 1);
 
@@ -126,9 +128,10 @@ namespace Scrutor.Tests
 
             var ex = Assert.Throws<InvalidOperationException>(() =>
                 collection.Scan(scan => scan.FromAssemblyOf<IWrongInheritanceA>()
-                    .AddFromAttributes()));
+                    .AddClasses()
+                        .UsingAttributes()));
 
-            Assert.Equal("Type \"Scrutor.Tests.WrongInheritance\" does not inherit or implement \"$Scrutor.Tests.IWrongInheritanceA\".", ex.Message);
+            Assert.Equal($@"Type ""Scrutor.Tests.WrongInheritance"" is not assignable to ""$Scrutor.Tests.IWrongInheritanceA"".", ex.Message);
         }
 
         [Fact]
@@ -138,16 +141,18 @@ namespace Scrutor.Tests
 
             var ex = Assert.Throws<InvalidOperationException>(() =>
                 collection.Scan(scan => scan.FromAssemblyOf<IDuplicateInheritance>()
-                    .AddFromAttributes(t => t.AssignableTo<IDuplicateInheritance>())));
+                    .AddClasses(t => t.AssignableTo<IDuplicateInheritance>())
+                        .UsingAttributes()));
 
-            Assert.Equal("Type \"Scrutor.Tests.DuplicateInheritance\" has multiple ServiceDescriptors specified with the same service type.", ex.Message);
+            Assert.Equal("Type \"Scrutor.Tests.DuplicateInheritance\" has multiple ServiceDescriptor attributes with the same service type.", ex.Message);
         }
 
         [Fact]
         public void CanHandleMultipleAttributes()
         {
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientServiceToCombine>()
-                .AddFromAttributes(t => t.AssignableTo<ITransientServiceToCombine>()));
+                .AddClasses(t => t.AssignableTo<ITransientServiceToCombine>())
+                    .UsingAttributes());
 
             var transientService = Collection.GetDescriptor<ITransientServiceToCombine>();
 

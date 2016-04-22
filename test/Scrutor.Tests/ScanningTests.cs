@@ -144,7 +144,7 @@ namespace Scrutor.Tests
                     .AddClasses(t => t.AssignableTo<IDuplicateInheritance>())
                         .UsingAttributes()));
 
-            Assert.Equal("Type \"Scrutor.Tests.DuplicateInheritance\" has multiple ServiceDescriptor attributes with the same service type.", ex.Message);
+            Assert.Equal($@"Type ""Scrutor.Tests.DuplicateInheritance"" has multiple ServiceDescriptor attributes with the same service type.", ex.Message);
         }
 
         [Fact]

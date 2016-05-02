@@ -134,7 +134,7 @@ namespace Scrutor.Tests
             };
 
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(t => t.AssignableToAny(types))
+                .AddClasses(t => t.AssignableTo<DefaultAttributes>())
                     .UsingAttributes());
 
             Assert.Equal(5, Collection.Count);

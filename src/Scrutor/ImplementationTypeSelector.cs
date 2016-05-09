@@ -84,11 +84,7 @@ namespace Scrutor
 
         public IServiceTypeSelector AddClasses(bool publicOnly)
         {
-            var selector = new ServiceTypeSelector(this, GetNonAbstractClasses(publicOnly));
-
-            Selectors.Add(selector);
-
-            return selector;
+            return AddSelector(GetNonAbstractClasses(publicOnly));
         }
 
         public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action)
@@ -107,11 +103,7 @@ namespace Scrutor
 
             action(filter);
 
-            var selector = new ServiceTypeSelector(this, filter.Types);
-
-            Selectors.Add(selector);
-
-            return selector;
+            return AddSelector(filter.Types);
         }
 
         void ISelector.Populate(IServiceCollection services)
@@ -125,6 +117,15 @@ namespace Scrutor
             {
                 selector.Populate(services);
             }
+        }
+
+        private IServiceTypeSelector AddSelector(IEnumerable<Type> types)
+        {
+            var selector = new ServiceTypeSelector(this, types);
+
+            Selectors.Add(selector);
+
+            return selector;
         }
 
         private IEnumerable<Type> GetNonAbstractClasses(bool publicOnly)

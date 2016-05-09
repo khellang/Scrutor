@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Scrutor.Tests;
 using System;
+using System.Linq;
 using Xunit;
 
 namespace Scrutor.Tests
@@ -122,6 +123,28 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void CanCreateDefault()
+        {
+            var types = new[]
+            {
+                typeof(IDefault1),
+                typeof(IDefault2),
+                typeof(IDefault3),
+                typeof(Default3)
+            };
+
+            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
+                .AddClasses(t => t.AssignableTo<DefaultAttributes>())
+                    .UsingAttributes());
+
+            Assert.Equal(5, Collection.Count);
+            var remainingSetOfTypes = Collection.Select(descriptor => descriptor.ServiceType)
+                .Except(types.Concat(new[] {typeof(DefaultAttributes)}));
+            Assert.Equal(0, remainingSetOfTypes.Count());
+
+        }
+
+        [Fact]
         public void ThrowsOnWrongInheritance()
         {
             var collection = new ServiceCollection();
@@ -144,7 +167,7 @@ namespace Scrutor.Tests
                     .AddClasses(t => t.AssignableTo<IDuplicateInheritance>())
                         .UsingAttributes()));
 
-            Assert.Equal("Type \"Scrutor.Tests.DuplicateInheritance\" has multiple ServiceDescriptor attributes with the same service type.", ex.Message);
+            Assert.Equal($@"Type ""Scrutor.Tests.DuplicateInheritance"" has multiple ServiceDescriptor attributes with the same service type.", ex.Message);
         }
 
         [Fact]
@@ -270,6 +293,17 @@ namespace Scrutor.Tests
     [ServiceDescriptor(typeof(IDuplicateInheritance))]
     [ServiceDescriptor(typeof(IDuplicateInheritance))]
     public class DuplicateInheritance : IDuplicateInheritance, IOtherInheritance { }
+    
+    public interface IDefault1 {}
+
+    public interface IDefault2 {}
+
+    public interface IDefault3 {}
+
+    public interface Default3 : IDefault3 { }
+
+    [ServiceDescriptor]
+    public class DefaultAttributes : Default3, IDefault1, IDefault2 {}
 }
 
 namespace UnwantedNamespace

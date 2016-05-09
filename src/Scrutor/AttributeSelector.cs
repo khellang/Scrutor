@@ -58,14 +58,19 @@ namespace Scrutor
 
             if (serviceType == null)
             {
-                var typeInfo = type.GetTypeInfo();
                 yield return type;
+
+                var typeInfo = type.GetTypeInfo();
+
                 foreach (var implementedInterface in typeInfo.ImplementedInterfaces)
                 {
                     yield return implementedInterface;
                 }
-                if(typeInfo.BaseType != null && typeInfo.BaseType != typeof(object))
+
+                if (typeInfo.BaseType != null && typeInfo.BaseType != typeof(object))
+                {
                     yield return typeInfo.BaseType;
+                }
 
                 yield break;
             }

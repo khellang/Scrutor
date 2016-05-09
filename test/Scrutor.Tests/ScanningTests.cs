@@ -129,19 +129,21 @@ namespace Scrutor.Tests
             {
                 typeof(IDefault1),
                 typeof(IDefault2),
-                typeof(IDefault3),
-                typeof(Default3)
+                typeof(IDefault3Level1),
+                typeof(IDefault3Level2)
             };
 
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
                 .AddClasses(t => t.AssignableTo<DefaultAttributes>())
                     .UsingAttributes());
 
-            Assert.Equal(5, Collection.Count);
-            var remainingSetOfTypes = Collection.Select(descriptor => descriptor.ServiceType)
-                .Except(types.Concat(new[] {typeof(DefaultAttributes)}));
-            Assert.Equal(0, remainingSetOfTypes.Count());
+            var remainingSetOfTypes = Collection
+                .Select(descriptor => descriptor.ServiceType)
+                .Except(types.Concat(new[] { typeof(DefaultAttributes) }))
+                .ToList();
 
+            Assert.Equal(5, Collection.Count);
+            Assert.Equal(0, remainingSetOfTypes.Count);
         }
 
         [Fact]
@@ -154,7 +156,7 @@ namespace Scrutor.Tests
                     .AddClasses()
                         .UsingAttributes()));
 
-            Assert.Equal($@"Type ""Scrutor.Tests.WrongInheritance"" is not assignable to ""$Scrutor.Tests.IWrongInheritanceA"".", ex.Message);
+            Assert.Equal(@"Type ""Scrutor.Tests.WrongInheritance"" is not assignable to ""$Scrutor.Tests.IWrongInheritanceA"".", ex.Message);
         }
 
         [Fact]
@@ -167,7 +169,7 @@ namespace Scrutor.Tests
                     .AddClasses(t => t.AssignableTo<IDuplicateInheritance>())
                         .UsingAttributes()));
 
-            Assert.Equal($@"Type ""Scrutor.Tests.DuplicateInheritance"" has multiple ServiceDescriptor attributes with the same service type.", ex.Message);
+            Assert.Equal(@"Type ""Scrutor.Tests.DuplicateInheritance"" has multiple ServiceDescriptor attributes with the same service type.", ex.Message);
         }
 
         [Fact]
@@ -294,16 +296,16 @@ namespace Scrutor.Tests
     [ServiceDescriptor(typeof(IDuplicateInheritance))]
     public class DuplicateInheritance : IDuplicateInheritance, IOtherInheritance { }
     
-    public interface IDefault1 {}
+    public interface IDefault1 { }
 
-    public interface IDefault2 {}
+    public interface IDefault2 { }
 
-    public interface IDefault3 {}
+    public interface IDefault3Level1 { }
 
-    public interface Default3 : IDefault3 { }
+    public interface IDefault3Level2 : IDefault3Level1 { }
 
     [ServiceDescriptor]
-    public class DefaultAttributes : Default3, IDefault1, IDefault2 {}
+    public class DefaultAttributes : IDefault3Level2, IDefault1, IDefault2 { }
 }
 
 namespace UnwantedNamespace

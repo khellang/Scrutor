@@ -10,7 +10,6 @@ namespace Scrutor
         /// Will scan for types from the assembly of type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type in which assembly that should be scanned.</typeparam>
-        /// <exception cref="ArgumentNullException">If the <paramref name="types"/> argument is <c>null</c>.</exception>
         IImplementationTypeSelector FromAssemblyOf<T>();
 
         /// <summary>

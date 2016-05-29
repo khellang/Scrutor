@@ -1,30 +1,30 @@
 ﻿{
-    "version": "1.6.0-*",
+  "version": "1.6.0-*",
 
-    "description": "Register services using assembly scanning and a fluent API.",
-    "authors": [ "Kristian Hellang" ],
-    "tags": [ "Dependency", "Injection", "DI", "Scanning" ],
+  "authors": [ "Kristian Hellang" ],
+  "description": "Register services using assembly scanning and a fluent API.",
+
+  "packOptions": {
+    "tags": ["Dependency", "Injection", "DI", "Scanning"],
     "projectUrl": "https://github.com/khellang/Scrutor",
-    "licenseUrl": "https://raw.githubusercontent.com/khellang/Scrutor/master/LICENSE",
+    "licenseUrl": "https://raw.githubusercontent.com/khellang/Scrutor/master/LICENSE"
+  },
 
-    "compilationOptions": {
-        "nowarn": [ "CS1591" ],
-        "warningsAsErrors": true,
-        "xmlDoc": true
-    },
+  "buildOptions": {
+    "nowarn": ["CS1591"],
+    "warningsAsErrors": true,
+    "xmlDoc": true
+  },
 
-    "dependencies": {
-        "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc1-final"
-    },
+  "dependencies": {
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-final"
+  },
 
-    "frameworks": {
-        "net451": { },
-        "netcore50": { },
-        "dotnet5.4": {
-            "dependencies": {
-                "System.Reflection.Extensions": "4.0.1-beta-23516",
-                "System.Reflection.TypeExtensions": "4.1.0-beta-23516"
-            }
-        }
+  "frameworks": {
+    "netstandard1.0": {
+      "dependencies": {
+        "System.Reflection.Extensions": "4.0.1-rc2-24027"
+      }
     }
+  }
 }

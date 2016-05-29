@@ -54,13 +54,13 @@ namespace Scrutor
 
         private static IEnumerable<Type> GetServiceTypes(Type type, ServiceDescriptorAttribute attribute)
         {
+            var typeInfo = type.GetTypeInfo();
+
             var serviceType = attribute.ServiceType;
 
             if (serviceType == null)
             {
                 yield return type;
-
-                var typeInfo = type.GetTypeInfo();
 
                 foreach (var implementedInterface in typeInfo.ImplementedInterfaces)
                 {
@@ -75,9 +75,11 @@ namespace Scrutor
                 yield break;
             }
 
-            if (!serviceType.IsAssignableFrom(type))
+            var serviceTypeInfo = serviceType.GetTypeInfo();
+
+            if (!serviceTypeInfo.IsAssignableFrom(typeInfo))
             {
-                throw new InvalidOperationException($@"Type ""{type.FullName}"" is not assignable to ""${serviceType.FullName}"".");
+                throw new InvalidOperationException($@"Type ""{typeInfo.FullName}"" is not assignable to ""${serviceTypeInfo.FullName}"".");
             }
 
             yield return serviceType;

@@ -52,7 +52,7 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(assemblies));
             }
 
-            return AddSelector(assemblies.SelectMany(asm => asm.GetTypes()));
+            return AddSelector(assemblies.SelectMany(asm => asm.DefinedTypes.Select(x => x.AsType())));
         }
 
         void ISelector.Populate(IServiceCollection services)

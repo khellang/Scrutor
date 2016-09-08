@@ -1,5 +1,5 @@
 ﻿{
-    "version": "1.8.0-*",
+    "version": "1.9.0-*",
 
     "authors": ["Kristian Hellang"],
     "description": "Register services using assembly scanning and a fluent API.",

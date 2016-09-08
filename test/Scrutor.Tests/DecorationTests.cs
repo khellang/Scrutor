@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Scrutor.Tests
@@ -39,6 +41,24 @@ namespace Scrutor.Tests
             var outerDecorator = Assert.IsType<Decorator>(decorator.Inner);
 
             Assert.IsType<Decorated>(outerDecorator.Inner);
+        }
+
+        [Fact]
+        public void CanDecorateDifferentServices()
+        {
+            Collection.AddSingleton<IDecoratedService, Decorated>();
+            Collection.AddSingleton<IDecoratedService, OtherDecorated>();
+
+            Collection.Decorate<IDecoratedService>(inner => new Decorator(inner));
+
+            var provider = Collection.BuildServiceProvider();
+
+            var instances = provider
+                .GetRequiredService<IEnumerable<IDecoratedService>>()
+                .ToArray();
+
+            Assert.Equal(2, instances.Length);
+            Assert.All(instances, x => Assert.IsType<Decorator>(x));
         }
 
         [Fact]
@@ -121,5 +141,7 @@ namespace Scrutor.Tests
 
             public IService InjectedService { get; }
         }
+
+        public class OtherDecorated : IDecoratedService { }
     }
 }

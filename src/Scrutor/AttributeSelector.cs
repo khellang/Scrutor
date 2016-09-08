@@ -29,9 +29,7 @@ namespace Scrutor
                 var attributes = typeInfo.GetCustomAttributes<ServiceDescriptorAttribute>().ToArray();
 
                 // Check if the type has multiple attributes with same ServiceType.
-                var duplicates = attributes
-                    .GroupBy(s => s.ServiceType)
-                    .SelectMany(grp => grp.Skip(1));
+                var duplicates = GetDuplicates(attributes);
 
                 if (duplicates.Any())
                 {
@@ -40,7 +38,7 @@ namespace Scrutor
 
                 foreach (var attribute in attributes)
                 {
-                    var serviceTypes = GetServiceTypes(type, attribute);
+                    var serviceTypes = attribute.GetServiceTypes(type);
 
                     foreach (var serviceType in serviceTypes)
                     {
@@ -52,37 +50,9 @@ namespace Scrutor
             }
         }
 
-        private static IEnumerable<Type> GetServiceTypes(Type type, ServiceDescriptorAttribute attribute)
+        private static IEnumerable<ServiceDescriptorAttribute> GetDuplicates(IEnumerable<ServiceDescriptorAttribute> attributes)
         {
-            var typeInfo = type.GetTypeInfo();
-
-            var serviceType = attribute.ServiceType;
-
-            if (serviceType == null)
-            {
-                yield return type;
-
-                foreach (var implementedInterface in typeInfo.ImplementedInterfaces)
-                {
-                    yield return implementedInterface;
-                }
-
-                if (typeInfo.BaseType != null && typeInfo.BaseType != typeof(object))
-                {
-                    yield return typeInfo.BaseType;
-                }
-
-                yield break;
-            }
-
-            var serviceTypeInfo = serviceType.GetTypeInfo();
-
-            if (!serviceTypeInfo.IsAssignableFrom(typeInfo))
-            {
-                throw new InvalidOperationException($@"Type ""{typeInfo.FullName}"" is not assignable to ""${serviceTypeInfo.FullName}"".");
-            }
-
-            yield return serviceType;
+            return attributes.GroupBy(s => s.ServiceType).SelectMany(grp => grp.Skip(1));
         }
     }
 }

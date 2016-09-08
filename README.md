@@ -60,9 +60,9 @@ collection.Decorate<IDecoratedService>(inner => new Decorator(inner));
 // As you can see, OtherDecorator requires a separate service, IService. We can get that from the provider argument.
 collection.Decorate<IDecoratedService>((inner, provider) => new OtherDecorator(inner, provider.GetRequiredService<IService>()));
 
-var provider = collection.BuildServiceProvider();
+var serviceProvider = collection.BuildServiceProvider();
 
 // When we resolve the IDecoratedService service, we'll get the following structure:
 // OtherDecorator -> Decorator -> Decorated
-var instance = provider.GetRequiredService<IDecoratedService>();
+var instance = serviceProvider.GetRequiredService<IDecoratedService>();
 ```

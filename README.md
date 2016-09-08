@@ -3,7 +3,7 @@
 > Scrutor - I search or examine thoroughly; I probe, investigate or scrutinize  
 > From scrūta, as the original sense of the verb was to search through trash. - https://en.wiktionary.org/wiki/scrutor
 
-Assembly scanning extensions for Microsoft.Extensions.DependencyInjection
+Assembly scanning and decoration extensions for Microsoft.Extensions.DependencyInjection
 
 ## Installation
 
@@ -11,9 +11,14 @@ Install the [Scrutor NuGet Package](https://www.nuget.org/packages/Scrutor).
 
 ## Usage
 
-The library adds a single extension method, `Scan`, to `IServiceCollection`. This is the entry point to set up your assembly scanning.
+The library adds a two extension methods to `IServiceCollection`:
 
-### Example
+ - `Scan` - This is the entry point to set up your assembly scanning.
+ - `Decorate` - This method is used to decorate already registered services.
+
+## Examples
+
+### Scanning
 
 ```csharp
 var collection = new ServiceCollection();
@@ -38,4 +43,26 @@ collection.Scan(scan => scan
             .As<IScopedService>()
             // And again, just specify the lifetime.
             .WithScopedLifetime());
+```
+
+### Decoration
+
+```csharp
+var collection = new ServiceCollection();
+
+// First, add our service to the collection.
+collection.AddSingleton<IDecoratedService, Decorated>();
+
+// Then, decorate Decorated with the Decorator type.
+collection.Decorate<IDecoratedService>(inner => new Decorator(inner));
+
+// Finally, decorate Decorator with the OtherDecorator type.
+// As you can see, OtherDecorator requires a separate service, IService. We can get that from the provider argument.
+collection.Decorate<IDecoratedService>((inner, provider) => new OtherDecorator(inner, provider.GetRequiredService<IService>()));
+
+var provider = collection.BuildServiceProvider();
+
+// When we resolve the IDecoratedService service, we'll get the following structure:
+// OtherDecorator -> Decorator -> Decorated
+var instance = provider.GetRequiredService<IDecoratedService>();
 ```

@@ -1,22 +1,22 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using System.Linq;
 
 namespace Scrutor.Tests
 {
     public class DecorationTests
     {
-        private IServiceCollection Collection { get; } = new ServiceCollection();
-
         [Fact]
         public void CanDecorateType()
         {
-            Collection.AddSingleton<IDecoratedService, Decorated>();
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<IDecoratedService, Decorated>();
 
-            Collection.Decorate<IDecoratedService>(inner => new Decorator(inner));
-
-            var provider = Collection.BuildServiceProvider();
+                services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+            });
 
             var instance = provider.GetRequiredService<IDecoratedService>();
 
@@ -28,12 +28,13 @@ namespace Scrutor.Tests
         [Fact]
         public void CanDecorateMultipleLevels()
         {
-            Collection.AddSingleton<IDecoratedService, Decorated>();
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<IDecoratedService, Decorated>();
 
-            Collection.Decorate<IDecoratedService>(inner => new Decorator(inner));
-            Collection.Decorate<IDecoratedService>(inner => new Decorator(inner));
-
-            var provider = Collection.BuildServiceProvider();
+                services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+                services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+            });
 
             var instance = provider.GetRequiredService<IDecoratedService>();
 
@@ -46,12 +47,13 @@ namespace Scrutor.Tests
         [Fact]
         public void CanDecorateDifferentServices()
         {
-            Collection.AddSingleton<IDecoratedService, Decorated>();
-            Collection.AddSingleton<IDecoratedService, OtherDecorated>();
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<IDecoratedService, Decorated>();
+                services.AddSingleton<IDecoratedService, OtherDecorated>();
 
-            Collection.Decorate<IDecoratedService>(inner => new Decorator(inner));
-
-            var provider = Collection.BuildServiceProvider();
+                services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+            });
 
             var instances = provider
                 .GetRequiredService<IEnumerable<IDecoratedService>>()
@@ -64,11 +66,13 @@ namespace Scrutor.Tests
         [Fact]
         public void ShouldReplaceExistingServiceDescriptor()
         {
-            Collection.AddSingleton<IDecoratedService, Decorated>();
+            var services = new ServiceCollection();
 
-            Collection.Decorate<IDecoratedService>(inner => new Decorator(inner));
+            services.AddSingleton<IDecoratedService, Decorated>();
 
-            var descriptor = Collection.GetDescriptor<IDecoratedService>();
+            services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+
+            var descriptor = services.GetDescriptor<IDecoratedService>();
 
             Assert.Equal(typeof(IDecoratedService), descriptor.ServiceType);
             Assert.NotNull(descriptor.ImplementationFactory);
@@ -77,12 +81,13 @@ namespace Scrutor.Tests
         [Fact]
         public void CanInjectServicesIntoDecoratedType()
         {
-            Collection.AddSingleton<IService, SomeRandomService>();
-            Collection.AddSingleton<IDecoratedService, Decorated>();
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<IService, SomeRandomService>();
+                services.AddSingleton<IDecoratedService, Decorated>();
 
-            Collection.Decorate<IDecoratedService>(inner => new Decorator(inner));
-
-            var provider = Collection.BuildServiceProvider();
+                services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+            });
 
             var validator = provider.GetRequiredService<IService>();
 
@@ -97,12 +102,18 @@ namespace Scrutor.Tests
         [Fact]
         public void CanInjectServicesIntoDecoratingType()
         {
-            Collection.AddSingleton<IService, SomeRandomService>();
-            Collection.AddSingleton<IDecoratedService, Decorated>();
+            var serviceProvider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<IService, SomeRandomService>();
+                services.AddSingleton<IDecoratedService, Decorated>();
 
-            Collection.Decorate<IDecoratedService>((inner, provider) => new Decorator(inner, provider.GetRequiredService<IService>()));
+                services.Decorate<IDecoratedService>((inner, provider) =>
+                {
+                    var service = provider.GetRequiredService<IService>();
 
-            var serviceProvider = Collection.BuildServiceProvider();
+                    return new Decorator(inner, service);
+                });
+            });
 
             var validator = serviceProvider.GetRequiredService<IService>();
 
@@ -111,6 +122,15 @@ namespace Scrutor.Tests
             var decorator = Assert.IsType<Decorator>(instance);
 
             Assert.Same(validator, decorator.InjectedService);
+        }
+
+        private static IServiceProvider ConfigureProvider(Action<IServiceCollection> configure)
+        {
+            var services = new ServiceCollection();
+
+            configure(services);
+
+            return services.BuildServiceProvider();
         }
 
         public interface IDecoratedService { }

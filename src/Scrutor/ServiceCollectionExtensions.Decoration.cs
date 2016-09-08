@@ -28,21 +28,7 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(decorator));
             }
 
-            var descriptors = services.GetDescriptors<TService>();
-
-            foreach (var descriptor in descriptors)
-            {
-                var index = services.IndexOf(descriptor);
-
-                var decoratedDescriptor = descriptor.Decorate(decorator);
-
-                // To avoid reordering descriptors, in case a specific order is expected.
-                services.Insert(index, decoratedDescriptor);
-
-                services.Remove(descriptor);
-            }
-
-            return services;
+            return services.DecorateDescriptors<TService>(x => x.Decorate(decorator));
         }
 
         /// <summary>
@@ -67,16 +53,19 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(decorator));
             }
 
+            return services.DecorateDescriptors<TService>(x => x.Decorate(decorator));
+        }
+
+        private static IServiceCollection DecorateDescriptors<TService>(this IServiceCollection services, Func<ServiceDescriptor, ServiceDescriptor> decorator)
+        {
             var descriptors = services.GetDescriptors<TService>();
 
             foreach (var descriptor in descriptors)
             {
                 var index = services.IndexOf(descriptor);
 
-                var decoratedDescriptor = descriptor.Decorate(decorator);
-
                 // To avoid reordering descriptors, in case a specific order is expected.
-                services.Insert(index, decoratedDescriptor);
+                services.Insert(index, decorator(descriptor));
 
                 services.Remove(descriptor);
             }

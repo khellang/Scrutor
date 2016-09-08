@@ -32,6 +32,11 @@ namespace Scrutor
 
                 foreach (var type in fallbackTypes)
                 {
+                    if (type == typeof(object))
+                    {
+                        continue;
+                    }
+
                     yield return type;
                 }
             }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
-using System.Linq;
 
 namespace Scrutor
 {
@@ -33,7 +32,14 @@ namespace Scrutor
 
             foreach (var descriptor in descriptors)
             {
-                services.Replace(descriptor.Decorate(decorator));
+                var index = services.IndexOf(descriptor);
+
+                var decoratedDescriptor = descriptor.Decorate(decorator);
+
+                // To avoid reordering descriptors, in case a specific order is expected.
+                services.Insert(index, decoratedDescriptor);
+
+                services.Remove(descriptor);
             }
 
             return services;
@@ -65,7 +71,14 @@ namespace Scrutor
 
             foreach (var descriptor in descriptors)
             {
-                services.Replace(descriptor.Decorate(decorator));
+                var index = services.IndexOf(descriptor);
+
+                var decoratedDescriptor = descriptor.Decorate(decorator);
+
+                // To avoid reordering descriptors, in case a specific order is expected.
+                services.Insert(index, decoratedDescriptor);
+
+                services.Remove(descriptor);
             }
 
             return services;
@@ -93,12 +106,12 @@ namespace Scrutor
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)
         {
-            return descriptor.WithFactory(provider => decorator((TService)descriptor.GetInstance(provider), provider));
+            return descriptor.WithFactory(provider => decorator((TService) descriptor.GetInstance(provider), provider));
         }
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator)
         {
-            return descriptor.WithFactory(provider => decorator((TService)descriptor.GetInstance(provider)));
+            return descriptor.WithFactory(provider => decorator((TService) descriptor.GetInstance(provider)));
         }
 
         private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object> factory)
@@ -124,20 +137,6 @@ namespace Scrutor
         private static object GetServiceOrCreateInstance(this IServiceProvider provider, Type type)
         {
             return ActivatorUtilities.GetServiceOrCreateInstance(provider, type);
-        }
-
-        private static IServiceCollection Replace(this IServiceCollection collection, ServiceDescriptor descriptor)
-        {
-            var registeredServiceDescriptor = collection.FirstOrDefault(s => s.ServiceType == descriptor.ServiceType);
-
-            if (registeredServiceDescriptor != null)
-            {
-                collection.Remove(registeredServiceDescriptor);
-            }
-
-            collection.Add(descriptor);
-
-            return collection;
         }
     }
 }

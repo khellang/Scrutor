@@ -10,11 +10,13 @@ namespace Scrutor
     {
         private List<ISelector> Selectors { get; } = new List<ISelector>();
 
+        /// <inheritdoc />
         public IImplementationTypeSelector FromAssemblyOf<T>()
         {
             return FromAssembliesOf(typeof(T));
         }
 
+        /// <inheritdoc />
         public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
         {
             if (types == null)
@@ -25,6 +27,7 @@ namespace Scrutor
             return FromAssembliesOf(types.AsEnumerable());
         }
 
+        /// <inheritdoc />
         public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
         {
             if (types == null)
@@ -35,6 +38,7 @@ namespace Scrutor
             return FromAssemblies(types.Select(t => t.GetTypeInfo().Assembly));
         }
 
+        /// <inheritdoc />
         public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
         {
             if (assemblies == null)
@@ -45,6 +49,7 @@ namespace Scrutor
             return FromAssemblies(assemblies.AsEnumerable());
         }
 
+        /// <inheritdoc />
         public IImplementationTypeSelector FromAssemblies(IEnumerable<Assembly> assemblies)
         {
             if (assemblies == null)

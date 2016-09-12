@@ -15,7 +15,7 @@ namespace Scrutor.Tests
             {
                 services.AddSingleton<IDecoratedService, Decorated>();
 
-                services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+                services.Decorate<IDecoratedService, Decorator>();
             });
 
             var instance = provider.GetRequiredService<IDecoratedService>();
@@ -32,8 +32,8 @@ namespace Scrutor.Tests
             {
                 services.AddSingleton<IDecoratedService, Decorated>();
 
-                services.Decorate<IDecoratedService>(inner => new Decorator(inner));
-                services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+                services.Decorate<IDecoratedService, Decorator>();
+                services.Decorate<IDecoratedService, Decorator>();
             });
 
             var instance = provider.GetRequiredService<IDecoratedService>();
@@ -52,7 +52,7 @@ namespace Scrutor.Tests
                 services.AddSingleton<IDecoratedService, Decorated>();
                 services.AddSingleton<IDecoratedService, OtherDecorated>();
 
-                services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+                services.Decorate<IDecoratedService, Decorator>();
             });
 
             var instances = provider
@@ -70,7 +70,7 @@ namespace Scrutor.Tests
 
             services.AddSingleton<IDecoratedService, Decorated>();
 
-            services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+            services.Decorate<IDecoratedService, Decorator>();
 
             var descriptor = services.GetDescriptor<IDecoratedService>();
 
@@ -86,7 +86,7 @@ namespace Scrutor.Tests
                 services.AddSingleton<IService, SomeRandomService>();
                 services.AddSingleton<IDecoratedService, Decorated>();
 
-                services.Decorate<IDecoratedService>(inner => new Decorator(inner));
+                services.Decorate<IDecoratedService, Decorator>();
             });
 
             var validator = provider.GetRequiredService<IService>();
@@ -107,12 +107,7 @@ namespace Scrutor.Tests
                 services.AddSingleton<IService, SomeRandomService>();
                 services.AddSingleton<IDecoratedService, Decorated>();
 
-                services.Decorate<IDecoratedService>((inner, provider) =>
-                {
-                    var service = provider.GetRequiredService<IService>();
-
-                    return new Decorator(inner, service);
-                });
+                services.Decorate<IDecoratedService, Decorator>();
             });
 
             var validator = serviceProvider.GetRequiredService<IService>();
@@ -135,7 +130,7 @@ namespace Scrutor.Tests
 
         public interface IDecoratedService { }
 
-        public interface IService {}
+        public interface IService { }
 
         private class SomeRandomService : IService { }
 

@@ -54,7 +54,7 @@ var collection = new ServiceCollection();
 collection.AddSingleton<IDecoratedService, Decorated>();
 
 // Then, decorate Decorated with the Decorator type.
-collection.Decorate<IDecoratedService>(inner => new Decorator(inner));
+collection.Decorate<IDecoratedService, Decorator>();
 
 // Finally, decorate Decorator with the OtherDecorator type.
 // As you can see, OtherDecorator requires a separate service, IService. We can get that from the provider argument.

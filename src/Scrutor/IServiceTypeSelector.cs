@@ -37,23 +37,23 @@ namespace Scrutor
         ILifetimeSelector AsImplementedInterfaces();
 
         /// <summary>
+        /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName)
+        /// </summary>
+        ILifetimeSelector AsMatchingInterface();
+
+        /// <summary>
+        /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName)
+        /// </summary>
+        /// <param name="action">Filter for matching the Type to an implementing interface</param>
+        ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action);
+
+        /// <summary>
         /// Registers each matching concrete type as each of the types returned
         /// from the <paramref name="selector"/> function.
         /// </summary>
         /// <param name="selector">A function to select service types based on implementation types.</param>
         /// <exception cref="ArgumentNullException">If the <paramref name="selector"/> argument is <c>null</c>.</exception>
         ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector);
-
-        /// <summary>
-        /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName)
-        /// </summary>
-        ILifetimeSelector AsMatchingInterface();
-
-        /// <summary>
-        /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName) 
-        /// </summary>
-        /// <param name="action">Filter for matching the Type to an implementing interface</param>
-        ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action);
 
         /// <summary>
         /// Registers each matching concrete type according to their <see cref="ServiceDescriptorAttribute"/>.

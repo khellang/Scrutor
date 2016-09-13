@@ -53,6 +53,18 @@ namespace Scrutor
         }
 
         /// <inheritdoc />
+        public ILifetimeSelector AsMatchingInterface()
+        {
+            return AsMatchingInterface(null);
+        }
+
+        /// <inheritdoc />
+        public ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action)
+        {
+            return AsTypeInfo(t => t.FindMatchingInterface(action));
+        }
+
+        /// <inheritdoc />
         public ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector)
         {
             if (selector == null)
@@ -61,6 +73,16 @@ namespace Scrutor
             }
 
             return AddSelector(Types.Select(t => new TypeMap(t, selector(t))));
+        }
+
+        /// <inheritdoc />
+        public IImplementationTypeSelector UsingAttributes()
+        {
+            var selector = new AttributeSelector(Types);
+
+            Selectors.Add(selector);
+
+            return this;
         }
 
         void ISelector.Populate(IServiceCollection services)
@@ -93,28 +115,6 @@ namespace Scrutor
         private ILifetimeSelector AsTypeInfo(Func<TypeInfo, IEnumerable<Type>> selector)
         {
             return As(t => selector(t.GetTypeInfo()));
-        }
-
-        /// <inheritdoc />
-        public ILifetimeSelector AsMatchingInterface()
-        {
-            return AsMatchingInterface(null);
-        }
-
-        /// <inheritdoc />
-        public ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action)
-        {
-            return AsTypeInfo(t => t.FindMatchingInterface(action));
-        }
-
-        /// <inheritdoc />
-        public IImplementationTypeSelector UsingAttributes()
-        {
-            var selector = new AttributeSelector(Types);
-
-            Selectors.Add(selector);
-
-            return this;
         }
     }
 }

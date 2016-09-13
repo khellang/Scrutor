@@ -1,50 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor
 {
-    internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelector
+    internal class ImplementationTypeSelector : AssemblySelector, IImplementationTypeSelector, ISelector
     {
-        public ImplementationTypeSelector(IAssemblySelector assemblySelector, IEnumerable<Type> types)
+        public ImplementationTypeSelector(IEnumerable<Type> types)
         {
-            AssemblySelector = assemblySelector;
             Types = types;
-            Selectors = new List<ISelector>();
         }
 
-        private IEnumerable<Type> Types { get; }
-
-        private List<ISelector> Selectors { get; }
-
-        private IAssemblySelector AssemblySelector { get; }
-
-        public IImplementationTypeSelector FromAssemblyOf<T>()
-        {
-            return AssemblySelector.FromAssemblyOf<T>();
-        }
-
-        public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
-        {
-            return AssemblySelector.FromAssembliesOf(types);
-        }
-
-        public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
-        {
-            return AssemblySelector.FromAssembliesOf(types);
-        }
-
-        public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
-        {
-            return AssemblySelector.FromAssemblies(assemblies);
-        }
-
-        public IImplementationTypeSelector FromAssemblies(IEnumerable<Assembly> assemblies)
-        {
-            return AssemblySelector.FromAssemblies(assemblies);
-        }
+        protected IEnumerable<Type> Types { get; }
 
         public void AddFromAttributes()
         {
@@ -53,7 +21,9 @@ namespace Scrutor
 
         public void AddFromAttributes(bool publicOnly)
         {
-            Selectors.Add(new AttributeSelector(GetNonAbstractClasses(publicOnly)));
+            var classes = GetNonAbstractClasses(publicOnly);
+
+            Selectors.Add(new AttributeSelector(classes));
         }
 
         public void AddFromAttributes(Action<IImplementationTypeFilter> action)
@@ -68,7 +38,9 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(action));
             }
 
-            var filter = new ImplementationTypeFilter(GetNonAbstractClasses(publicOnly));
+            var classes = GetNonAbstractClasses(publicOnly);
+
+            var filter = new ImplementationTypeFilter(classes);
 
             action(filter);
 
@@ -84,7 +56,9 @@ namespace Scrutor
 
         public IServiceTypeSelector AddClasses(bool publicOnly)
         {
-            return AddSelector(GetNonAbstractClasses(publicOnly));
+            var classes = GetNonAbstractClasses(publicOnly);
+
+            return AddSelector(classes);
         }
 
         public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action)
@@ -99,7 +73,9 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(action));
             }
 
-            var filter = new ImplementationTypeFilter(GetNonAbstractClasses(publicOnly));
+            var classes = GetNonAbstractClasses(publicOnly);
+
+            var filter = new ImplementationTypeFilter(classes);
 
             action(filter);
 
@@ -121,7 +97,7 @@ namespace Scrutor
 
         private IServiceTypeSelector AddSelector(IEnumerable<Type> types)
         {
-            var selector = new ServiceTypeSelector(this, types);
+            var selector = new ServiceTypeSelector(types);
 
             Selectors.Add(selector);
 

@@ -8,7 +8,7 @@ namespace Scrutor
 {
     internal class AssemblySelector : IAssemblySelector, ISelector
     {
-        private List<ISelector> Selectors { get; } = new List<ISelector>();
+        protected List<ISelector> Selectors { get; } = new List<ISelector>();
 
         /// <inheritdoc />
         public IImplementationTypeSelector FromAssemblyOf<T>()
@@ -85,7 +85,7 @@ namespace Scrutor
 
         private IImplementationTypeSelector AddSelector(IEnumerable<Type> types)
         {
-            var selector = new ImplementationTypeSelector(this, types);
+            var selector = new ImplementationTypeSelector(types);
 
             Selectors.Add(selector);
 

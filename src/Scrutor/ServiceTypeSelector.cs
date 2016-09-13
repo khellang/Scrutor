@@ -6,97 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor
 {
-    internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
+    internal class ServiceTypeSelector : ImplementationTypeSelector, IServiceTypeSelector, ISelector
     {
-        public ServiceTypeSelector(IImplementationTypeSelector implementationTypeSelector, IEnumerable<Type> types)
+        public ServiceTypeSelector(IEnumerable<Type> types) : base(types)
         {
-            ImplementationTypeSelector = implementationTypeSelector;
-            Types = types;
-            Selectors = new List<ISelector>();
-        }
-
-        private IEnumerable<Type> Types { get; }
-
-        private List<ISelector> Selectors { get; }
-
-        private IImplementationTypeSelector ImplementationTypeSelector { get; }
-
-        /// <inheritdoc />
-        public IImplementationTypeSelector FromAssemblyOf<T>()
-        {
-            return ImplementationTypeSelector.FromAssemblyOf<T>();
-        }
-
-        /// <inheritdoc />
-        public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
-        {
-            return ImplementationTypeSelector.FromAssembliesOf(types);
-        }
-
-        /// <inheritdoc />
-        public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
-        {
-            return ImplementationTypeSelector.FromAssembliesOf(types);
-        }
-
-        /// <inheritdoc />
-        public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
-        {
-            return ImplementationTypeSelector.FromAssemblies(assemblies);
-        }
-
-        /// <inheritdoc />
-        public IImplementationTypeSelector FromAssemblies(IEnumerable<Assembly> assemblies)
-        {
-            return ImplementationTypeSelector.FromAssemblies(assemblies);
-        }
-
-        /// <inheritdoc />
-        public void AddFromAttributes()
-        {
-            ImplementationTypeSelector.AddClasses().UsingAttributes();
-        }
-
-        /// <inheritdoc />
-        public void AddFromAttributes(bool publicOnly)
-        {
-            ImplementationTypeSelector.AddClasses(publicOnly).UsingAttributes();
-        }
-
-        /// <inheritdoc />
-        public IServiceTypeSelector AddClasses()
-        {
-            return ImplementationTypeSelector.AddClasses();
-        }
-
-        /// <inheritdoc />
-        public IServiceTypeSelector AddClasses(bool publicOnly)
-        {
-            return ImplementationTypeSelector.AddClasses(publicOnly);
-        }
-
-        /// <inheritdoc />
-        public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action)
-        {
-            return ImplementationTypeSelector.AddClasses(action);
-        }
-
-        /// <inheritdoc />
-        public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action, bool publicOnly)
-        {
-            return ImplementationTypeSelector.AddClasses(action, publicOnly);
-        }
-
-        /// <inheritdoc />
-        public void AddFromAttributes(Action<IImplementationTypeFilter> action)
-        {
-            ImplementationTypeSelector.AddClasses(action).UsingAttributes();
-        }
-
-        /// <inheritdoc />
-        public void AddFromAttributes(Action<IImplementationTypeFilter> action, bool publicOnly)
-        {
-            ImplementationTypeSelector.AddClasses(action, publicOnly).UsingAttributes();
         }
 
         /// <inheritdoc />
@@ -170,11 +83,11 @@ namespace Scrutor
 
         private ILifetimeSelector AddSelector(IEnumerable<TypeMap> types)
         {
-            var lifetimeSelector = new LifetimeSelector(this, types);
+            var selector = new LifetimeSelector(Types, types);
 
-            Selectors.Add(lifetimeSelector);
+            Selectors.Add(selector);
 
-            return lifetimeSelector;
+            return selector;
         }
 
         private ILifetimeSelector AsTypeInfo(Func<TypeInfo, IEnumerable<Type>> selector)
@@ -201,7 +114,7 @@ namespace Scrutor
 
             Selectors.Add(selector);
 
-            return ImplementationTypeSelector;
+            return this;
         }
     }
 }

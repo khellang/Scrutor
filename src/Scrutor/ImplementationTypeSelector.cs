@@ -89,6 +89,11 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(services));
             }
 
+            if (Selectors.Count == 0)
+            {
+                AddClasses();
+            }
+
             foreach (var selector in Selectors)
             {
                 selector.Populate(services);

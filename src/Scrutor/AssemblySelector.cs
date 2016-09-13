@@ -67,7 +67,7 @@ namespace Scrutor
 
         private IImplementationTypeSelector InternalFromAssemblies(IEnumerable<Assembly> assemblies)
         {
-            return AddSelector(assemblies.SelectMany(asm => asm.DefinedTypes.Select(x => x.AsType())));
+            return AddSelector(assemblies.SelectMany(asm => asm.DefinedTypes).Select(x => x.AsType()));
         }
 
         void ISelector.Populate(IServiceCollection services)

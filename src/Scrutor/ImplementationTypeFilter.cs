@@ -45,7 +45,7 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(types));
             }
 
-            return Where(t => types.Any(type => t.IsAssignableTo(type)));
+            return Where(t => types.Any(t.IsAssignableTo));
         }
 
         public IImplementationTypeFilter WithAttribute<T>() where T : Attribute
@@ -130,7 +130,7 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(namespaces));
             }
 
-            return Where(t => namespaces.Any(ns => t.IsInNamespace(ns)));
+            return Where(t => namespaces.Any(t.IsInNamespace));
         }
 
         public IImplementationTypeFilter NotInNamespaceOf<T>()

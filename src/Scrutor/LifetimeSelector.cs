@@ -58,6 +58,11 @@ namespace Scrutor
                 {
                     var implementationType = typeMap.ImplementationType;
 
+                    if (!implementationType.IsAssignableTo(serviceType))
+                    {
+                        throw new InvalidOperationException($@"Type ""{implementationType.FullName}"" is not assignable to ""${serviceType.FullName}"".");
+                    }
+
                     var descriptor = new ServiceDescriptor(serviceType, implementationType, Lifetime.Value);
 
                     services.Add(descriptor);

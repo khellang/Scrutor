@@ -39,20 +39,20 @@ namespace Scrutor
 
                     yield return type;
                 }
+
+                yield break;
             }
-            else
+
+            var fallbackTypeInfo = fallbackType.GetTypeInfo();
+
+            var serviceTypeInfo = ServiceType.GetTypeInfo();
+
+            if (!serviceTypeInfo.IsAssignableFrom(fallbackTypeInfo))
             {
-                var fallbackTypeInfo = fallbackType.GetTypeInfo();
-
-                var serviceTypeInfo = ServiceType.GetTypeInfo();
-
-                if (!serviceTypeInfo.IsAssignableFrom(fallbackTypeInfo))
-                {
-                    throw new InvalidOperationException($@"Type ""{fallbackTypeInfo.FullName}"" is not assignable to ""${serviceTypeInfo.FullName}"".");
-                }
-
-                yield return ServiceType;
+                throw new InvalidOperationException($@"Type ""{fallbackTypeInfo.FullName}"" is not assignable to ""${serviceTypeInfo.FullName}"".");
             }
+
+            yield return ServiceType;
         }
     }
 }

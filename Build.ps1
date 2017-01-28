@@ -20,7 +20,7 @@ function Install-Dotnet
     }
 
     # Run the dotnet CLI install
-    & .\.dotnet\dotnet-install.ps1
+    & .\.dotnet\dotnet-install.ps1 -Version "1.0.0-preview2-003156"
 
     # Add the dotnet folder path to the process.
     Remove-PathVariable $env:DOTNET_INSTALL_DIR

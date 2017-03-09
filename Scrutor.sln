@@ -1,22 +1,21 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3F8D19AB-70F9-4640-BEDE-BBDA2AA4EE9D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EA96AC3B-130F-4415-9D22-0074ECF8880F}"
 	ProjectSection(SolutionItems) = preProject
 		Build.ps1 = Build.ps1
-		global.json = global.json
 		NuGet.Config = NuGet.Config
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Scrutor", "src\Scrutor\Scrutor.xproj", "{1D63DA77-E425-4FEA-BC82-94A8F6C3024E}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{34EEB067-2738-4DD0-8596-D67A9461833A}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Scrutor.Tests", "test\Scrutor.Tests\Scrutor.Tests.xproj", "{B065DC10-3AD1-462B-A90E-9BE86403243E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scrutor", "src\Scrutor\Scrutor.csproj", "{1D63DA77-E425-4FEA-BC82-94A8F6C3024E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scrutor.Tests", "test\Scrutor.Tests\Scrutor.Tests.csproj", "{B065DC10-3AD1-462B-A90E-9BE86403243E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

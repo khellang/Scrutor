@@ -18,6 +18,8 @@ namespace Scrutor.Tests
                     .AsImplementedInterfaces()
                     .WithTransientLifetime());
 
+            var provider = Collection.BuildServiceProvider();
+
             var services = Collection.GetDescriptors<ITransientService>();
 
             Assert.Equal(services, Collection);

@@ -16,11 +16,11 @@ function Install-Dotnet
     # Download the dotnet CLI install script
     if (!(Test-Path .\dotnet\install.ps1))
     {
-      Invoke-WebRequest "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0-preview2/scripts/obtain/dotnet-install.ps1" -OutFile ".\.dotnet\dotnet-install.ps1"
+      Invoke-WebRequest "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.1/scripts/obtain/dotnet-install.ps1" -OutFile ".\.dotnet\dotnet-install.ps1"
     }
 
     # Run the dotnet CLI install
-    & .\.dotnet\dotnet-install.ps1 -Version "1.0.0-preview2-003156"
+    & .\.dotnet\dotnet-install.ps1 -Version "1.0.1"
 
     # Add the dotnet folder path to the process.
     Remove-PathVariable $env:DOTNET_INSTALL_DIR
@@ -43,13 +43,13 @@ function Remove-PathVariable
 function Restore-Packages
 {
     param([string] $DirectoryName)
-    & dotnet restore -v Warning ("""" + $DirectoryName + """")
+    & dotnet restore -v minimal ("""" + $DirectoryName + """")
 }
 
 function Test-Project
 {
-    param([string] $DirectoryName)
-    & dotnet test -c Release ("""" + $DirectoryName + """")
+    param([string] $ProjectPath)
+    & dotnet test -v minimal -c Release ("""" + $ProjectPath + """")
 }
 
 ########################
@@ -62,9 +62,9 @@ Push-Location $PSScriptRoot
 Install-Dotnet
 
 # Package restore
-Get-ChildItem -Path . -Filter *.xproj -Recurse | ForEach-Object { Restore-Packages $_.DirectoryName }
+Get-ChildItem -Path . -Filter *.csproj -Recurse | ForEach-Object { Restore-Packages $_.DirectoryName }
 
 # Tests
-Get-ChildItem -Path .\test -Filter *.xproj -Recurse | ForEach-Object { Test-Project $_.DirectoryName }
+Get-ChildItem -Path .\test -Filter *.csproj -Recurse | ForEach-Object { Test-Project $_.FullName }
 
 Pop-Location

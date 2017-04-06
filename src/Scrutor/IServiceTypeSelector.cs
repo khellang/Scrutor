@@ -59,5 +59,9 @@ namespace Scrutor
         /// Registers each matching concrete type according to their <see cref="ServiceDescriptorAttribute"/>.
         /// </summary>
         IImplementationTypeSelector UsingAttributes();
+
+        IServiceTypeSelector UseTryAdd();
+
+        IServiceTypeSelector ReplaceServiceTypes();
     }
 }

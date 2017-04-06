@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Scrutor
 {
@@ -15,7 +16,7 @@ namespace Scrutor
 
         private IEnumerable<Type> Types { get; }
 
-        void ISelector.Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services, SelectorOptions options)
         {
             if (services == null)
             {
@@ -44,7 +45,7 @@ namespace Scrutor
                     {
                         var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
 
-                        services.Add(descriptor);
+                        options.ApplyType(services, descriptor);
                     }
                 }
             }

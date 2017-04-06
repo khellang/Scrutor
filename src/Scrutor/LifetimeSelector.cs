@@ -40,7 +40,7 @@ namespace Scrutor
             return this;
         }
 
-        void ISelector.Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services, SelectorOptions options)
         {
             if (services == null)
             {
@@ -64,8 +64,8 @@ namespace Scrutor
                     }
 
                     var descriptor = new ServiceDescriptor(serviceType, implementationType, Lifetime.Value);
-
-                    services.Add(descriptor);
+                    
+                    options.ApplyType(services, descriptor);
                 }
             }
         }

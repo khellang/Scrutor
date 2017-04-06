@@ -70,7 +70,7 @@ namespace Scrutor
             return AddSelector(assemblies.SelectMany(asm => asm.DefinedTypes).Select(x => x.AsType()));
         }
 
-        void ISelector.Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services, SelectorOptions options)
         {
             if (services == null)
             {
@@ -79,7 +79,7 @@ namespace Scrutor
 
             foreach (var selector in Selectors)
             {
-                selector.Populate(services);
+                selector.Populate(services, options);
             }
         }
 

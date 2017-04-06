@@ -8,6 +8,8 @@ namespace Scrutor
 {
     internal class ServiceTypeSelector : ImplementationTypeSelector, IServiceTypeSelector, ISelector
     {
+        private readonly SelectorOptions options = new SelectorOptions();
+
         public ServiceTypeSelector(IEnumerable<Type> types) : base(types)
         {
         }
@@ -85,7 +87,7 @@ namespace Scrutor
             return this;
         }
 
-        void ISelector.Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services, SelectorOptions otherOptions)
         {
             if (services == null)
             {
@@ -96,11 +98,23 @@ namespace Scrutor
             {
                 AsSelf();
             }
-
+            options.MergeOptions(otherOptions);
             foreach (var selector in Selectors)
             {
-                selector.Populate(services);
+                selector.Populate(services, options);
             }
+        }
+
+        public IServiceTypeSelector UseTryAdd()
+        {
+            options.UseTry = true;
+            return this;
+        }
+
+        public IServiceTypeSelector ReplaceServiceTypes()
+        {
+            options.ReplaceServiceType = true;
+            return this;
         }
 
         private ILifetimeSelector AddSelector(IEnumerable<TypeMap> types)

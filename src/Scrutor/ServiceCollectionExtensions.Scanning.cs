@@ -29,12 +29,12 @@ namespace Scrutor
 
             action(selector);
 
-            return services.Populate(selector);
+            return services.Populate(selector, new SelectorOptions());
         }
 
-        private static IServiceCollection Populate(this IServiceCollection services, ISelector selector)
+        private static IServiceCollection Populate(this IServiceCollection services, ISelector selector, SelectorOptions options)
         {
-            selector.Populate(services);
+            selector.Populate(services, options);
             return services;
         }
     }

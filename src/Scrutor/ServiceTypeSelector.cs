@@ -117,6 +117,12 @@ namespace Scrutor
             return this;
         }
 
+        public IServiceTypeSelector ReplaceImplementationTypes()
+        {
+            options.ReplaceImplementationType = true;
+            return this;
+        }
+
         private ILifetimeSelector AddSelector(IEnumerable<TypeMap> types)
         {
             var selector = new LifetimeSelector(Types, types);

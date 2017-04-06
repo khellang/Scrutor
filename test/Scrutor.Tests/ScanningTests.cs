@@ -70,6 +70,26 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void Options_ReplaceImplementationTypes()
+        {
+            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
+                .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                .AsImplementedInterfaces()
+                .WithTransientLifetime());
+
+
+            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
+                .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                .ReplaceImplementationTypes()
+                .AsImplementedInterfaces()
+                .WithSingletonLifetime());
+
+            var services = Collection.GetDescriptors<ITransientService>();
+
+            Assert.Equal(4, services.Where(x => x.ServiceType == typeof(ITransientService)).Count());
+        }
+
+        [Fact]
         public void CanFilterTypesToScan()
         {
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()

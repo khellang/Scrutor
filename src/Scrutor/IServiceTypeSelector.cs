@@ -63,5 +63,7 @@ namespace Scrutor
         IServiceTypeSelector UseTryAdd();
 
         IServiceTypeSelector ReplaceServiceTypes();
+
+        IServiceTypeSelector ReplaceImplementationTypes();
     }
 }

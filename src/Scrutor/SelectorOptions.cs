@@ -7,20 +7,23 @@ namespace Scrutor
     {
         public bool UseTry { get; set; }
         public bool ReplaceServiceType { get; set; }
+        public bool ReplaceImplementationType { get; set; }
 
         public void MergeOptions(SelectorOptions otherOptions)
         {
             UseTry = UseTry || otherOptions.UseTry;
             ReplaceServiceType = ReplaceServiceType || otherOptions.ReplaceServiceType;
+            ReplaceImplementationType = ReplaceImplementationType || otherOptions.ReplaceImplementationType;
         }
 
         public void ApplyType(IServiceCollection services, ServiceDescriptor descriptor)
         {
-            if (ReplaceServiceType)
+            if (ReplaceServiceType || ReplaceImplementationType)
             {
                 for (var i = services.Count - 1; i >=0; i--)
                 {
-                    if (services[i].ServiceType == descriptor.ServiceType)
+                    if ((ReplaceServiceType && services[i].ServiceType == descriptor.ServiceType)
+                        || (ReplaceImplementationType && services[i].ImplementationType == descriptor.ImplementationType))
                     {
                         services.RemoveAt(i);
                     }

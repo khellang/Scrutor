@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -15,12 +15,14 @@ namespace Scrutor
 
         private IEnumerable<Type> Types { get; }
 
-        void ISelector.Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
+
+            var strategy = registrationStrategy ?? RegistrationStrategy.Append;
 
             foreach (var type in Types)
             {
@@ -44,7 +46,7 @@ namespace Scrutor
                     {
                         var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
 
-                        services.Add(descriptor);
+                        strategy.Apply(services, descriptor);
                     }
                 }
             }

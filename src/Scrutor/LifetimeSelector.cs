@@ -40,7 +40,7 @@ namespace Scrutor
             return this;
         }
 
-        void ISelector.Populate(IServiceCollection services)
+        void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
             if (services == null)
             {
@@ -51,6 +51,8 @@ namespace Scrutor
             {
                 Lifetime = ServiceLifetime.Transient;
             }
+
+            registrationStrategy = registrationStrategy ?? RegistrationStrategy.Append;
 
             foreach (var typeMap in TypeMaps)
             {
@@ -65,7 +67,7 @@ namespace Scrutor
 
                     var descriptor = new ServiceDescriptor(serviceType, implementationType, Lifetime.Value);
 
-                    services.Add(descriptor);
+                    registrationStrategy.Apply(services, descriptor);
                 }
             }
         }

@@ -11,6 +11,18 @@ namespace Scrutor.Tests
         private IServiceCollection Collection { get; } = new ServiceCollection();
 
         [Fact]
+        public void Scan_TheseTypes()
+        {
+            Collection.Scan(scan => scan.These<TransientService1, TransientService2>()
+                .AsImplementedInterfaces()
+                .WithTransientLifetime());
+
+            var services = Collection.GetDescriptors<ITransientService>();
+
+            Assert.Equal(2, services.Where(x => x.ServiceType == typeof(ITransientService)).Count());
+        }
+
+        [Fact]
         public void UsingRegistrationStrategy_None()
         {
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()

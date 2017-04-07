@@ -3,7 +3,7 @@
 namespace Scrutor
 {
     [Flags]
-    public enum ReplacementStrategy
+    public enum ReplacementBehavior
     {
         /// <summary>
         /// ServiceType only is the default
@@ -17,5 +17,6 @@ namespace Scrutor
         /// Replace by ImplementationType.
         /// </summary>
         ImplementationType = 2,
+        All = ServiceType | ImplementationType
     }
 }

@@ -60,10 +60,6 @@ namespace Scrutor
         /// </summary>
         IImplementationTypeSelector UsingAttributes();
 
-        IServiceTypeSelector UseTryAdd();
-
-        IServiceTypeSelector ReplaceServiceTypes();
-
-        IServiceTypeSelector ReplaceImplementationTypes();
+        IServiceTypeSelector UsingRegistrationBehavior(RegistrationBehavior registrationBehavior, ReplacementStrategy replacementStrategy = ReplacementStrategy.ServiceType);
     }
 }

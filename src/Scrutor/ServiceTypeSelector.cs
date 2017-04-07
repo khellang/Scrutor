@@ -105,21 +105,10 @@ namespace Scrutor
             }
         }
 
-        public IServiceTypeSelector UseTryAdd()
+        public IServiceTypeSelector UsingRegistrationBehavior(RegistrationBehavior registrationBehavior, ReplacementStrategy replacementStrategy = ReplacementStrategy.ServiceType)
         {
-            options.UseTry = true;
-            return this;
-        }
-
-        public IServiceTypeSelector ReplaceServiceTypes()
-        {
-            options.ReplaceServiceType = true;
-            return this;
-        }
-
-        public IServiceTypeSelector ReplaceImplementationTypes()
-        {
-            options.ReplaceImplementationType = true;
+            options.RegistrationBehavior = registrationBehavior;
+            options.ReplacementStrategy = replacementStrategy;
             return this;
         }
 

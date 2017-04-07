@@ -5,38 +5,54 @@ namespace Scrutor
 {
     public class SelectorOptions
     {
-        public bool UseTry { get; set; }
-        public bool ReplaceServiceType { get; set; }
-        public bool ReplaceImplementationType { get; set; }
+        public RegistrationBehavior? RegistrationBehavior { get; set; }
+        public ReplacementStrategy? ReplacementStrategy { get; set; }
 
         public void MergeOptions(SelectorOptions otherOptions)
         {
-            UseTry = UseTry || otherOptions.UseTry;
-            ReplaceServiceType = ReplaceServiceType || otherOptions.ReplaceServiceType;
-            ReplaceImplementationType = ReplaceImplementationType || otherOptions.ReplaceImplementationType;
+            RegistrationBehavior = RegistrationBehavior ??  otherOptions.RegistrationBehavior;
+            if (otherOptions.ReplacementStrategy.HasValue && ReplacementStrategy.HasValue)
+            {
+                ReplacementStrategy |= otherOptions.ReplacementStrategy;
+            }
+            else
+            {
+                ReplacementStrategy = ReplacementStrategy ?? otherOptions.ReplacementStrategy;
+            }
         }
 
         public void ApplyType(IServiceCollection services, ServiceDescriptor descriptor)
         {
-            if (ReplaceServiceType || ReplaceImplementationType)
+            switch (RegistrationBehavior ?? Scrutor.RegistrationBehavior.Append)
             {
-                for (var i = services.Count - 1; i >=0; i--)
+                case Scrutor.RegistrationBehavior.Replace:
                 {
-                    if ((ReplaceServiceType && services[i].ServiceType == descriptor.ServiceType)
-                        || (ReplaceImplementationType && services[i].ImplementationType == descriptor.ImplementationType))
+                    var strategy = ReplacementStrategy ?? Scrutor.ReplacementStrategy.ServiceType;
+                    if (strategy == Scrutor.ReplacementStrategy.Default)
                     {
-                        services.RemoveAt(i);
+                        strategy = Scrutor.ReplacementStrategy.ServiceType;
                     }
+                    for (var i = services.Count - 1; i >= 0; i--)
+                    {
+                        if ((strategy.HasFlag(Scrutor.ReplacementStrategy.ServiceType) && services[i].ServiceType == descriptor.ServiceType)
+                            || (strategy.HasFlag(Scrutor.ReplacementStrategy.ImplementationType) && services[i].ImplementationType == descriptor.ImplementationType))
+                        {
+                            services.RemoveAt(i);
+                        }
+                    }
+                    services.Add(descriptor);
+                    break;
                 }
-                services.Add(descriptor);
-            }
-            else if (UseTry)
-            {
-                services.TryAdd(descriptor);
-            }
-            else
-            {
-                services.Add(descriptor);
+                case Scrutor.RegistrationBehavior.SkipIfExists:
+                {
+                    services.TryAdd(descriptor);
+                    break;
+                }
+                case Scrutor.RegistrationBehavior.Append:
+                {
+                    services.Add(descriptor);
+                    break;
+                }
             }
         }
     }

@@ -6,17 +6,23 @@ namespace Scrutor
     public enum ReplacementBehavior
     {
         /// <summary>
-        /// ServiceType only is the default
+        /// Replace existing services by service type.
         /// </summary>
         Default = 0,
+
         /// <summary>
-        /// Replace by ServiceType (default)
+        /// Replace existing services by service type (default).
         /// </summary>
         ServiceType = 1,
+
         /// <summary>
-        /// Replace by ImplementationType.
+        /// Replace existing services by implementation type.
         /// </summary>
         ImplementationType = 2,
+
+        /// <summary>
+        /// Replace existing services by either service- or implementation type.
+        /// </summary>
         All = ServiceType | ImplementationType
     }
 }

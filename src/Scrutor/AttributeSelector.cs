@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -22,6 +22,8 @@ namespace Scrutor
                 throw new ArgumentNullException(nameof(services));
             }
 
+            var strategy = registrationStrategy ?? RegistrationStrategy.Append;
+
             foreach (var type in Types)
             {
                 var typeInfo = type.GetTypeInfo();
@@ -36,8 +38,6 @@ namespace Scrutor
                     throw new InvalidOperationException($@"Type ""{type.FullName}"" has multiple ServiceDescriptor attributes with the same service type.");
                 }
 
-                var r = registrationStrategy ?? RegistrationStrategy.Append;
-
                 foreach (var attribute in attributes)
                 {
                     var serviceTypes = attribute.GetServiceTypes(type);
@@ -46,7 +46,7 @@ namespace Scrutor
                     {
                         var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
 
-                        r.Apply(services, descriptor);
+                        strategy.Apply(services, descriptor);
                     }
                 }
             }

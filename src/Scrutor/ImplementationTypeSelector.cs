@@ -82,7 +82,7 @@ namespace Scrutor
             return AddSelector(filter.Types);
         }
 
-        void ISelector.Populate(IServiceCollection services, SelectorOptions options)
+        void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
             if (services == null)
             {
@@ -96,7 +96,7 @@ namespace Scrutor
 
             foreach (var selector in Selectors)
             {
-                selector.Populate(services, options);
+                selector.Populate(services, registrationStrategy);
             }
         }
 

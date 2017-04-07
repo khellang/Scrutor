@@ -15,7 +15,7 @@ namespace Scrutor
 
         private IEnumerable<Type> Types { get; }
 
-        void ISelector.Populate(IServiceCollection services, SelectorOptions options)
+        void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
             if (services == null)
             {
@@ -36,6 +36,8 @@ namespace Scrutor
                     throw new InvalidOperationException($@"Type ""{type.FullName}"" has multiple ServiceDescriptor attributes with the same service type.");
                 }
 
+                var r = registrationStrategy ?? RegistrationStrategy.Append;
+
                 foreach (var attribute in attributes)
                 {
                     var serviceTypes = attribute.GetServiceTypes(type);
@@ -44,7 +46,7 @@ namespace Scrutor
                     {
                         var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
 
-                        options.ApplyType(services, descriptor);
+                        r.Apply(services, descriptor);
                     }
                 }
             }

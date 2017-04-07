@@ -32,6 +32,25 @@ namespace Scrutor
             return services.Populate(selector, RegistrationStrategy.Append);
         }
 
+        public static IServiceCollection Scan(this IServiceCollection services, Action<ITypeSelector> action)
+        {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            var selector = new TypeSelector();
+
+            action(selector);
+
+            return services.Populate(selector, RegistrationStrategy.Append);
+        }
+
         private static IServiceCollection Populate(this IServiceCollection services, ISelector selector, RegistrationStrategy registrationStrategy)
         {
             selector.Populate(services, registrationStrategy);

@@ -1,29 +1,29 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Scrutor
 {
     public abstract class RegistrationStrategy
     {
-        public static readonly RegistrationStrategy Skip = new SkipStrategy();
+        public static readonly RegistrationStrategy Skip = new SkipRegistrationStrategy();
 
-        public static readonly RegistrationStrategy Append = new AppendStrategy();
+        public static readonly RegistrationStrategy Append = new AppendRegistrationStrategy();
 
-        public static RegistrationStrategy Replace(ReplacementBehavior behavior = ReplacementBehavior.Default) => new ReplaceStrategy(behavior);
+        public static RegistrationStrategy Replace(ReplacementBehavior behavior = ReplacementBehavior.Default) => new ReplaceRegistrationStrategy(behavior);
 
         public abstract void Apply(IServiceCollection services, ServiceDescriptor descriptor);
 
-        private sealed class SkipStrategy : RegistrationStrategy
+        private sealed class SkipRegistrationStrategy : RegistrationStrategy
         {
             public override void Apply(IServiceCollection services, ServiceDescriptor descriptor) => services.TryAdd(descriptor);
         }
 
-        private sealed class AppendStrategy : RegistrationStrategy
+        private sealed class AppendRegistrationStrategy : RegistrationStrategy
         {
             public override void Apply(IServiceCollection services, ServiceDescriptor descriptor) => services.Add(descriptor);
         }
 
-        private class ReplaceStrategy : RegistrationStrategy
+        private sealed class ReplaceRegistrationStrategy : RegistrationStrategy
         {
             public ReplaceStrategy(ReplacementBehavior behavior)
             {

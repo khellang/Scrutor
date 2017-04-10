@@ -4,6 +4,10 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
+#if DEPENDENCY_MODEL
+using Microsoft.Extensions.DependencyModel;
+#endif
+
 namespace Scrutor
 {
     internal class TypeSourceSelector : ITypeSourceSelector, ISelector
@@ -35,6 +39,21 @@ namespace Scrutor
         public IImplementationTypeSelector FromEntryAssembly()
         {
             return FromAssemblies(Assembly.GetEntryAssembly());
+        }
+
+        /// <inheritdoc />
+        public IImplementationTypeSelector FromApplicationDependencies()
+        {
+            return FromDependencyContext(DependencyContext.Default);
+        }
+
+        /// <inheritdoc />
+        public IImplementationTypeSelector FromDependencyContext(DependencyContext context)
+        {
+            return FromAssemblies(context.RuntimeLibraries
+                .SelectMany(library => library.GetDefaultAssemblyNames(context))
+                .Select(Assembly.Load)
+                .ToArray());
         }
 #endif
 

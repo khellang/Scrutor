@@ -14,41 +14,6 @@ namespace Scrutor
 
         protected IEnumerable<Type> Types { get; }
 
-        public void AddFromAttributes()
-        {
-            AddFromAttributes(publicOnly: false);
-        }
-
-        public void AddFromAttributes(bool publicOnly)
-        {
-            var classes = GetNonAbstractClasses(publicOnly);
-
-            Selectors.Add(new AttributeSelector(classes));
-        }
-
-        public void AddFromAttributes(Action<IImplementationTypeFilter> action)
-        {
-            AddFromAttributes(action, publicOnly: false);
-        }
-
-        public void AddFromAttributes(Action<IImplementationTypeFilter> action, bool publicOnly)
-        {
-            if (action == null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            var classes = GetNonAbstractClasses(publicOnly);
-
-            var filter = new ImplementationTypeFilter(classes);
-
-            action(filter);
-
-            var selector = new AttributeSelector(filter.Types);
-
-            Selectors.Add(selector);
-        }
-
         public IServiceTypeSelector AddClasses()
         {
             return AddClasses(publicOnly: false);

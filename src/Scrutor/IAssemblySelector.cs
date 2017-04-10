@@ -18,7 +18,7 @@ namespace Scrutor
         IImplementationTypeSelector FromExecutingAssembly();
 #endif
 
-#if NET451 || NETSTANDARD1_6
+#if DEPENDENCY_MODEL
         /// <summary>
         /// Will scan for types from the entry assembly.
         /// </summary>

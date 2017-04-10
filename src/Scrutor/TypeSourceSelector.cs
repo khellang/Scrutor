@@ -30,7 +30,7 @@ namespace Scrutor
         }
 #endif
 
-#if NET451 || NETSTANDARD1_6
+#if DEPENDENCY_MODEL
         /// <inheritdoc />
         public IImplementationTypeSelector FromEntryAssembly()
         {

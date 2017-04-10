@@ -8,12 +8,12 @@ namespace Scrutor
     {
         protected List<ISelector> Selectors { get; } = new List<ISelector>();
 
-        public IServiceTypeSelector These(params Type[] types)
+        public IServiceTypeSelector AddTypes(params Type[] types)
         {
             return AddSelector(types);
         }
 
-        public IServiceTypeSelector These(IEnumerable<Type> types)
+        public IServiceTypeSelector AddTypes(IEnumerable<Type> types)
         {
             return AddSelector(types);
         }

@@ -84,11 +84,6 @@ namespace Scrutor
 
         void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
             if (Selectors.Count == 0)
             {
                 AddClasses();

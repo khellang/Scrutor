@@ -17,11 +17,6 @@ namespace Scrutor
 
         void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
             var strategy = registrationStrategy ?? RegistrationStrategy.Append;
 
             foreach (var type in Types)

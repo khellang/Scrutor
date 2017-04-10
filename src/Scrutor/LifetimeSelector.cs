@@ -42,11 +42,6 @@ namespace Scrutor
 
         void ISelector.Populate(IServiceCollection services, RegistrationStrategy strategy)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
             if (!Lifetime.HasValue)
             {
                 Lifetime = ServiceLifetime.Transient;

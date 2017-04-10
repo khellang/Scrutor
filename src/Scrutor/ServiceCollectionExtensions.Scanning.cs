@@ -26,7 +26,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(action));
             }
 
-            var selector = new AssemblySelector();
+            var selector = new TypeSourceSelector();
 
             action(selector);
 
@@ -45,7 +45,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(action));
             }
 
-            var selector = new TypeSelector();
+            var selector = new TypeSourceSelector();
 
             action(selector);
 

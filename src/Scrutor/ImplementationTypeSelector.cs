@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor
 {
-    internal class ImplementationTypeSelector : AssemblySelector, IImplementationTypeSelector, ISelector
+    internal class ImplementationTypeSelector : TypeSourceSelector, IImplementationTypeSelector, ISelector
     {
         public ImplementationTypeSelector(IEnumerable<Type> types)
         {

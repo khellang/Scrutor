@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor
 {
-    internal class AssemblySelector : IAssemblySelector, ISelector
+    internal class TypeSourceSelector : IAssemblySelector, ITypeSelector, ISelector
     {
         protected List<ISelector> Selectors { get; } = new List<ISelector>();
 
@@ -72,20 +72,25 @@ namespace Scrutor
 
         void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
             foreach (var selector in Selectors)
             {
                 selector.Populate(services, registrationStrategy);
             }
         }
 
-        private IImplementationTypeSelector AddSelector(IEnumerable<Type> types)
+        public IServiceTypeSelector AddTypes(params Type[] types)
         {
-            var selector = new ImplementationTypeSelector(types);
+            return AddSelector(types);
+        }
+
+        public IServiceTypeSelector AddTypes(IEnumerable<Type> types)
+        {
+            return AddSelector(types);
+        }
+
+        private IServiceTypeSelector AddSelector(IEnumerable<Type> types)
+        {
+            var selector = new ServiceTypeSelector(types);
 
             Selectors.Add(selector);
 

@@ -16,6 +16,26 @@ namespace Scrutor
             return InternalFromAssembliesOf(new[] { typeof(T).GetTypeInfo() });
         }
 
+#if NET451
+        /// <inheritdoc />
+        public IImplementationTypeSelector FromCallingAssembly()
+        {
+            return FromAssemblies(Assembly.GetCallingAssembly());
+        }
+
+        /// <inheritdoc />
+        public IImplementationTypeSelector FromExecutingAssembly()
+        {
+            return FromAssemblies(Assembly.GetExecutingAssembly());
+        }
+
+        /// <inheritdoc />
+        public IImplementationTypeSelector FromEntryAssembly()
+        {
+            return FromAssemblies(Assembly.GetEntryAssembly());
+        }
+#endif
+
         /// <inheritdoc />
         public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
         {

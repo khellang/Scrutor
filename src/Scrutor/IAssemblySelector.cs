@@ -16,12 +16,15 @@ namespace Scrutor
         /// Will scan for types from the currently executing assembly.
         /// </summary>
         IImplementationTypeSelector FromExecutingAssembly();
+#endif
 
+#if NET451 || NETSTANDARD1_6
         /// <summary>
         /// Will scan for types from the entry assembly.
         /// </summary>
         IImplementationTypeSelector FromEntryAssembly();
 #endif
+
         /// <summary>
         /// Will scan for types from the assembly of type <typeparamref name="T"/>.
         /// </summary>

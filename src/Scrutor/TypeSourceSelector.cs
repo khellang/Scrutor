@@ -28,7 +28,9 @@ namespace Scrutor
         {
             return FromAssemblies(Assembly.GetExecutingAssembly());
         }
+#endif
 
+#if NET451 || NETSTANDARD1_6
         /// <inheritdoc />
         public IImplementationTypeSelector FromEntryAssembly()
         {

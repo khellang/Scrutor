@@ -4,7 +4,7 @@
     <VersionPrefix>2.0.0</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Authors>Kristian Hellang</Authors>
-    <TargetFrameworks>net451;netstandard1.0</TargetFrameworks>
+    <TargetFrameworks>net451;netstandard1.0;netstandard1.6</TargetFrameworks>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

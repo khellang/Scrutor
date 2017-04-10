@@ -13,7 +13,7 @@ namespace Scrutor.Tests
         [Fact]
         public void Scan_TheseTypes()
         {
-            Collection.Scan(scan => scan.These<TransientService1, TransientService2>()
+            Collection.Scan(scan => scan.AddTypes<TransientService1, TransientService2>()
                 .AsImplementedInterfaces()
                 .WithTransientLifetime());
 

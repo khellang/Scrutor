@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor
 {
-    internal class LifetimeSelector : ServiceTypeSelector, ILifetimeSelector, ISelector
+    internal sealed class LifetimeSelector : ServiceTypeSelector, ILifetimeSelector, ISelector
     {
         public LifetimeSelector(IEnumerable<Type> types, IEnumerable<TypeMap> typeMaps) : base(types)
         {
@@ -40,7 +40,7 @@ namespace Scrutor
             return this;
         }
 
-        void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
+        void ISelector.Populate(IServiceCollection services, RegistrationStrategy strategy)
         {
             if (services == null)
             {
@@ -52,7 +52,7 @@ namespace Scrutor
                 Lifetime = ServiceLifetime.Transient;
             }
 
-            registrationStrategy = registrationStrategy ?? RegistrationStrategy.Append;
+            strategy = strategy ?? RegistrationStrategy.Append;
 
             foreach (var typeMap in TypeMaps)
             {
@@ -67,7 +67,7 @@ namespace Scrutor
 
                     var descriptor = new ServiceDescriptor(serviceType, implementationType, Lifetime.Value);
 
-                    registrationStrategy.Apply(services, descriptor);
+                    strategy.Apply(services, descriptor);
                 }
             }
         }

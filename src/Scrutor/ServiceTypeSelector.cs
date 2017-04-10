@@ -8,11 +8,11 @@ namespace Scrutor
 {
     internal class ServiceTypeSelector : ImplementationTypeSelector, IServiceTypeSelector, ISelector
     {
-        private RegistrationStrategy registrationStrategy;
-
         public ServiceTypeSelector(IEnumerable<Type> types) : base(types)
         {
         }
+
+        private RegistrationStrategy RegistrationStrategy { get; set; }
 
         /// <inheritdoc />
         public ILifetimeSelector AsSelf()
@@ -98,16 +98,18 @@ namespace Scrutor
             {
                 AsSelf();
             }
-            var r = this.registrationStrategy ?? registrationStrategy;
+
+            var strategy = RegistrationStrategy ?? registrationStrategy;
+
             foreach (var selector in Selectors)
             {
-                selector.Populate(services, r);
+                selector.Populate(services, strategy);
             }
         }
 
         public IServiceTypeSelector UsingRegistrationStrategy(RegistrationStrategy registrationStrategy)
         {
-            this.registrationStrategy = registrationStrategy;
+            RegistrationStrategy = registrationStrategy;
             return this;
         }
 

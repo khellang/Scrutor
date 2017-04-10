@@ -4,9 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor
 {
-    internal class TypeSelector : ITypeSelector, ISelector
+    internal sealed class TypeSelector : ITypeSelector, ISelector
     {
-        protected List<ISelector> Selectors { get; } = new List<ISelector>();
+        private List<ISelector> Selectors { get; } = new List<ISelector>();
 
         public IServiceTypeSelector AddTypes(params Type[] types)
         {
@@ -33,6 +33,11 @@ namespace Scrutor
 
         private IServiceTypeSelector AddSelector(IEnumerable<Type> types)
         {
+            if (types == null)
+            {
+                throw new ArgumentNullException(nameof(types));
+            }
+
             var selector = new ServiceTypeSelector(types);
 
             Selectors.Add(selector);

@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor
 {
-    internal class TypeSourceSelector : IAssemblySelector, ITypeSelector, ISelector
+    internal class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
         protected List<ISelector> Selectors { get; } = new List<ISelector>();
 

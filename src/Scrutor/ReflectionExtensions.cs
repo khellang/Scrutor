@@ -230,8 +230,7 @@ namespace Scrutor
 
         public static bool IsOpenGeneric(this Type type)
         {
-            var typeInfo = type.GetTypeInfo();
-            return typeInfo.IsGenericTypeDefinition;
+            return type.GetTypeInfo().IsGenericTypeDefinition;
         }
     }
 }

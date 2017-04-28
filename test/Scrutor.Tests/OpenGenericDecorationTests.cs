@@ -53,41 +53,24 @@ namespace Scrutor.Tests
         }
     }
 
-    public class MyQuery
-    {
-        
-    }
+    public class MyQuery { }
 
-    public class MyResult
-    {
-        
-    }
+    public class MyResult { }
 
-    public class MyQueryHandler : QueryHandler<MyQuery, MyResult>
-    {
-    }
+    public class MyQueryHandler : QueryHandler<MyQuery, MyResult> { }
 
 
-    public class QueryHandler<TQuery, TResult> : IQueryHandler<TQuery, TResult>
-    {
-        
-    }
+    public class QueryHandler<TQuery, TResult> : IQueryHandler<TQuery, TResult> { }
 
     public class LoggingQueryHandler<TQuery, TResult> : DecoratorQueryHandler<TQuery, TResult>
     {
-        public LoggingQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner)
-        {
-        }
-
+        public LoggingQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner) { }
     }
 
 
     public class TelemetryQueryHandler<TQuery, TResult> : DecoratorQueryHandler<TQuery, TResult>
     {
-        public TelemetryQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner)
-        {
-        }
-
+        public TelemetryQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner) { }
     }
 
 

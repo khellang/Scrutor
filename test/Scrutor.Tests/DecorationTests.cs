@@ -119,7 +119,6 @@ namespace Scrutor.Tests
             Assert.Same(validator, decorator.InjectedService);
         }
 
-
         private static IServiceProvider ConfigureProvider(Action<IServiceCollection> configure)
         {
             var services = new ServiceCollection();

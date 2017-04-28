@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Scrutor;
 
 // ReSharper disable once CheckNamespace
@@ -34,6 +33,11 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <paramref name="serviceType"/> or <paramref name="decoratorType"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate(this IServiceCollection services, Type serviceType, Type decoratorType)
         {
+            if (serviceType == null)
+            {
+                throw new ArgumentNullException(nameof(serviceType));
+            }
+
             if (decoratorType == null)
             {
                 throw new ArgumentNullException(nameof(decoratorType));
@@ -41,19 +45,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
             {
-                var closedGenericTypeArguments =
-                    services.Where(descriptor => descriptor.ServiceType.IsAssignableTo(serviceType))
-                    .Select(descriptor => descriptor.ServiceType.GenericTypeArguments).ToArray();
-
-                foreach (var genericTypeArguments in closedGenericTypeArguments)
-                {
-                    var closedServiceType = serviceType.MakeGenericType(genericTypeArguments);
-                    var closedDecoratorType = decoratorType.MakeGenericType(genericTypeArguments);
-                    services.DecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
-                }
-
-                return services;
-
+                return services.DecorateOpenGeneric(serviceType, decoratorType);
             }
 
             return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType));
@@ -137,6 +129,22 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator));
+        }
+
+        private static IServiceCollection DecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType)
+        {
+            IServiceCollection Decorate(IServiceCollection s, Type[] typeArguments)
+            {
+                var closedServiceType = serviceType.MakeGenericType(typeArguments);
+                var closedDecoratorType = decoratorType.MakeGenericType(typeArguments);
+
+                return s.DecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
+            }
+
+            return services
+                .Where(descriptor => descriptor.ServiceType.IsAssignableTo(serviceType))
+                .Select(descriptor => descriptor.ServiceType.GenericTypeArguments)
+                .Aggregate(services, Decorate);
         }
 
         private static IServiceCollection DecorateDescriptors(this IServiceCollection services, Type serviceType, Func<ServiceDescriptor, ServiceDescriptor> decorator)

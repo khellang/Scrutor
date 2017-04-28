@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Description>Register services using assembly scanning and a fluent API.</Description>
     <VersionPrefix>2.0.0</VersionPrefix>
-    <VersionSuffix>beta</VersionSuffix>
+    <VersionSuffix>rc</VersionSuffix>
     <Authors>Kristian Hellang</Authors>
     <TargetFrameworks>net451;netstandard1.0;netstandard1.6</TargetFrameworks>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
@@ -10,7 +10,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>Scrutor</AssemblyName>
     <PackageId>Scrutor</PackageId>
-    <PackageTags>Dependency;Injection;DI;Scanning;Conventions</PackageTags>
+    <PackageTags>Dependency;Injection;DI;Scanning;Conventions;Decoration</PackageTags>
     <PackageProjectUrl>https://github.com/khellang/Scrutor</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/khellang/Scrutor/master/LICENSE</PackageLicenseUrl>
   </PropertyGroup>

@@ -227,5 +227,11 @@ namespace Scrutor
 
             return true;
         }
+
+        public static bool IsOpenGeneric(this Type type)
+        {
+            var typeInfo = type.GetTypeInfo();
+            return typeInfo.IsGenericTypeDefinition;
+        }
     }
 }

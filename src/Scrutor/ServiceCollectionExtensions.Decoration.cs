@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Scrutor;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
@@ -34,6 +37,23 @@ namespace Microsoft.Extensions.DependencyInjection
             if (decoratorType == null)
             {
                 throw new ArgumentNullException(nameof(decoratorType));
+            }
+
+            if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
+            {
+                var closedGenericTypeArguments =
+                    services.Where(descriptor => descriptor.ServiceType.IsAssignableTo(serviceType))
+                    .Select(descriptor => descriptor.ServiceType.GenericTypeArguments).ToArray();
+
+                foreach (var genericTypeArguments in closedGenericTypeArguments)
+                {
+                    var closedServiceType = serviceType.MakeGenericType(genericTypeArguments);
+                    var closedDecoratorType = decoratorType.MakeGenericType(genericTypeArguments);
+                    services.DecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
+                }
+
+                return services;
+
             }
 
             return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType));

@@ -44,12 +44,14 @@ function Restore-Packages
 {
     param([string] $DirectoryName)
     & dotnet restore -v minimal ("""" + $DirectoryName + """")
+    if($LASTEXITCODE -ne 0) { exit 1 }    
 }
 
 function Test-Project
 {
     param([string] $ProjectPath)
     & dotnet test -v minimal -c Release ("""" + $ProjectPath + """")
+    if($LASTEXITCODE -ne 0) { exit 1 }    
 }
 
 ########################

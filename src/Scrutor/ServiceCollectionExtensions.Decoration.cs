@@ -141,10 +141,12 @@ namespace Microsoft.Extensions.DependencyInjection
                 return s.DecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
             }
 
-            return services
+            var arguments = services
                 .Where(descriptor => descriptor.ServiceType.IsAssignableTo(serviceType))
                 .Select(descriptor => descriptor.ServiceType.GenericTypeArguments)
-                .Aggregate(services, Decorate);
+                .ToArray();
+
+            return arguments.Aggregate(services, Decorate);
         }
 
         private static IServiceCollection DecorateDescriptors(this IServiceCollection services, Type serviceType, Func<ServiceDescriptor, ServiceDescriptor> decorator)

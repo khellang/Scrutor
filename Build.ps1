@@ -44,14 +44,21 @@ function Restore-Packages
 {
     param([string] $DirectoryName)
     & dotnet restore -v minimal ("""" + $DirectoryName + """")
-    if($LASTEXITCODE -ne 0) { exit 1 }    
+    if($LASTEXITCODE -ne 0) { exit 1 }
 }
 
 function Test-Project
 {
     param([string] $ProjectPath)
     & dotnet test -v minimal -c Release ("""" + $ProjectPath + """")
-    if($LASTEXITCODE -ne 0) { exit 1 }    
+    if($LASTEXITCODE -ne 0) { exit 1 }
+}
+
+function Pack-Project
+{
+    param([string] $ProjectPath)
+    & dotnet pack -v minimal -c Release --no-build --output packages ("""" + $ProjectPath + """")
+    if($LASTEXITCODE -ne 0) { exit 1 }
 }
 
 ########################
@@ -68,5 +75,8 @@ Get-ChildItem -Path . -Filter *.csproj -Recurse | ForEach-Object { Restore-Packa
 
 # Tests
 Get-ChildItem -Path .\test -Filter *.csproj -Recurse | ForEach-Object { Test-Project $_.FullName }
+
+# Pack
+Get-ChildItem -Path .\src -Filter *.csproj -Recurse | ForEach-Object { Pack-Project $_.FullName }
 
 Pop-Location

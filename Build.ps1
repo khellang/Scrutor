@@ -57,7 +57,7 @@ function Test-Project
 function Pack-Project
 {
     param([string] $ProjectPath)
-    & dotnet pack -v minimal -c Release --no-build --output packages ("""" + $ProjectPath + """")
+    & dotnet pack -v minimal -c Release --output packages ("""" + $ProjectPath + """")
     if($LASTEXITCODE -ne 0) { exit 1 }
 }
 

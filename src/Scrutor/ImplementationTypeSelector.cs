@@ -33,10 +33,7 @@ namespace Scrutor
 
         public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action, bool publicOnly)
         {
-            if (action == null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
+            Preconditions.NotNull(action, nameof(action));
 
             var classes = GetNonAbstractClasses(publicOnly);
 

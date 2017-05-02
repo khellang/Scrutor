@@ -36,6 +36,8 @@ namespace Scrutor
         /// <inheritdoc />
         public IImplementationTypeSelector WithLifetime(ServiceLifetime lifetime)
         {
+            Preconditions.IsDefined(lifetime, nameof(lifetime));
+
             Lifetime = lifetime;
             return this;
         }

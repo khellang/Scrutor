@@ -29,10 +29,7 @@ namespace Scrutor
         /// <inheritdoc />
         public ILifetimeSelector As(params Type[] types)
         {
-            if (types == null)
-            {
-                throw new ArgumentNullException(nameof(types));
-            }
+            Preconditions.NotNull(types, nameof(types));
 
             return As(types.AsEnumerable());
         }
@@ -40,10 +37,7 @@ namespace Scrutor
         /// <inheritdoc />
         public ILifetimeSelector As(IEnumerable<Type> types)
         {
-            if (types == null)
-            {
-                throw new ArgumentNullException(nameof(types));
-            }
+            Preconditions.NotNull(types, nameof(types));
 
             return AddSelector(Types.Select(t => new TypeMap(t, types)));
         }
@@ -69,10 +63,7 @@ namespace Scrutor
         /// <inheritdoc />
         public ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector)
         {
-            if (selector == null)
-            {
-                throw new ArgumentNullException(nameof(selector));
-            }
+            Preconditions.NotNull(selector, nameof(selector));
 
             return AddSelector(Types.Select(t => new TypeMap(t, selector(t))));
         }

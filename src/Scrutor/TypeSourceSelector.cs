@@ -50,6 +50,8 @@ namespace Scrutor
         /// <inheritdoc />
         public IImplementationTypeSelector FromDependencyContext(DependencyContext context)
         {
+            Preconditions.NotNull(context, nameof(context));
+
             return FromAssemblies(context.RuntimeLibraries
                 .SelectMany(library => library.GetDefaultAssemblyNames(context))
                 .Select(Assembly.Load)

@@ -156,7 +156,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
-        private static List<ServiceDescriptor> GetDescriptors(this IServiceCollection services, Type serviceType)
+        private static IEnumerable<ServiceDescriptor> GetDescriptors(this IServiceCollection services, Type serviceType)
         {
             var descriptors = new List<ServiceDescriptor>();
 

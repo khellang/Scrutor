@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Scrutor.Tests
 {
-    public class ScanningTests
+    public class ScanningTests : TestBase
     {
         private IServiceCollection Collection { get; } = new ServiceCollection();
 

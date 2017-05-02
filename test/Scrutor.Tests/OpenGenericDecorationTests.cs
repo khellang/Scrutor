@@ -1,21 +1,11 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Scrutor.Tests
 {
-    public class OpenGenericDecorationTests
+    public class OpenGenericDecorationTests : TestBase
     {
         private IServiceCollection Collection { get; } = new ServiceCollection();
-
-        private static IServiceProvider ConfigureProvider(Action<IServiceCollection> configure)
-        {
-            var services = new ServiceCollection();
-
-            configure(services);
-
-            return services.BuildServiceProvider();
-        }
 
         [Fact]
         public void CanDecorateOpenGenericTypeBasedOnClass()

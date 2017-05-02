@@ -7,7 +7,7 @@ namespace Scrutor
 {
     internal class ImplementationTypeSelector : TypeSourceSelector, IImplementationTypeSelector, ISelector
     {
-        public ImplementationTypeSelector(IEnumerable<Type> types)
+        protected ImplementationTypeSelector(IEnumerable<Type> types)
         {
             Types = types;
         }

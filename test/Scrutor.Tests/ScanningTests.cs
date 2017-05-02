@@ -19,7 +19,7 @@ namespace Scrutor.Tests
 
             var services = Collection.GetDescriptors<ITransientService>();
 
-            Assert.Equal(2, services.Where(x => x.ServiceType == typeof(ITransientService)).Count());
+            Assert.Equal(2, services.Count(x => x.ServiceType == typeof(ITransientService)));
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace Scrutor.Tests
 
             var services = Collection.GetDescriptors<ITransientService>();
 
-            Assert.Equal(8, services.Where(x => x.ServiceType == typeof(ITransientService)).Count());
+            Assert.Equal(8, services.Count(x => x.ServiceType == typeof(ITransientService)));
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace Scrutor.Tests
 
             var services = Collection.GetDescriptors<ITransientService>();
 
-            Assert.Equal(4, services.Where(x => x.ServiceType == typeof(ITransientService)).Count());
+            Assert.Equal(4, services.Count(x => x.ServiceType == typeof(ITransientService)));
         }
 
         [Fact]
@@ -75,7 +75,7 @@ namespace Scrutor.Tests
 
             var services = Collection.GetDescriptors<ITransientService>();
 
-            Assert.Equal(1, services.Where(x => x.ServiceType == typeof(ITransientService)).Count());
+            Assert.Equal(1, services.Count(x => x.ServiceType == typeof(ITransientService)));
         }
 
         [Fact]
@@ -94,7 +94,7 @@ namespace Scrutor.Tests
 
             var services = Collection.GetDescriptors<ITransientService>();
 
-            Assert.Equal(1, services.Where(x => x.ServiceType == typeof(ITransientService)).Count());
+            Assert.Equal(1, services.Count(x => x.ServiceType == typeof(ITransientService)));
         }
 
         [Fact]
@@ -113,7 +113,7 @@ namespace Scrutor.Tests
 
             var services = Collection.GetDescriptors<ITransientService>();
 
-            Assert.Equal(4, services.Where(x => x.ServiceType == typeof(ITransientService)).Count());
+            Assert.Equal(4, services.Count(x => x.ServiceType == typeof(ITransientService)));
         }
 
         [Fact]

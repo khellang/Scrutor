@@ -21,13 +21,11 @@ namespace Scrutor
         }
 
 #if NET451
-        /// <inheritdoc />
         public IImplementationTypeSelector FromCallingAssembly()
         {
             return FromAssemblies(Assembly.GetCallingAssembly());
         }
 
-        /// <inheritdoc />
         public IImplementationTypeSelector FromExecutingAssembly()
         {
             return FromAssemblies(Assembly.GetExecutingAssembly());
@@ -35,19 +33,16 @@ namespace Scrutor
 #endif
 
 #if DEPENDENCY_MODEL
-        /// <inheritdoc />
         public IImplementationTypeSelector FromEntryAssembly()
         {
             return FromAssemblies(Assembly.GetEntryAssembly());
         }
 
-        /// <inheritdoc />
         public IImplementationTypeSelector FromApplicationDependencies()
         {
             return FromDependencyContext(DependencyContext.Default);
         }
 
-        /// <inheritdoc />
         public IImplementationTypeSelector FromDependencyContext(DependencyContext context)
         {
             Preconditions.NotNull(context, nameof(context));

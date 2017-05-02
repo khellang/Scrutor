@@ -14,19 +14,16 @@ namespace Scrutor
 
         private RegistrationStrategy RegistrationStrategy { get; set; }
 
-        /// <inheritdoc />
         public ILifetimeSelector AsSelf()
         {
             return As(t => new[] { t });
         }
 
-        /// <inheritdoc />
         public ILifetimeSelector As<T>()
         {
             return As(typeof(T));
         }
 
-        /// <inheritdoc />
         public ILifetimeSelector As(params Type[] types)
         {
             Preconditions.NotNull(types, nameof(types));
@@ -34,7 +31,6 @@ namespace Scrutor
             return As(types.AsEnumerable());
         }
 
-        /// <inheritdoc />
         public ILifetimeSelector As(IEnumerable<Type> types)
         {
             Preconditions.NotNull(types, nameof(types));
@@ -42,25 +38,21 @@ namespace Scrutor
             return AddSelector(Types.Select(t => new TypeMap(t, types)));
         }
 
-        /// <inheritdoc />
         public ILifetimeSelector AsImplementedInterfaces()
         {
             return AsTypeInfo(t => t.ImplementedInterfaces);
         }
 
-        /// <inheritdoc />
         public ILifetimeSelector AsMatchingInterface()
         {
             return AsMatchingInterface(null);
         }
 
-        /// <inheritdoc />
         public ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action)
         {
             return AsTypeInfo(t => t.FindMatchingInterface(action));
         }
 
-        /// <inheritdoc />
         public ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector)
         {
             Preconditions.NotNull(selector, nameof(selector));
@@ -68,7 +60,6 @@ namespace Scrutor
             return AddSelector(Types.Select(t => new TypeMap(t, selector(t))));
         }
 
-        /// <inheritdoc />
         public IImplementationTypeSelector UsingAttributes()
         {
             var selector = new AttributeSelector(Types);

@@ -59,7 +59,6 @@ namespace Scrutor.Tests
 
     public class MyQueryHandler : QueryHandler<MyQuery, MyResult> { }
 
-
     public class QueryHandler<TQuery, TResult> : IQueryHandler<TQuery, TResult> { }
 
     public class LoggingQueryHandler<TQuery, TResult> : DecoratorQueryHandler<TQuery, TResult>
@@ -67,14 +66,12 @@ namespace Scrutor.Tests
         public LoggingQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner) { }
     }
 
-
     public class TelemetryQueryHandler<TQuery, TResult> : DecoratorQueryHandler<TQuery, TResult>
     {
         public TelemetryQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner) { }
     }
 
-
-    public class DecoratorQueryHandler<TQuery, TResult> :QueryHandler<TQuery, TResult>,  IDecoratorQueryHandler<TQuery, TResult>
+    public class DecoratorQueryHandler<TQuery, TResult> : QueryHandler<TQuery, TResult>, IDecoratorQueryHandler<TQuery, TResult>
     {
         public DecoratorQueryHandler(IQueryHandler<TQuery, TResult> inner)
         {

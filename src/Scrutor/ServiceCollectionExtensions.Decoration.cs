@@ -80,7 +80,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.DecorateDescriptors(typeof(TService), x => x.Decorate<TService>(inner => decorator(inner)));
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator));
         }
 
         /// <summary>

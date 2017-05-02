@@ -13,9 +13,10 @@ namespace Scrutor.Tests
         [Fact]
         public void Scan_TheseTypes()
         {
-            Collection.Scan(scan => scan.AddTypes<TransientService1, TransientService2>()
-                .AsImplementedInterfaces()
-                .WithTransientLifetime());
+            Collection.Scan(scan => scan
+                .AddTypes<TransientService1, TransientService2>()
+                    .AsImplementedInterfaces()
+                    .WithTransientLifetime());
 
             var services = Collection.GetDescriptors<ITransientService>();
 
@@ -25,15 +26,17 @@ namespace Scrutor.Tests
         [Fact]
         public void UsingRegistrationStrategy_None()
         {
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                .AsImplementedInterfaces()
-                .WithTransientLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .AsImplementedInterfaces()
+                        .WithTransientLifetime());
 
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                .AsImplementedInterfaces()
-                .WithSingletonLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .AsImplementedInterfaces()
+                        .WithSingletonLifetime());
 
             var services = Collection.GetDescriptors<ITransientService>();
 
@@ -43,16 +46,18 @@ namespace Scrutor.Tests
         [Fact]
         public void UsingRegistrationStrategy_SkipIfExists()
         {
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                .AsImplementedInterfaces()
-                .WithTransientLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .AsImplementedInterfaces()
+                        .WithTransientLifetime());
 
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                .UsingRegistrationStrategy(RegistrationStrategy.Skip)
-                .AsImplementedInterfaces()
-                .WithSingletonLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .UsingRegistrationStrategy(RegistrationStrategy.Skip)
+                        .AsImplementedInterfaces()
+                        .WithSingletonLifetime());
 
             var services = Collection.GetDescriptors<ITransientService>();
 
@@ -62,16 +67,18 @@ namespace Scrutor.Tests
         [Fact]
         public void UsingRegistrationStrategy_ReplaceDefault()
         {
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                .AsImplementedInterfaces()
-                .WithTransientLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .AsImplementedInterfaces()
+                        .WithTransientLifetime());
 
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                .UsingRegistrationStrategy(RegistrationStrategy.Replace(ReplacementBehavior.Default))
-                .AsImplementedInterfaces()
-                .WithSingletonLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .UsingRegistrationStrategy(RegistrationStrategy.Replace())
+                        .AsImplementedInterfaces()
+                        .WithSingletonLifetime());
 
             var services = Collection.GetDescriptors<ITransientService>();
 
@@ -81,16 +88,18 @@ namespace Scrutor.Tests
         [Fact]
         public void UsingRegistrationStrategy_ReplaceServiceTypes()
         {
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                .AsImplementedInterfaces()
-                .WithTransientLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .AsImplementedInterfaces()
+                        .WithTransientLifetime());
 
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                .UsingRegistrationStrategy(RegistrationStrategy.Replace(ReplacementBehavior.ServiceType))
-                .AsImplementedInterfaces()
-                .WithSingletonLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .UsingRegistrationStrategy(RegistrationStrategy.Replace(ReplacementBehavior.ServiceType))
+                        .AsImplementedInterfaces()
+                        .WithSingletonLifetime());
 
             var services = Collection.GetDescriptors<ITransientService>();
 
@@ -100,16 +109,18 @@ namespace Scrutor.Tests
         [Fact]
         public void UsingRegistrationStrategy_ReplaceImplementationTypes()
         {
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                .AsImplementedInterfaces()
-                .WithTransientLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .AsImplementedInterfaces()
+                        .WithTransientLifetime());
 
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                .UsingRegistrationStrategy(RegistrationStrategy.Replace(ReplacementBehavior.ImplementationType))
-                .AsImplementedInterfaces()
-                .WithSingletonLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .UsingRegistrationStrategy(RegistrationStrategy.Replace(ReplacementBehavior.ImplementationType))
+                        .AsImplementedInterfaces()
+                        .WithSingletonLifetime());
 
             var services = Collection.GetDescriptors<ITransientService>();
 
@@ -119,10 +130,11 @@ namespace Scrutor.Tests
         [Fact]
         public void CanFilterTypesToScan()
         {
-            Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
-                .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                    .AsImplementedInterfaces()
-                    .WithTransientLifetime());
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                        .AsImplementedInterfaces()
+                        .WithTransientLifetime());
 
             var provider = Collection.BuildServiceProvider();
 

@@ -5,8 +5,6 @@ namespace Scrutor.Tests
 {
     public class OpenGenericDecorationTests : TestBase
     {
-        private IServiceCollection Collection { get; } = new ServiceCollection();
-
         [Fact]
         public void CanDecorateOpenGenericTypeBasedOnClass()
         {

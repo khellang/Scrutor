@@ -16,10 +16,18 @@ namespace Scrutor
         public static readonly RegistrationStrategy Append = new AppendRegistrationStrategy();
 
         /// <summary>
+        /// Replaces existing service registrations using <see cref="ReplacementBehavior.Default"/>.
+        /// </summary>
+        public static RegistrationStrategy Replace()
+        {
+            return Replace(ReplacementBehavior.Default);
+        }
+
+        /// <summary>
         /// Replaces existing service registrations based on the specified <see cref="ReplacementBehavior"/>.
         /// </summary>
         /// <param name="behavior">The behavior to use when replacing services.</param>
-        public static RegistrationStrategy Replace(ReplacementBehavior behavior = ReplacementBehavior.Default)
+        public static RegistrationStrategy Replace(ReplacementBehavior behavior)
         {
             return new ReplaceRegistrationStrategy(behavior);
         }

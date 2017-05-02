@@ -54,58 +54,46 @@ namespace Scrutor
         }
 #endif
 
-        /// <inheritdoc />
         public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
         {
-            if (types == null)
-            {
-                throw new ArgumentNullException(nameof(types));
-            }
+            Preconditions.NotNull(types, nameof(types));
 
             return InternalFromAssembliesOf(types.Select(x => x.GetTypeInfo()));
         }
 
-        /// <inheritdoc />
         public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
         {
-            if (types == null)
-            {
-                throw new ArgumentNullException(nameof(types));
-            }
+            Preconditions.NotNull(types, nameof(types));
 
             return InternalFromAssembliesOf(types.Select(t => t.GetTypeInfo()));
         }
 
-        private IImplementationTypeSelector InternalFromAssembliesOf(IEnumerable<TypeInfo> typeInfos)
-        {
-            return InternalFromAssemblies(typeInfos.Select(t => t.Assembly));
-        }
-
-        /// <inheritdoc />
         public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
         {
-            if (assemblies == null)
-            {
-                throw new ArgumentNullException(nameof(assemblies));
-            }
+            Preconditions.NotNull(assemblies, nameof(assemblies));
 
             return InternalFromAssemblies(assemblies);
         }
 
-        /// <inheritdoc />
         public IImplementationTypeSelector FromAssemblies(IEnumerable<Assembly> assemblies)
         {
-            if (assemblies == null)
-            {
-                throw new ArgumentNullException(nameof(assemblies));
-            }
+            Preconditions.NotNull(assemblies, nameof(assemblies));
 
             return InternalFromAssemblies(assemblies);
         }
 
-        private IImplementationTypeSelector InternalFromAssemblies(IEnumerable<Assembly> assemblies)
+        public IServiceTypeSelector AddTypes(params Type[] types)
         {
-            return AddSelector(assemblies.SelectMany(asm => asm.DefinedTypes).Select(x => x.AsType()));
+            Preconditions.NotNull(types, nameof(types));
+
+            return AddSelector(types);
+        }
+
+        public IServiceTypeSelector AddTypes(IEnumerable<Type> types)
+        {
+            Preconditions.NotNull(types, nameof(types));
+
+            return AddSelector(types);
         }
 
         void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
@@ -116,14 +104,14 @@ namespace Scrutor
             }
         }
 
-        public IServiceTypeSelector AddTypes(params Type[] types)
+        private IImplementationTypeSelector InternalFromAssembliesOf(IEnumerable<TypeInfo> typeInfos)
         {
-            return AddSelector(types);
+            return InternalFromAssemblies(typeInfos.Select(t => t.Assembly));
         }
 
-        public IServiceTypeSelector AddTypes(IEnumerable<Type> types)
+        private IImplementationTypeSelector InternalFromAssemblies(IEnumerable<Assembly> assemblies)
         {
-            return AddSelector(types);
+            return AddSelector(assemblies.SelectMany(asm => asm.DefinedTypes).Select(x => x.AsType()));
         }
 
         private IServiceTypeSelector AddSelector(IEnumerable<Type> types)

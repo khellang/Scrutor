@@ -69,6 +69,14 @@ namespace Scrutor
             return this;
         }
 
+        public IServiceTypeSelector UsingRegistrationStrategy(RegistrationStrategy registrationStrategy)
+        {
+            Preconditions.NotNull(registrationStrategy, nameof(registrationStrategy));
+
+            RegistrationStrategy = registrationStrategy;
+            return this;
+        }
+
         void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
             if (Selectors.Count == 0)
@@ -82,12 +90,6 @@ namespace Scrutor
             {
                 selector.Populate(services, strategy);
             }
-        }
-
-        public IServiceTypeSelector UsingRegistrationStrategy(RegistrationStrategy registrationStrategy)
-        {
-            RegistrationStrategy = registrationStrategy;
-            return this;
         }
 
         private ILifetimeSelector AddSelector(IEnumerable<TypeMap> types)

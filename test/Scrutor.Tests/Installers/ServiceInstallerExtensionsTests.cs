@@ -62,14 +62,13 @@ namespace Scrutor.Tests.Installers
         public void ShouldFindAndInstallAllInstallersFromAnAssembly()
         {
             // Arrange
-            IServiceCollection expectedServices = new ServiceCollection();
-            IConfiguration expectedConfiguration = new DummyConfiguration();
+            IServiceCollection services = new ServiceCollection();
 
             // Act
-            expectedServices.InstallFromAssemblyContaining<InstallerExtensionsTests>(expectedConfiguration);
+            services.InstallFromAssemblyContaining<InstallerExtensionsTests>(new DummyConfiguration());
 
             // Assert
-            var provider = expectedServices.BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             Assert.IsType<Foo>(provider.GetRequiredService<Foo>());
             Assert.IsType<Bar>(provider.GetRequiredService<Bar>());

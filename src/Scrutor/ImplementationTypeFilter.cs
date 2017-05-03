@@ -20,30 +20,21 @@ namespace Scrutor
 
         public IImplementationTypeFilter AssignableTo(Type type)
         {
-            if (type == null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
+            Preconditions.NotNull(type, nameof(type));
 
             return AssignableToAny(type);
         }
 
         public IImplementationTypeFilter AssignableToAny(params Type[] types)
         {
-            if (types == null)
-            {
-                throw new ArgumentNullException(nameof(types));
-            }
+            Preconditions.NotNull(types, nameof(types));
 
             return AssignableToAny(types.AsEnumerable());
         }
 
         public IImplementationTypeFilter AssignableToAny(IEnumerable<Type> types)
         {
-            if (types == null)
-            {
-                throw new ArgumentNullException(nameof(types));
-            }
+            Preconditions.NotNull(types, nameof(types));
 
             return Where(t => types.Any(t.IsAssignableTo));
         }
@@ -55,20 +46,14 @@ namespace Scrutor
 
         public IImplementationTypeFilter WithAttribute(Type attributeType)
         {
-            if (attributeType == null)
-            {
-                throw new ArgumentNullException(nameof(attributeType));
-            }
+            Preconditions.NotNull(attributeType, nameof(attributeType));
 
             return Where(t => t.HasAttribute(attributeType));
         }
 
         public IImplementationTypeFilter WithAttribute<T>(Func<T, bool> predicate) where T : Attribute
         {
-            if (predicate == null)
-            {
-                throw new ArgumentNullException(nameof(predicate));
-            }
+            Preconditions.NotNull(predicate, nameof(predicate));
 
             return Where(t => t.HasAttribute(predicate));
         }
@@ -80,20 +65,14 @@ namespace Scrutor
 
         public IImplementationTypeFilter WithoutAttribute(Type attributeType)
         {
-            if (attributeType == null)
-            {
-                throw new ArgumentNullException(nameof(attributeType));
-            }
+            Preconditions.NotNull(attributeType, nameof(attributeType));
 
             return Where(t => !t.HasAttribute(attributeType));
         }
 
         public IImplementationTypeFilter WithoutAttribute<T>(Func<T, bool> predicate) where T : Attribute
         {
-            if (predicate == null)
-            {
-                throw new ArgumentNullException(nameof(predicate));
-            }
+            Preconditions.NotNull(predicate, nameof(predicate));
 
             return Where(t => !t.HasAttribute(predicate));
         }
@@ -105,30 +84,21 @@ namespace Scrutor
 
         public IImplementationTypeFilter InNamespaceOf(params Type[] types)
         {
-            if (types == null)
-            {
-                throw new ArgumentNullException(nameof(types));
-            }
+            Preconditions.NotNull(types, nameof(types));
 
             return InNamespaces(types.Select(t => t.Namespace));
         }
 
         public IImplementationTypeFilter InNamespaces(params string[] namespaces)
         {
-            if (namespaces == null)
-            {
-                throw new ArgumentNullException(nameof(namespaces));
-            }
+            Preconditions.NotNull(namespaces, nameof(namespaces));
 
             return InNamespaces(namespaces.AsEnumerable());
         }
 
         public IImplementationTypeFilter InNamespaces(IEnumerable<string> namespaces)
         {
-            if (namespaces == null)
-            {
-                throw new ArgumentNullException(nameof(namespaces));
-            }
+            Preconditions.NotNull(namespaces, nameof(namespaces));
 
             return Where(t => namespaces.Any(t.IsInNamespace));
         }
@@ -140,40 +110,28 @@ namespace Scrutor
 
         public IImplementationTypeFilter NotInNamespaceOf(params Type[] types)
         {
-            if (types == null)
-            {
-                throw new ArgumentNullException(nameof(types));
-            }
+            Preconditions.NotNull(types, nameof(types));
 
             return NotInNamespaces(types.Select(t => t.Namespace));
         }
 
         public IImplementationTypeFilter NotInNamespaces(params string[] namespaces)
         {
-            if (namespaces == null)
-            {
-                throw new ArgumentNullException(nameof(namespaces));
-            }
+            Preconditions.NotNull(namespaces, nameof(namespaces));
 
             return NotInNamespaces(namespaces.AsEnumerable());
         }
 
         public IImplementationTypeFilter NotInNamespaces(IEnumerable<string> namespaces)
         {
-            if (namespaces == null)
-            {
-                throw new ArgumentNullException(nameof(namespaces));
-            }
+            Preconditions.NotNull(namespaces, nameof(namespaces));
 
             return Where(t => namespaces.All(ns => !t.IsInNamespace(ns)));
         }
 
         public IImplementationTypeFilter Where(Func<Type, bool> predicate)
         {
-            if (predicate == null)
-            {
-                throw new ArgumentNullException(nameof(predicate));
-            }
+            Preconditions.NotNull(predicate, nameof(predicate));
 
             Types = Types.Where(predicate);
             return this;

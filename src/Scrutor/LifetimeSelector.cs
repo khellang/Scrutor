@@ -15,27 +15,25 @@ namespace Scrutor
 
         private ServiceLifetime? Lifetime { get; set; }
 
-        /// <inheritdoc />
         public IImplementationTypeSelector WithSingletonLifetime()
         {
             return WithLifetime(ServiceLifetime.Singleton);
         }
 
-        /// <inheritdoc />
         public IImplementationTypeSelector WithScopedLifetime()
         {
             return WithLifetime(ServiceLifetime.Scoped);
         }
 
-        /// <inheritdoc />
         public IImplementationTypeSelector WithTransientLifetime()
         {
             return WithLifetime(ServiceLifetime.Transient);
         }
 
-        /// <inheritdoc />
         public IImplementationTypeSelector WithLifetime(ServiceLifetime lifetime)
         {
+            Preconditions.IsDefined(lifetime, nameof(lifetime));
+
             Lifetime = lifetime;
             return this;
         }

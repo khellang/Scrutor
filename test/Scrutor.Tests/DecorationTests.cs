@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using System.Linq;
 
 namespace Scrutor.Tests
 {
-    public class DecorationTests
+    public class DecorationTests : TestBase
     {
         [Fact]
         public void CanDecorateType()
@@ -117,16 +116,6 @@ namespace Scrutor.Tests
             var decorator = Assert.IsType<Decorator>(instance);
 
             Assert.Same(validator, decorator.InjectedService);
-        }
-
-
-        private static IServiceProvider ConfigureProvider(Action<IServiceCollection> configure)
-        {
-            var services = new ServiceCollection();
-
-            configure(services);
-
-            return services.BuildServiceProvider();
         }
 
         public interface IDecoratedService { }

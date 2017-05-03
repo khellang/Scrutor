@@ -1,22 +1,10 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Scrutor.Tests
 {
-    public class OpenGenericDecorationTests
+    public class OpenGenericDecorationTests : TestBase
     {
-        private IServiceCollection Collection { get; } = new ServiceCollection();
-
-        private static IServiceProvider ConfigureProvider(Action<IServiceCollection> configure)
-        {
-            var services = new ServiceCollection();
-
-            configure(services);
-
-            return services.BuildServiceProvider();
-        }
-
         [Fact]
         public void CanDecorateOpenGenericTypeBasedOnClass()
         {
@@ -53,45 +41,25 @@ namespace Scrutor.Tests
         }
     }
 
-    public class MyQuery
-    {
-        
-    }
+    public class MyQuery { }
 
-    public class MyResult
-    {
-        
-    }
+    public class MyResult { }
 
-    public class MyQueryHandler : QueryHandler<MyQuery, MyResult>
-    {
-    }
+    public class MyQueryHandler : QueryHandler<MyQuery, MyResult> { }
 
-
-    public class QueryHandler<TQuery, TResult> : IQueryHandler<TQuery, TResult>
-    {
-        
-    }
+    public class QueryHandler<TQuery, TResult> : IQueryHandler<TQuery, TResult> { }
 
     public class LoggingQueryHandler<TQuery, TResult> : DecoratorQueryHandler<TQuery, TResult>
     {
-        public LoggingQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner)
-        {
-        }
-
+        public LoggingQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner) { }
     }
-
 
     public class TelemetryQueryHandler<TQuery, TResult> : DecoratorQueryHandler<TQuery, TResult>
     {
-        public TelemetryQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner)
-        {
-        }
-
+        public TelemetryQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner) { }
     }
 
-
-    public class DecoratorQueryHandler<TQuery, TResult> :QueryHandler<TQuery, TResult>,  IDecoratorQueryHandler<TQuery, TResult>
+    public class DecoratorQueryHandler<TQuery, TResult> : QueryHandler<TQuery, TResult>, IDecoratorQueryHandler<TQuery, TResult>
     {
         public DecoratorQueryHandler(IQueryHandler<TQuery, TResult> inner)
         {

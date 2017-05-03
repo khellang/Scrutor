@@ -16,15 +16,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// or <paramref name="action"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Scan(this IServiceCollection services, Action<ITypeSourceSelector> action)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (action == null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(action, nameof(action));
 
             var selector = new TypeSourceSelector();
 

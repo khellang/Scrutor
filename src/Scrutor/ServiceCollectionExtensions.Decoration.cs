@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Scrutor;
 
 // ReSharper disable once CheckNamespace
@@ -19,6 +18,8 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection Decorate<TService, TDecorator>(this IServiceCollection services)
             where TDecorator : TService
         {
+            Preconditions.NotNull(services, nameof(services));
+
             return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator)));
         }
 
@@ -34,26 +35,13 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <paramref name="serviceType"/> or <paramref name="decoratorType"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate(this IServiceCollection services, Type serviceType, Type decoratorType)
         {
-            if (decoratorType == null)
-            {
-                throw new ArgumentNullException(nameof(decoratorType));
-            }
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decoratorType, nameof(decoratorType));
 
             if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
             {
-                var closedGenericTypeArguments =
-                    services.Where(descriptor => descriptor.ServiceType.IsAssignableTo(serviceType))
-                    .Select(descriptor => descriptor.ServiceType.GenericTypeArguments).ToArray();
-
-                foreach (var genericTypeArguments in closedGenericTypeArguments)
-                {
-                    var closedServiceType = serviceType.MakeGenericType(genericTypeArguments);
-                    var closedDecoratorType = decoratorType.MakeGenericType(genericTypeArguments);
-                    services.DecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
-                }
-
-                return services;
-
+                return services.DecorateOpenGeneric(serviceType, decoratorType);
             }
 
             return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType));
@@ -71,10 +59,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
         {
-            if (decorator == null)
-            {
-                throw new ArgumentNullException(nameof(decorator));
-            }
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
 
             return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator));
         }
@@ -91,12 +77,10 @@ namespace Microsoft.Extensions.DependencyInjection
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, TService> decorator)
         {
-            if (decorator == null)
-            {
-                throw new ArgumentNullException(nameof(decorator));
-            }
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.DecorateDescriptors(typeof(TService), x => x.Decorate<TService>(inner => decorator(inner)));
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator));
         }
 
         /// <summary>
@@ -111,10 +95,9 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
         {
-            if (decorator == null)
-            {
-                throw new ArgumentNullException(nameof(decorator));
-            }
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
 
             return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator));
         }
@@ -131,26 +114,33 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate(this IServiceCollection services, Type serviceType, Func<object, object> decorator)
         {
-            if (decorator == null)
-            {
-                throw new ArgumentNullException(nameof(decorator));
-            }
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
 
             return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator));
         }
 
+        private static IServiceCollection DecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType)
+        {
+            IServiceCollection Decorate(IServiceCollection s, Type[] typeArguments)
+            {
+                var closedServiceType = serviceType.MakeGenericType(typeArguments);
+                var closedDecoratorType = decoratorType.MakeGenericType(typeArguments);
+
+                return s.DecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
+            }
+
+            var arguments = services
+                .Where(descriptor => descriptor.ServiceType.IsAssignableTo(serviceType))
+                .Select(descriptor => descriptor.ServiceType.GenericTypeArguments)
+                .ToArray();
+
+            return arguments.Aggregate(services, Decorate);
+        }
+
         private static IServiceCollection DecorateDescriptors(this IServiceCollection services, Type serviceType, Func<ServiceDescriptor, ServiceDescriptor> decorator)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (serviceType == null)
-            {
-                throw new ArgumentNullException(nameof(serviceType));
-            }
-
             var descriptors = services.GetDescriptors(serviceType);
 
             foreach (var descriptor in descriptors)
@@ -166,7 +156,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
-        private static List<ServiceDescriptor> GetDescriptors(this IServiceCollection services, Type serviceType)
+        private static IEnumerable<ServiceDescriptor> GetDescriptors(this IServiceCollection services, Type serviceType)
         {
             var descriptors = new List<ServiceDescriptor>();
 

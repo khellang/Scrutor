@@ -16,7 +16,7 @@ namespace Scrutor
 
         public IServiceTypeSelector AddClasses()
         {
-            return AddClasses(publicOnly: false);
+            return AddClasses(publicOnly: true);
         }
 
         public IServiceTypeSelector AddClasses(bool publicOnly)

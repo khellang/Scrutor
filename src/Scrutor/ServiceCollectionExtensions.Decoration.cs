@@ -253,6 +253,11 @@ namespace Microsoft.Extensions.DependencyInjection
                 .Select(descriptor => descriptor.ServiceType.GenericTypeArguments)
                 .ToArray();
 
+            if (arguments.Length == 0)
+            {
+                return false;
+            }
+
             return arguments.Aggregate(true, (result, args) => result && TryDecorate(args));
         }
 

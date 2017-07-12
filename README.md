@@ -1,4 +1,4 @@
-# Scrutor [![Build status](https://ci.appveyor.com/api/projects/status/j00uyvqnm54rdlkb?svg=true)](https://ci.appveyor.com/project/khellang/scrutor)
+# Scrutor [![Build status](https://ci.appveyor.com/api/projects/status/j00uyvqnm54rdlkb?svg=true)](https://ci.appveyor.com/project/khellang/scrutor) [![NuGet Package](https://img.shields.io/nuget/v/Scrutor.svg)](https://www.nuget.org/packages/Scrutor)
 
 > Scrutor - I search or examine thoroughly; I probe, investigate or scrutinize  
 > From scrūta, as the original sense of the verb was to search through trash. - https://en.wiktionary.org/wiki/scrutor

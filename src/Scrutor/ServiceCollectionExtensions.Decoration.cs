@@ -123,12 +123,22 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static IServiceCollection DecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType)
         {
-            IServiceCollection Decorate(IServiceCollection s, Type[] typeArguments)
+            if (services.TryDecorateOpenGeneric(serviceType, decoratorType))
+            {
+                return services;
+            }
+
+            throw new InvalidOperationException($"Could not find any registered services for type '{serviceType.FullName}'.");
+        }
+
+        private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType)
+        {
+            bool TryDecorate(Type[] typeArguments)
             {
                 var closedServiceType = serviceType.MakeGenericType(typeArguments);
                 var closedDecoratorType = decoratorType.MakeGenericType(typeArguments);
 
-                return s.DecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
+                return services.TryDecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
             }
 
             var arguments = services
@@ -136,12 +146,25 @@ namespace Microsoft.Extensions.DependencyInjection
                 .Select(descriptor => descriptor.ServiceType.GenericTypeArguments)
                 .ToArray();
 
-            return arguments.Aggregate(services, Decorate);
+            return arguments.Aggregate(true, (result, args) => result && TryDecorate(args));
         }
 
         private static IServiceCollection DecorateDescriptors(this IServiceCollection services, Type serviceType, Func<ServiceDescriptor, ServiceDescriptor> decorator)
         {
-            var descriptors = services.GetDescriptors(serviceType);
+            if (services.TryDecorateDescriptors(serviceType, decorator))
+            {
+                return services;
+            }
+
+            throw new InvalidOperationException($"Could not find any registered services for type '{serviceType.FullName}'.");
+        }
+
+        private static bool TryDecorateDescriptors(this IServiceCollection services, Type serviceType, Func<ServiceDescriptor, ServiceDescriptor> decorator)
+        {
+            if (!services.TryGetDescriptors(serviceType, out var descriptors))
+            {
+                return false;
+            }
 
             foreach (var descriptor in descriptors)
             {
@@ -153,27 +176,12 @@ namespace Microsoft.Extensions.DependencyInjection
                 services.Remove(descriptor);
             }
 
-            return services;
+            return true;
         }
 
-        private static IEnumerable<ServiceDescriptor> GetDescriptors(this IServiceCollection services, Type serviceType)
+        private static bool TryGetDescriptors(this IServiceCollection services, Type serviceType, out ICollection<ServiceDescriptor> descriptors)
         {
-            var descriptors = new List<ServiceDescriptor>();
-
-            foreach (var service in services)
-            {
-                if (service.ServiceType == serviceType)
-                {
-                    descriptors.Add(service);
-                }
-            }
-
-            if (descriptors.Count == 0)
-            {
-                throw new InvalidOperationException($"Could not find any registered services for type '{serviceType.FullName}'.");
-            }
-
-            return descriptors;
+            return (descriptors = services.Where(service => service.ServiceType == serviceType).ToArray()).Any();
         }
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)

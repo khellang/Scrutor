@@ -79,6 +79,26 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void CanDecorateExistingInstance()
+        {
+            var existing = new Decorated();
+
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<IDecoratedService>(existing);
+
+                services.Decorate<IDecoratedService, Decorator>();
+            });
+
+            var instance = provider.GetRequiredService<IDecoratedService>();
+
+            var decorator = Assert.IsType<Decorator>(instance);
+            var decorated = Assert.IsType<Decorated>(decorator.Inner);
+
+            Assert.Same(existing, decorated);
+        }
+
+        [Fact]
         public void CanInjectServicesIntoDecoratedType()
         {
             var provider = ConfigureProvider(services =>

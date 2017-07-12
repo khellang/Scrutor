@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Scrutor.Tests
@@ -38,6 +39,12 @@ namespace Scrutor.Tests
             var telemetryDecorator = Assert.IsType<TelemetryQueryHandler<MyQuery, MyResult>>(instance);
             var loggingDecorator = Assert.IsType<LoggingQueryHandler<MyQuery, MyResult>>(telemetryDecorator.Inner);
             Assert.IsType<MyQueryHandler>(loggingDecorator.Inner);
+        }
+
+        [Fact]
+        public void DecoratingNonRegisteredOpenGenericServiceThrows()
+        {
+            Assert.Throws<InvalidOperationException>(() => ConfigureProvider(services => services.Decorate(typeof(IQueryHandler<,>), typeof(QueryHandler<,>))));
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using System.Linq;
@@ -116,6 +117,12 @@ namespace Scrutor.Tests
             var decorator = Assert.IsType<Decorator>(instance);
 
             Assert.Same(validator, decorator.InjectedService);
+        }
+
+        [Fact]
+        public void DecoratingNonRegisteredServiceThrows()
+        {
+            Assert.Throws<InvalidOperationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
         }
 
         public interface IDecoratedService { }

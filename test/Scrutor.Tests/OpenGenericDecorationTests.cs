@@ -44,7 +44,7 @@ namespace Scrutor.Tests
         [Fact]
         public void DecoratingNonRegisteredOpenGenericServiceThrows()
         {
-            Assert.Throws<InvalidOperationException>(() => ConfigureProvider(services => services.Decorate(typeof(IQueryHandler<,>), typeof(QueryHandler<,>))));
+            Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IQueryHandler<,>), typeof(QueryHandler<,>))));
         }
     }
 

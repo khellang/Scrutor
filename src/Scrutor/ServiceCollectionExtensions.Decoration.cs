@@ -13,7 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// using the specified type <typeparamref name="TDecorator"/>.
         /// </summary>
         /// <param name="services">The services to add to.</param>
-        /// <exception cref="InvalidOperationException">If no service of the type <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the type <typeparamref name="TService"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If the <paramref name="services"/> argument is <c>null</c>.</exception>
         public static IServiceCollection Decorate<TService, TDecorator>(this IServiceCollection services)
             where TDecorator : TService
@@ -44,7 +44,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to decorate.</param>
         /// <param name="decoratorType">The type to decorate existing services with.</param>
-        /// <exception cref="InvalidOperationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
         /// <paramref name="serviceType"/> or <paramref name="decoratorType"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate(this IServiceCollection services, Type serviceType, Type decoratorType)
@@ -91,7 +91,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TService">The type of services to decorate.</typeparam>
         /// <param name="services">The services to add to.</param>
         /// <param name="decorator">The decorator function.</param>
-        /// <exception cref="InvalidOperationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
@@ -126,7 +126,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TService">The type of services to decorate.</typeparam>
         /// <param name="services">The services to add to.</param>
         /// <param name="decorator">The decorator function.</param>
-        /// <exception cref="InvalidOperationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, TService> decorator)
@@ -161,7 +161,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to decorate.</param>
         /// <param name="decorator">The decorator function.</param>
-        /// <exception cref="InvalidOperationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
         /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
@@ -198,7 +198,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to decorate.</param>
         /// <param name="decorator">The decorator function.</param>
-        /// <exception cref="InvalidOperationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
         /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
         public static IServiceCollection Decorate(this IServiceCollection services, Type serviceType, Func<object, object> decorator)
@@ -235,7 +235,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services;
             }
 
-            throw new InvalidOperationException($"Could not find any registered services for type '{serviceType.FullName}'.");
+            throw new MissingTypeRegistrationException(serviceType);
         }
 
         private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType)
@@ -268,7 +268,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services;
             }
 
-            throw new InvalidOperationException($"Could not find any registered services for type '{serviceType.FullName}'.");
+            throw new MissingTypeRegistrationException(serviceType);
         }
 
         private static bool TryDecorateDescriptors(this IServiceCollection services, Type serviceType, Func<ServiceDescriptor, ServiceDescriptor> decorator)

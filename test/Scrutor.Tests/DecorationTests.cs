@@ -142,7 +142,7 @@ namespace Scrutor.Tests
         [Fact]
         public void DecoratingNonRegisteredServiceThrows()
         {
-            Assert.Throws<InvalidOperationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
+            Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
         }
 
         public interface IDecoratedService { }

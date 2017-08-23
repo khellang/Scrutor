@@ -40,7 +40,16 @@ namespace Scrutor
 
         public IImplementationTypeSelector FromApplicationDependencies()
         {
-            return FromDependencyContext(DependencyContext.Default);
+            try
+            {
+                return FromDependencyContext(DependencyContext.Default);
+            }
+            catch
+            {
+                // Something went wrong when loading the DependencyContext, fall
+                // back to loading all referenced assemblies of the entry assembly...
+                return FromAssemblyDependencies(Assembly.GetEntryAssembly());
+            }
         }
 
         public IImplementationTypeSelector FromDependencyContext(DependencyContext context)
@@ -51,6 +60,37 @@ namespace Scrutor
                 .SelectMany(library => library.GetDefaultAssemblyNames(context))
                 .Select(Assembly.Load)
                 .ToArray());
+        }
+
+        public IImplementationTypeSelector FromAssemblyDependencies(Assembly assembly)
+        {
+            Preconditions.NotNull(assembly, nameof(assembly));
+
+            var assemblies = new List<Assembly> { assembly };
+
+            try
+            {
+                var dependencyNames = assembly.GetReferencedAssemblies();
+
+                foreach (var dependencyName in dependencyNames)
+                {
+                    try
+                    {
+                        // Try to load the referenced assembly...
+                        assemblies.Add(Assembly.Load(dependencyName));
+                    }
+                    catch
+                    {
+                        // Failed to load assembly. Skip it.
+                    }
+                }
+
+                return FromAssemblies(assemblies);
+            }
+            catch
+            {
+                return FromAssemblies(assemblies);
+            }
         }
 #endif
 

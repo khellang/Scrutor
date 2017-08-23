@@ -31,8 +31,16 @@ namespace Scrutor
         /// <summary>
         /// Will load and scan all runtime libraries referenced by the currently executing application.
         /// Calling this method is equivalent to calling <see cref="FromDependencyContext"/> and passing in <see cref="DependencyContext.Default"/>.
+        /// If loading <see cref="DependencyContext.Default"/> fails, this method will fall back to calling <see cref="FromApplicationDependencies"/>,
+        /// using the entry assembly.
         /// </summary>
         IImplementationTypeSelector FromApplicationDependencies();
+
+        /// <summary>
+        /// Will load and scan all runtime libraries referenced by the currently specified <paramref name="assembly"/>.
+        /// </summary>
+        /// <param name="assembly">The assembly whose dependencies should be scanned.</param>
+        IImplementationTypeSelector FromAssemblyDependencies(Assembly assembly);
 
         /// <summary>
         /// Will load and scan all runtime libraries in the given <paramref name="context"/>.

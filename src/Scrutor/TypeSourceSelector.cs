@@ -12,7 +12,7 @@ namespace Scrutor
 {
     internal class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
-        protected List<ISelector> Selectors { get; } = new List<ISelector>();
+        private List<ISelector> Selectors { get; } = new List<ISelector>();
 
         /// <inheritdoc />
         public IImplementationTypeSelector FromAssemblyOf<T>()
@@ -126,14 +126,28 @@ namespace Scrutor
         {
             Preconditions.NotNull(types, nameof(types));
 
-            return AddSelector(types);
+            var implementationSelector = new ImplementationTypeSelector(this, types);
+
+            var selector = new ServiceTypeSelector(implementationSelector, types);
+
+            Selectors.Add(selector);
+
+            return selector;
         }
 
         public IServiceTypeSelector AddTypes(IEnumerable<Type> types)
         {
             Preconditions.NotNull(types, nameof(types));
 
-            return AddSelector(types);
+            var allTypes = types.ToArray();
+
+            var implementationSelector = new ImplementationTypeSelector(this, allTypes);
+
+            var selector = new ServiceTypeSelector(implementationSelector, allTypes);
+
+            Selectors.Add(selector);
+
+            return selector;
         }
 
         void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
@@ -154,9 +168,9 @@ namespace Scrutor
             return AddSelector(assemblies.SelectMany(asm => asm.DefinedTypes).Select(x => x.AsType()));
         }
 
-        private IServiceTypeSelector AddSelector(IEnumerable<Type> types)
+        private IImplementationTypeSelector AddSelector(IEnumerable<Type> types)
         {
-            var selector = new ServiceTypeSelector(types);
+            var selector = new ImplementationTypeSelector(this, types);
 
             Selectors.Add(selector);
 

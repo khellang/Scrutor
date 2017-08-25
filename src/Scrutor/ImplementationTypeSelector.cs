@@ -1,18 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+
+#if DEPENDENCY_MODEL
+using Microsoft.Extensions.DependencyModel;
+#endif
 
 namespace Scrutor
 {
-    internal class ImplementationTypeSelector : TypeSourceSelector, IImplementationTypeSelector, ISelector
+    internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelector
     {
-        protected ImplementationTypeSelector(IEnumerable<Type> types)
+        public ImplementationTypeSelector(ITypeSourceSelector inner, IEnumerable<Type> types)
         {
+            Inner = inner;
             Types = types;
         }
 
-        protected IEnumerable<Type> Types { get; }
+        private ITypeSourceSelector Inner { get; }
+
+        private IEnumerable<Type> Types { get; }
+
+        private List<ISelector> Selectors { get; } = new List<ISelector>();
 
         public IServiceTypeSelector AddClasses()
         {
@@ -44,6 +54,69 @@ namespace Scrutor
             return AddSelector(filter.Types);
         }
 
+        #region Chain Methods
+
+#if NET451
+        public IImplementationTypeSelector FromCallingAssembly()
+        {
+            return Inner.FromCallingAssembly();
+        }
+
+        public IImplementationTypeSelector FromExecutingAssembly()
+        {
+            return Inner.FromExecutingAssembly();
+        }
+#endif
+
+#if DEPENDENCY_MODEL
+        public IImplementationTypeSelector FromEntryAssembly()
+        {
+            return Inner.FromEntryAssembly();
+        }
+
+        public IImplementationTypeSelector FromApplicationDependencies()
+        {
+            return Inner.FromApplicationDependencies();
+        }
+
+        public IImplementationTypeSelector FromAssemblyDependencies(Assembly assembly)
+        {
+            return Inner.FromAssemblyDependencies(assembly);
+        }
+
+        public IImplementationTypeSelector FromDependencyContext(DependencyContext context)
+        {
+            return Inner.FromDependencyContext(context);
+        }
+#endif
+
+        public IImplementationTypeSelector FromAssemblyOf<T>()
+        {
+            return Inner.FromAssemblyOf<T>();
+        }
+
+        public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
+        {
+            return Inner.FromAssembliesOf(types);
+        }
+
+        public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
+        {
+            return Inner.FromAssembliesOf(types);
+        }
+
+        public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
+        {
+            return Inner.FromAssemblies(assemblies);
+        }
+
+        public IImplementationTypeSelector FromAssemblies(IEnumerable<Assembly> assemblies)
+        {
+            return Inner.FromAssemblies(assemblies);
+        }
+
+        #endregion
+
         void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
             if (Selectors.Count == 0)
@@ -59,7 +132,7 @@ namespace Scrutor
 
         private IServiceTypeSelector AddSelector(IEnumerable<Type> types)
         {
-            var selector = new ServiceTypeSelector(types);
+            var selector = new ServiceTypeSelector(this, types);
 
             Selectors.Add(selector);
 

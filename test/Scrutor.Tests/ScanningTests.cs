@@ -30,10 +30,7 @@ namespace Scrutor.Tests
                 .FromAssemblyOf<ITransientService>()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
                         .AsImplementedInterfaces()
-                        .WithTransientLifetime());
-
-            Collection.Scan(scan => scan
-                .FromAssemblyOf<ITransientService>()
+                        .WithTransientLifetime()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
                         .AsImplementedInterfaces()
                         .WithSingletonLifetime());
@@ -50,10 +47,7 @@ namespace Scrutor.Tests
                 .FromAssemblyOf<ITransientService>()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
                         .AsImplementedInterfaces()
-                        .WithTransientLifetime());
-
-            Collection.Scan(scan => scan
-                .FromAssemblyOf<ITransientService>()
+                        .WithTransientLifetime()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
                         .UsingRegistrationStrategy(RegistrationStrategy.Skip)
                         .AsImplementedInterfaces()
@@ -71,10 +65,7 @@ namespace Scrutor.Tests
                 .FromAssemblyOf<ITransientService>()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
                         .AsImplementedInterfaces()
-                        .WithTransientLifetime());
-
-            Collection.Scan(scan => scan
-                .FromAssemblyOf<ITransientService>()
+                        .WithTransientLifetime()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
                         .UsingRegistrationStrategy(RegistrationStrategy.Replace())
                         .AsImplementedInterfaces()
@@ -92,10 +83,7 @@ namespace Scrutor.Tests
                 .FromAssemblyOf<ITransientService>()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
                         .AsImplementedInterfaces()
-                        .WithTransientLifetime());
-
-            Collection.Scan(scan => scan
-                .FromAssemblyOf<ITransientService>()
+                        .WithTransientLifetime()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
                         .UsingRegistrationStrategy(RegistrationStrategy.Replace(ReplacementBehavior.ServiceType))
                         .AsImplementedInterfaces()
@@ -113,10 +101,7 @@ namespace Scrutor.Tests
                 .FromAssemblyOf<ITransientService>()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
                         .AsImplementedInterfaces()
-                        .WithTransientLifetime());
-
-            Collection.Scan(scan => scan
-                .FromAssemblyOf<ITransientService>()
+                        .WithTransientLifetime()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
                         .UsingRegistrationStrategy(RegistrationStrategy.Replace(ReplacementBehavior.ImplementationType))
                         .AsImplementedInterfaces()

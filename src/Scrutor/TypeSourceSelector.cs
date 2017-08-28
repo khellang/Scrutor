@@ -126,28 +126,22 @@ namespace Scrutor
         {
             Preconditions.NotNull(types, nameof(types));
 
-            var implementationSelector = new ImplementationTypeSelector(this, types);
-
-            var selector = new ServiceTypeSelector(implementationSelector, types);
+            var selector = new ImplementationTypeSelector(this, types);
 
             Selectors.Add(selector);
 
-            return selector;
+            return selector.AddClasses();
         }
 
         public IServiceTypeSelector AddTypes(IEnumerable<Type> types)
         {
             Preconditions.NotNull(types, nameof(types));
 
-            var allTypes = types.ToArray();
-
-            var implementationSelector = new ImplementationTypeSelector(this, allTypes);
-
-            var selector = new ServiceTypeSelector(implementationSelector, allTypes);
+            var selector = new ImplementationTypeSelector(this, types);
 
             Selectors.Add(selector);
 
-            return selector;
+            return selector.AddClasses();
         }
 
         void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)

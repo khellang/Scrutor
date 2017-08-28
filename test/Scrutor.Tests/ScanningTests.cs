@@ -16,11 +16,15 @@ namespace Scrutor.Tests
             Collection.Scan(scan => scan
                 .AddTypes<TransientService1, TransientService2>()
                     .AsImplementedInterfaces()
-                    .WithTransientLifetime());
+                    .WithSingletonLifetime());
 
-            var services = Collection.GetDescriptors<ITransientService>();
+            Assert.Equal(2, Collection.Count);
 
-            Assert.Equal(2, services.Count(x => x.ServiceType == typeof(ITransientService)));
+            Assert.All(Collection, x =>
+            {
+                Assert.Equal(ServiceLifetime.Singleton, x.Lifetime);
+                Assert.Equal(typeof(ITransientService), x.ServiceType);
+            });
         }
 
         [Fact]

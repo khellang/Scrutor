@@ -74,9 +74,10 @@ namespace Scrutor
             return Inner.FromEntryAssembly();
         }
 
-        public IImplementationTypeSelector FromApplicationDependencies()
+        public IImplementationTypeSelector 
+            FromApplicationDependencies(Func<Assembly, bool> predicate = null)
         {
-            return Inner.FromApplicationDependencies();
+            return Inner.FromApplicationDependencies(predicate);
         }
 
         public IImplementationTypeSelector FromAssemblyDependencies(Assembly assembly)
@@ -84,9 +85,10 @@ namespace Scrutor
             return Inner.FromAssemblyDependencies(assembly);
         }
 
-        public IImplementationTypeSelector FromDependencyContext(DependencyContext context)
+        public IImplementationTypeSelector FromDependencyContext(
+            DependencyContext context, Func<Assembly, bool> predicate = null)
         {
-            return Inner.FromDependencyContext(context);
+            return Inner.FromDependencyContext(context, predicate);
         }
 #endif
 

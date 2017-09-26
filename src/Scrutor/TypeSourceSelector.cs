@@ -73,7 +73,7 @@ namespace Scrutor
                 .Where(predicate)
                 .ToArray();
 
-            return FromAssemblies(assemblies);
+            return InternalFromAssemblies(assemblies);
         }
 
         public IImplementationTypeSelector FromAssemblyDependencies(Assembly assembly)
@@ -99,11 +99,11 @@ namespace Scrutor
                     }
                 }
 
-                return FromAssemblies(assemblies);
+                return InternalFromAssemblies(assemblies);
             }
             catch
             {
-                return FromAssemblies(assemblies);
+                return InternalFromAssemblies(assemblies);
             }
         }
 #endif

@@ -38,8 +38,12 @@ namespace Scrutor
             return FromAssemblies(Assembly.GetEntryAssembly());
         }
 
-        public IImplementationTypeSelector 
-            FromApplicationDependencies(Func<Assembly, bool> predicate = null)
+        public IImplementationTypeSelector FromApplicationDependencies()
+        {
+            return FromApplicationDependencies(_ => true);
+        }
+
+        public IImplementationTypeSelector FromApplicationDependencies(Func<Assembly, bool> predicate)
         {
             try
             {
@@ -53,20 +57,23 @@ namespace Scrutor
             }
         }
 
-        public IImplementationTypeSelector FromDependencyContext(
-            DependencyContext context, Func<Assembly, bool> predicate = null)
+        public IImplementationTypeSelector FromDependencyContext(DependencyContext context)
+        {
+            return FromDependencyContext(context, _ => true);
+        }
+
+        public IImplementationTypeSelector FromDependencyContext(DependencyContext context, Func<Assembly, bool> predicate)
         {
             Preconditions.NotNull(context, nameof(context));
+            Preconditions.NotNull(predicate, nameof(predicate));
 
             var assemblies = context.RuntimeLibraries
                 .SelectMany(library => library.GetDefaultAssemblyNames(context))
-                .Select(Assembly.Load);
-            if (predicate != null)
-            {
-                assemblies = assemblies.Where(predicate);
-            }
+                .Select(Assembly.Load)
+                .Where(predicate)
+                .ToArray();
 
-            return FromAssemblies(assemblies.ToArray());
+            return FromAssemblies(assemblies);
         }
 
         public IImplementationTypeSelector FromAssemblyDependencies(Assembly assembly)

@@ -30,13 +30,24 @@ namespace Scrutor
 
         /// <summary>
         /// Will load and scan all runtime libraries referenced by the currently executing application.
-        /// Calling this method is equivalent to calling <see cref="FromDependencyContext"/> and passing in <see cref="DependencyContext.Default"/>.
-        /// If loading <see cref="DependencyContext.Default"/> fails, this method will fall back to calling <see cref="FromApplicationDependencies"/>,
-        /// using the entry assembly.
+        /// Calling this method is equivalent to calling <see cref="FromDependencyContext(DependencyContext)"/> and passing in <see cref="DependencyContext.Default"/>.
         /// </summary>
-        /// <param name="predicate">The predicate to match assemblys.</param>
-        IImplementationTypeSelector FromApplicationDependencies(
-            Func<Assembly, bool> predicate = null);
+        /// <remarks>
+        /// If loading <see cref="DependencyContext.Default"/> fails, this method will fall back to calling <see cref="FromAssemblyDependencies(Assembly)"/>,
+        /// using the entry assembly.
+        /// </remarks>
+        IImplementationTypeSelector FromApplicationDependencies();
+
+        /// <summary>
+        /// Will load and scan all runtime libraries referenced by the currently executing application.
+        /// Calling this method is equivalent to calling <see cref="FromDependencyContext(DependencyContext, Func{Assembly, bool})"/> and passing in <see cref="DependencyContext.Default"/>.
+        /// </summary>
+        /// <remarks>
+        /// If loading <see cref="DependencyContext.Default"/> fails, this method will fall back to calling <see cref="FromAssemblyDependencies(Assembly)"/>,
+        /// using the entry assembly.
+        /// </remarks>
+        /// <param name="predicate">The predicate to match assemblies.</param>
+        IImplementationTypeSelector FromApplicationDependencies(Func<Assembly, bool> predicate);
 
         /// <summary>
         /// Will load and scan all runtime libraries referenced by the currently specified <paramref name="assembly"/>.
@@ -48,9 +59,14 @@ namespace Scrutor
         /// Will load and scan all runtime libraries in the given <paramref name="context"/>.
         /// </summary>
         /// <param name="context">The dependency context.</param>
-        /// <param name="predicate">The predicate to match assemblys.</param>
-        IImplementationTypeSelector FromDependencyContext(
-            DependencyContext context, Func<Assembly, bool> predicate = null);
+        IImplementationTypeSelector FromDependencyContext(DependencyContext context);
+
+        /// <summary>
+        /// Will load and scan all runtime libraries in the given <paramref name="context"/>.
+        /// </summary>
+        /// <param name="context">The dependency context.</param>
+        /// <param name="predicate">The predicate to match assemblies.</param>
+        IImplementationTypeSelector FromDependencyContext(DependencyContext context, Func<Assembly, bool> predicate);
 #endif
 
         /// <summary>

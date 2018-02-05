@@ -9,6 +9,18 @@ Assembly scanning and decoration extensions for Microsoft.Extensions.DependencyI
 
 Install the [Scrutor NuGet Package](https://www.nuget.org/packages/Scrutor).
 
+NuGet CLI:
+
+```
+Install-Package Scrutor
+```
+
+.NET Core CLI
+
+```
+dotnet add package Scrutor
+```
+
 ## Usage
 
 The library adds two extension methods to `IServiceCollection`:

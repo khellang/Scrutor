@@ -94,11 +94,6 @@ namespace Scrutor
 
             if (otherTypeInfo.IsGenericTypeDefinition)
             {
-                if (typeInfo.IsGenericTypeDefinition)
-                {
-                    return typeInfo.Equals(otherTypeInfo);
-                }
-
                 return typeInfo.IsAssignableToGenericTypeDefinition(otherTypeInfo);
             }
 

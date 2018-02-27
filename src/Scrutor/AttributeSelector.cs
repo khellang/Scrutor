@@ -30,7 +30,7 @@ namespace Scrutor
 
                 if (duplicates.Any())
                 {
-                    throw new InvalidOperationException($@"Type ""{type.FullName}"" has multiple ServiceDescriptor attributes with the same service type.");
+                    throw new InvalidOperationException($@"Type ""{type.ToFriendlyName()}"" has multiple ServiceDescriptor attributes with the same service type.");
                 }
 
                 foreach (var attribute in attributes)

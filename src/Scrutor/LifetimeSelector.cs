@@ -206,7 +206,7 @@ namespace Scrutor
 
                     if (!implementationType.IsAssignableTo(serviceType))
                     {
-                        throw new InvalidOperationException($@"Type ""{implementationType.FullName}"" is not assignable to ""${serviceType.FullName}"".");
+                        throw new InvalidOperationException($@"Type ""{implementationType.ToFriendlyName()}"" is not assignable to ""${serviceType.ToFriendlyName()}"".");
                     }
 
                     var descriptor = new ServiceDescriptor(serviceType, implementationType, Lifetime.Value);

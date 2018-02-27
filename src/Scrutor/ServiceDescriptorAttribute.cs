@@ -44,7 +44,7 @@ namespace Scrutor
 
             if (!fallbackType.IsAssignableTo(ServiceType))
             {
-                throw new InvalidOperationException($@"Type ""{fallbackType.FullName}"" is not assignable to ""${ServiceType.FullName}"".");
+                throw new InvalidOperationException($@"Type ""{fallbackType.ToFriendlyName()}"" is not assignable to ""{ServiceType.ToFriendlyName()}"".");
             }
 
             yield return ServiceType;

@@ -263,7 +263,7 @@ namespace Scrutor.Tests
                     .AddClasses()
                         .UsingAttributes()));
 
-            Assert.Equal(@"Type ""Scrutor.Tests.WrongInheritance"" is not assignable to ""$Scrutor.Tests.IWrongInheritanceA"".", ex.Message);
+            Assert.Equal(@"Type ""Scrutor.Tests.WrongInheritance"" is not assignable to ""Scrutor.Tests.IWrongInheritanceA"".", ex.Message);
         }
 
         [Fact]

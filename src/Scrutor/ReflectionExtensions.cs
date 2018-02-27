@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.Internal;
 
 namespace Scrutor
 {
@@ -226,6 +227,23 @@ namespace Scrutor
             }
 
             return true;
+        }
+
+        public static string ToFriendlyName(this Type type)
+        {
+            return TypeNameHelper.GetTypeDisplayName(type, includeGenericParameterNames: true);
+        }
+
+#if NETSTANDARD
+        public static Type[] GetGenericArguments(this Type type)
+        {
+            return type.GenericTypeArguments;
+        }
+#endif
+
+        public static bool IsGenericType(this Type type)
+        {
+            return type.GetTypeInfo().IsGenericType;
         }
 
         public static bool IsOpenGeneric(this Type type)

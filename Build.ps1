@@ -16,11 +16,15 @@ function Install-Dotnet
     # Download the dotnet CLI install script
     if (!(Test-Path .\dotnet\install.ps1))
     {
-      Invoke-WebRequest "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.1/scripts/obtain/dotnet-install.ps1" -OutFile ".\.dotnet\dotnet-install.ps1"
+      Invoke-WebRequest "https://raw.githubusercontent.com/dotnet/cli/v2.1.4/scripts/obtain/dotnet-install.ps1" -OutFile ".\.dotnet\dotnet-install.ps1"
     }
 
+    # Skip all the extra work
+    $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
+    $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true"
+
     # Run the dotnet CLI install
-    & .\.dotnet\dotnet-install.ps1 -Version "1.0.3"
+    & .\.dotnet\dotnet-install.ps1 -Version "2.1.4"
 
     # Add the dotnet folder path to the process.
     Remove-PathVariable $env:DOTNET_INSTALL_DIR

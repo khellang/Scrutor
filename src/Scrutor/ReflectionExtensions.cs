@@ -224,18 +224,6 @@ namespace Scrutor
             return TypeNameHelper.GetTypeDisplayName(type, includeGenericParameterNames: true);
         }
 
-#if NETSTANDARD
-        public static Type[] GetGenericArguments(this Type type)
-        {
-            return type.GenericTypeArguments;
-        }
-#endif
-
-        public static bool IsGenericType(this Type type)
-        {
-            return type.GetTypeInfo().IsGenericType;
-        }
-
         public static bool IsOpenGeneric(this Type type)
         {
             return type.GetTypeInfo().IsGenericTypeDefinition;
@@ -245,7 +233,9 @@ namespace Scrutor
         {
             if (typeInfo.IsGenericType)
             {
-                if (interfaceType.IsGenericType())
+                var interfaceTypeInfo = interfaceType.GetTypeInfo();
+
+                if (interfaceTypeInfo.IsGenericType)
                 {
                     var argumentCount = interfaceType.GenericTypeArguments.Length;
                     var parameterCount = typeInfo.GenericTypeParameters.Length;
@@ -261,7 +251,9 @@ namespace Scrutor
         {
             if (typeInfo.IsGenericTypeDefinition)
             {
-                if (interfaceType.IsGenericType())
+                var interfaceTypeInfo = interfaceType.GetTypeInfo();
+
+                if (interfaceTypeInfo.IsGenericType)
                 {
                     return interfaceType.GetGenericTypeDefinition();
                 }

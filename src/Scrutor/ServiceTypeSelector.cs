@@ -52,7 +52,9 @@ namespace Scrutor
 
         public ILifetimeSelector AsImplementedInterfaces()
         {
-            return AsTypeInfo(t => t.ImplementedInterfaces);
+            return AsTypeInfo(t => t.ImplementedInterfaces
+                .Where(x => x.HasMatchingGenericArity(t))
+                .Select(x => x.GetRegistrationType(t)));
         }
 
         public ILifetimeSelector AsMatchingInterface()

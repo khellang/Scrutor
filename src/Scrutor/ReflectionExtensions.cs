@@ -14,11 +14,6 @@ namespace Scrutor
 
             if (typeInfo.IsClass && !typeInfo.IsAbstract)
             {
-                if (typeInfo.IsGenericType && typeInfo.ContainsGenericParameters)
-                {
-                    return false;
-                }
-
                 if (publicOnly)
                 {
                     return typeInfo.IsPublic || typeInfo.IsNestedPublic;
@@ -245,5 +240,35 @@ namespace Scrutor
         {
             return type.GetTypeInfo().IsGenericTypeDefinition;
         }
+
+        public static bool HasMatchingGenericArity(this Type interfaceType, TypeInfo typeInfo)
+        {
+            if (typeInfo.IsGenericType)
+            {
+                if (interfaceType.IsGenericType())
+                {
+                    var argumentCount = interfaceType.GenericTypeArguments.Length;
+                    var parameterCount = typeInfo.GenericTypeParameters.Length;
+
+                    return argumentCount == parameterCount;
+                }
+            }
+
+            return true;
+        }
+
+        public static Type GetRegistrationType(this Type interfaceType, TypeInfo typeInfo)
+        {
+            if (typeInfo.IsGenericTypeDefinition)
+            {
+                if (interfaceType.IsGenericType())
+                {
+                    return interfaceType.GetGenericTypeDefinition();
+                }
+            }
+
+            return interfaceType;
+        }
+
     }
 }

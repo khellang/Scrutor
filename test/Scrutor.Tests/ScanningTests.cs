@@ -343,15 +343,30 @@ namespace Scrutor.Tests
         }
 
         [Fact]
-        public void ShouldNotRegisterGenericTypesWithMissingParameters()
+        public void ShouldRegisterOpenGenericTypes()
         {
+            var genericTypes = new[]
+            {
+                typeof(OpenGeneric<>),
+                typeof(QueryHandler<,>),
+                typeof(PartiallyClosedGeneric<>)
+            };
+
             Collection.Scan(scan => scan
-                .FromAssemblyOf<ITransientService>()
-                    .AddClasses(x => x.AssignableTo(typeof(BaseQueryHandler<>)))
+                .AddTypes(genericTypes)
+                    .AddClasses(x => x.Where(y => y.IsGenericType))
                     .AsImplementedInterfaces());
 
-            // This would throw if generic type definitions were registered.
-            Collection.BuildServiceProvider();
+            var provider = Collection.BuildServiceProvider();
+
+            Assert.NotNull(provider.GetService<IOpenGeneric<int>>());
+            Assert.NotNull(provider.GetService<IOpenGeneric<string>>());
+
+            Assert.NotNull(provider.GetService<IQueryHandler<string, float>>());
+            Assert.NotNull(provider.GetService<IQueryHandler<double, Guid>>());
+
+            // We don't register partially closed generic types.
+            Assert.Null(provider.GetService<IPartiallyClosedGeneric<string, int>>());
         }
     }
 
@@ -374,7 +389,13 @@ namespace Scrutor.Tests
 
     public class QueryHandler : IQueryHandler<string, int> { }
 
-    public class BaseQueryHandler<T> : IQueryHandler<T, int> { }
+    public interface IOpenGeneric<T> { }
+
+    public class OpenGeneric<T> : IOpenGeneric<T> { }
+
+    public interface IPartiallyClosedGeneric<T1, T2> { }
+
+    public class PartiallyClosedGeneric<T> : IPartiallyClosedGeneric<T, int> { }
 
     public interface ITransientServiceToCombine { }
 

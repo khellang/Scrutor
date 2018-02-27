@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor
@@ -43,13 +42,9 @@ namespace Scrutor
                 yield break;
             }
 
-            var fallbackTypeInfo = fallbackType.GetTypeInfo();
-
-            var serviceTypeInfo = ServiceType.GetTypeInfo();
-
-            if (!serviceTypeInfo.IsAssignableFrom(fallbackTypeInfo))
+            if (!fallbackType.IsAssignableTo(ServiceType))
             {
-                throw new InvalidOperationException($@"Type ""{fallbackTypeInfo.FullName}"" is not assignable to ""${serviceTypeInfo.FullName}"".");
+                throw new InvalidOperationException($@"Type ""{fallbackType.FullName}"" is not assignable to ""${ServiceType.FullName}"".");
             }
 
             yield return ServiceType;

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor.Tests
@@ -12,7 +13,12 @@ namespace Scrutor.Tests
 
         public static ServiceDescriptor[] GetDescriptors<T>(this IServiceCollection services)
         {
-            return services.Where(x => x.ServiceType == typeof(T)).ToArray();
+            return services.GetDescriptors(typeof(T));
+        }
+
+        public static ServiceDescriptor[] GetDescriptors(this IServiceCollection services, Type serviceType)
+        {
+            return services.Where(x => x.ServiceType == serviceType).ToArray();
         }
     }
 }

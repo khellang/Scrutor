@@ -220,7 +220,7 @@ namespace Scrutor.Tests
                 .AddClasses(t => t.AssignableTo<ITransientService>())
                     .UsingAttributes());
 
-            Assert.Equal(Collection.Count, 1);
+            Assert.Equal(1, Collection.Count);
 
             var service = Collection.GetDescriptor<ITransientService>();
 
@@ -250,7 +250,7 @@ namespace Scrutor.Tests
                 .ToList();
 
             Assert.Equal(5, Collection.Count);
-            Assert.Equal(0, remainingSetOfTypes.Count);
+            Assert.Empty(remainingSetOfTypes);
         }
 
         [Fact]

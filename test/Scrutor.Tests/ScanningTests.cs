@@ -2,6 +2,7 @@
 using Scrutor.Tests;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace Scrutor.Tests
@@ -368,6 +369,12 @@ namespace Scrutor.Tests
             // We don't register partially closed generic types.
             Assert.Null(provider.GetService<IPartiallyClosedGeneric<string, int>>());
         }
+
+        [Fact]
+        public void ShouldNotIncludeCompilerGeneratedTypes()
+        {
+            Assert.Empty(Collection.Scan(scan => scan.AddType<CompilerGenerated>()));
+        }
     }
 
     public interface ITransientService { }
@@ -434,6 +441,9 @@ namespace Scrutor.Tests
 
     [ServiceDescriptor]
     public class DefaultAttributes : IDefault3Level2, IDefault1, IDefault2 { }
+
+    [CompilerGenerated]
+    public class CompilerGenerated { }
 }
 
 namespace UnwantedNamespace

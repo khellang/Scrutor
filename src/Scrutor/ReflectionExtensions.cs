@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Internal;
 
 namespace Scrutor
@@ -14,6 +15,11 @@ namespace Scrutor
 
             if (typeInfo.IsClass && !typeInfo.IsAbstract)
             {
+                if (typeInfo.IsDefined(typeof(CompilerGeneratedAttribute), inherit: true))
+                {
+                    return false;
+                }
+
                 if (publicOnly)
                 {
                     return typeInfo.IsPublic || typeInfo.IsNestedPublic;

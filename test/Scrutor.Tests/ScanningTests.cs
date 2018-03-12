@@ -355,7 +355,7 @@ namespace Scrutor.Tests
 
             Collection.Scan(scan => scan
                 .AddTypes(genericTypes)
-                    .AddClasses(x => x.Where(y => y.IsGenericType))
+                    .AddClasses()
                     .AsImplementedInterfaces());
 
             var provider = Collection.BuildServiceProvider();

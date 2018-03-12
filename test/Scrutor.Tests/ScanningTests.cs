@@ -396,7 +396,7 @@ namespace Scrutor.Tests
 
     public class QueryHandler : IQueryHandler<string, int> { }
 
-    public interface IOpenGeneric<T> { }
+    public interface IOpenGeneric<T> : IOtherInheritance { }
 
     public class OpenGeneric<T> : IOpenGeneric<T> { }
 

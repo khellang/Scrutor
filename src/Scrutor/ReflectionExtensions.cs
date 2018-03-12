@@ -248,6 +248,8 @@ namespace Scrutor
 
                     return argumentCount == parameterCount;
                 }
+
+                return false;
             }
 
             return true;

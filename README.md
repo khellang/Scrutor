@@ -25,8 +25,8 @@ dotnet add package Scrutor
 
 The library adds two extension methods to `IServiceCollection`:
 
- - `Scan` - This is the entry point to set up your assembly scanning.
- - `Decorate` - This method is used to decorate already registered services.
+* `Scan` - This is the entry point to set up your assembly scanning.
+* `Decorate` - This method is used to decorate already registered services.
 
 See **Examples** below for usage examples.
 

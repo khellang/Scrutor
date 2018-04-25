@@ -96,6 +96,24 @@ namespace Scrutor
             return InNamespaces(namespaces.AsEnumerable());
         }
 
+        public IImplementationTypeFilter InExactNamespaceOf<T>()
+        {
+            return InExactNamespaceOf(typeof(T));
+        }
+
+        public IImplementationTypeFilter InExactNamespaceOf(params Type[] types)
+        {
+            Preconditions.NotNull(types, nameof(types));
+            return Where(t => types.Any(x => t.IsInExactNamespace(x.Namespace)));
+        }
+
+        public IImplementationTypeFilter InExactNamespacesOf(params string[] namespaces)
+        {
+            Preconditions.NotNull(namespaces, nameof(namespaces));
+
+            return Where(t => namespaces.Any(t.IsInExactNamespace));
+        }
+
         public IImplementationTypeFilter InNamespaces(IEnumerable<string> namespaces)
         {
             Preconditions.NotNull(namespaces, nameof(namespaces));

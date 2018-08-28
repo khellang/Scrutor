@@ -37,6 +37,11 @@ namespace Scrutor
         ILifetimeSelector AsImplementedInterfaces();
 
         /// <summary>
+        /// Registers each matching concrete type as all of its implemented interfaces, by returning an instance of the main type
+        /// </summary>
+        ILifetimeSelector AsSelfWithInterfaces();
+
+        /// <summary>
         /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName)
         /// </summary>
         ILifetimeSelector AsMatchingInterface();

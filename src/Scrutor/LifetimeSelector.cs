@@ -11,15 +11,18 @@ namespace Scrutor
 {
     internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
     {
-        public LifetimeSelector(IServiceTypeSelector inner, IEnumerable<TypeMap> typeMaps)
+        public LifetimeSelector(IServiceTypeSelector inner, IEnumerable<TypeMap> typeMaps, IEnumerable<TypeFactoryMap> typeFactoryMaps)
         {
             Inner = inner;
             TypeMaps = typeMaps;
+            TypeFactoryMaps = typeFactoryMaps;
         }
 
         private IServiceTypeSelector Inner { get; }
 
         private IEnumerable<TypeMap> TypeMaps { get; }
+
+        private IEnumerable<TypeFactoryMap> TypeFactoryMaps { get; }
 
         private ServiceLifetime? Lifetime { get; set; }
 
@@ -162,6 +165,11 @@ namespace Scrutor
             return Inner.AsImplementedInterfaces();
         }
 
+        public ILifetimeSelector AsSelfWithInterfaces()
+        {
+            return Inner.AsSelfWithInterfaces();
+        }
+
         public ILifetimeSelector AsMatchingInterface()
         {
             return Inner.AsMatchingInterface();
@@ -210,6 +218,16 @@ namespace Scrutor
                     }
 
                     var descriptor = new ServiceDescriptor(serviceType, implementationType, Lifetime.Value);
+
+                    strategy.Apply(services, descriptor);
+                }
+            }
+
+            foreach (var typeFactoryMap in TypeFactoryMaps)
+            {
+                foreach (var serviceType in typeFactoryMap.ServiceTypes)
+                {
+                    var descriptor = new ServiceDescriptor(serviceType, typeFactoryMap.ImplementationFactory, Lifetime.Value);
 
                     strategy.Apply(services, descriptor);
                 }

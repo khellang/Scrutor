@@ -375,6 +375,78 @@ namespace Scrutor.Tests
         {
             Assert.Empty(Collection.Scan(scan => scan.AddType<CompilerGenerated>()));
         }
+
+        [Fact]
+        public void ScanShouldCreateSeparateRegistrationsPerInterface()
+        {
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<CombinedService2>()
+                .AddClasses(classes => classes.AssignableTo<CombinedService2>())
+                    .AsImplementedInterfaces()
+                    .WithSingletonLifetime()
+                .AddClasses(classes => classes.AssignableTo<CombinedService2>())
+                    .AsSelf()
+                    .WithSingletonLifetime());
+
+            Assert.Equal(5, Collection.Count);
+
+            Assert.All(Collection, x =>
+            {
+                Assert.Equal(ServiceLifetime.Singleton, x.Lifetime);
+                Assert.Equal(typeof(CombinedService2), x.ImplementationType);
+            });
+        }
+
+        [Fact]
+        public void AsSelfWithInterfacesShouldForwardRegistrationsToClass()
+        {
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<CombinedService2>()
+                .AddClasses(classes => classes.AssignableTo<CombinedService2>())
+                    .AsSelfWithInterfaces()
+                    .WithSingletonLifetime());
+
+            Assert.Equal(5, Collection.Count);
+
+            var service1 = Collection.GetDescriptor<CombinedService2>();
+
+            Assert.NotNull(service1);
+            Assert.Equal(ServiceLifetime.Singleton, service1.Lifetime);
+            Assert.Equal(typeof(CombinedService2), service1.ImplementationType);
+
+            var interfaceDescriptors = Collection.Where(x => x.ImplementationType != typeof(CombinedService2)).ToList();
+            Assert.Equal(4, interfaceDescriptors.Count);
+
+            Assert.All(interfaceDescriptors, x =>
+            {
+                Assert.Equal(ServiceLifetime.Singleton, x.Lifetime);
+                Assert.NotNull(x.ImplementationFactory);
+            });
+        }
+
+        [Fact]
+        public void AsSelfWithInterfacesShouldCreateTrueSingletons()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.Scan(scan => scan
+                    .FromAssemblyOf<CombinedService2>()
+                     .AddClasses(classes => classes.AssignableTo<CombinedService2>())
+                        .AsSelfWithInterfaces()
+                        .WithSingletonLifetime());
+            });
+
+            var instance1 = provider.GetRequiredService<CombinedService2>();
+            var instance2 = provider.GetRequiredService<IDefault1>();
+            var instance3 = provider.GetRequiredService<IDefault2>();
+            var instance4 = provider.GetRequiredService<IDefault3Level2>();
+            var instance5 = provider.GetRequiredService<IDefault3Level1>();
+
+            Assert.Same(instance1, instance2);
+            Assert.Same(instance1, instance3);
+            Assert.Same(instance1, instance4);
+            Assert.Same(instance1, instance5);
+        }
     }
 
     public interface ITransientService { }
@@ -444,6 +516,8 @@ namespace Scrutor.Tests
 
     [CompilerGenerated]
     public class CompilerGenerated { }
+
+    public class CombinedService2: IDefault1, IDefault2, IDefault3Level2 { }
 }
 
 namespace UnwantedNamespace

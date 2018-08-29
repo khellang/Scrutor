@@ -2,24 +2,24 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-
-#if DEPENDENCY_MODEL
 using Microsoft.Extensions.DependencyModel;
-#endif
 
 namespace Scrutor
 {
     internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
     {
-        public LifetimeSelector(IServiceTypeSelector inner, IEnumerable<TypeMap> typeMaps)
+        public LifetimeSelector(IServiceTypeSelector inner, IEnumerable<TypeMap> typeMaps, IEnumerable<TypeFactoryMap> typeFactoryMaps)
         {
             Inner = inner;
             TypeMaps = typeMaps;
+            TypeFactoryMaps = typeFactoryMaps;
         }
 
         private IServiceTypeSelector Inner { get; }
 
         private IEnumerable<TypeMap> TypeMaps { get; }
+
+        private IEnumerable<TypeFactoryMap> TypeFactoryMaps { get; }
 
         private ServiceLifetime? Lifetime { get; set; }
 
@@ -48,7 +48,6 @@ namespace Scrutor
 
         #region Chain Methods
 
-#if NET451
         public IImplementationTypeSelector FromCallingAssembly()
         {
             return Inner.FromCallingAssembly();
@@ -58,9 +57,7 @@ namespace Scrutor
         {
             return Inner.FromExecutingAssembly();
         }
-#endif
 
-#if DEPENDENCY_MODEL
         public IImplementationTypeSelector FromEntryAssembly()
         {
             return Inner.FromEntryAssembly();
@@ -90,7 +87,6 @@ namespace Scrutor
         {
             return Inner.FromDependencyContext(context, predicate);
         }
-#endif
 
         public IImplementationTypeSelector FromAssemblyOf<T>()
         {
@@ -162,6 +158,11 @@ namespace Scrutor
             return Inner.AsImplementedInterfaces();
         }
 
+        public ILifetimeSelector AsSelfWithInterfaces()
+        {
+            return Inner.AsSelfWithInterfaces();
+        }
+
         public ILifetimeSelector AsMatchingInterface()
         {
             return Inner.AsMatchingInterface();
@@ -210,6 +211,16 @@ namespace Scrutor
                     }
 
                     var descriptor = new ServiceDescriptor(serviceType, implementationType, Lifetime.Value);
+
+                    strategy.Apply(services, descriptor);
+                }
+            }
+
+            foreach (var typeFactoryMap in TypeFactoryMaps)
+            {
+                foreach (var serviceType in typeFactoryMap.ServiceTypes)
+                {
+                    var descriptor = new ServiceDescriptor(serviceType, typeFactoryMap.ImplementationFactory, Lifetime.Value);
 
                     strategy.Apply(services, descriptor);
                 }

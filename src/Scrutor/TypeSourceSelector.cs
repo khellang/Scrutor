@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-
-#if DEPENDENCY_MODEL
 using Microsoft.Extensions.DependencyModel;
-#endif
 
 namespace Scrutor
 {
@@ -20,7 +17,6 @@ namespace Scrutor
             return InternalFromAssembliesOf(new[] { typeof(T).GetTypeInfo() });
         }
 
-#if NET451
         public IImplementationTypeSelector FromCallingAssembly()
         {
             return FromAssemblies(Assembly.GetCallingAssembly());
@@ -30,9 +26,7 @@ namespace Scrutor
         {
             return FromAssemblies(Assembly.GetExecutingAssembly());
         }
-#endif
 
-#if DEPENDENCY_MODEL
         public IImplementationTypeSelector FromEntryAssembly()
         {
             return FromAssemblies(Assembly.GetEntryAssembly());
@@ -106,7 +100,6 @@ namespace Scrutor
                 return InternalFromAssemblies(assemblies);
             }
         }
-#endif
 
         public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
         {

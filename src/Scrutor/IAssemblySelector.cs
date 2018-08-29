@@ -1,16 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-
-#if DEPENDENCY_MODEL
 using Microsoft.Extensions.DependencyModel;
-#endif
 
 namespace Scrutor
 {
     public interface IAssemblySelector : IFluentInterface
     {
-#if NET451
         /// <summary>
         /// Will scan for types from the calling assembly.
         /// </summary>
@@ -20,9 +16,7 @@ namespace Scrutor
         /// Will scan for types from the currently executing assembly.
         /// </summary>
         IImplementationTypeSelector FromExecutingAssembly();
-#endif
 
-#if DEPENDENCY_MODEL
         /// <summary>
         /// Will scan for types from the entry assembly.
         /// </summary>
@@ -67,7 +61,6 @@ namespace Scrutor
         /// <param name="context">The dependency context.</param>
         /// <param name="predicate">The predicate to match assemblies.</param>
         IImplementationTypeSelector FromDependencyContext(DependencyContext context, Func<Assembly, bool> predicate);
-#endif
 
         /// <summary>
         /// Will scan for types from the assembly of type <typeparamref name="T"/>.

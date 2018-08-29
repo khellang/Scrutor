@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-
-#if DEPENDENCY_MODEL
 using Microsoft.Extensions.DependencyModel;
-#endif
 
 namespace Scrutor
 {
@@ -47,7 +44,7 @@ namespace Scrutor
         {
             Preconditions.NotNull(types, nameof(types));
 
-            return AddSelector(Types.Select(t => new TypeMap(t, types)));
+            return AddSelector(Types.Select(t => new TypeMap(t, types)), Enumerable.Empty<TypeFactoryMap>());
         }
 
         public ILifetimeSelector AsImplementedInterfaces()
@@ -55,6 +52,18 @@ namespace Scrutor
             return AsTypeInfo(t => t.ImplementedInterfaces
                 .Where(x => x.HasMatchingGenericArity(t))
                 .Select(x => x.GetRegistrationType(t)));
+        }
+
+        public ILifetimeSelector AsSelfWithInterfaces()
+        {
+            Func<TypeInfo, IEnumerable<Type>> selector = info =>
+                info.ImplementedInterfaces
+                    .Where(x => x.HasMatchingGenericArity(info))
+                    .Select(x => x.GetRegistrationType(info));
+
+            return AddSelector(
+                Types.Select(t => new TypeMap(t, new[] { t })),
+                Types.Select(t => new TypeFactoryMap(x => x.GetRequiredService(t), selector(t.GetTypeInfo()))));
         }
 
         public ILifetimeSelector AsMatchingInterface()
@@ -71,7 +80,7 @@ namespace Scrutor
         {
             Preconditions.NotNull(selector, nameof(selector));
 
-            return AddSelector(Types.Select(t => new TypeMap(t, selector(t))));
+            return AddSelector(Types.Select(t => new TypeMap(t, selector(t))), Enumerable.Empty<TypeFactoryMap>());
         }
 
         public IImplementationTypeSelector UsingAttributes()
@@ -93,7 +102,6 @@ namespace Scrutor
 
         #region Chain Methods
 
-#if NET451
         public IImplementationTypeSelector FromCallingAssembly()
         {
             return Inner.FromCallingAssembly();
@@ -103,9 +111,7 @@ namespace Scrutor
         {
             return Inner.FromExecutingAssembly();
         }
-#endif
 
-#if DEPENDENCY_MODEL
         public IImplementationTypeSelector FromEntryAssembly()
         {
             return Inner.FromEntryAssembly();
@@ -135,7 +141,6 @@ namespace Scrutor
         {
             return Inner.FromDependencyContext(context, predicate);
         }
-#endif
 
         public IImplementationTypeSelector FromAssemblyOf<T>()
         {
@@ -199,9 +204,9 @@ namespace Scrutor
             }
         }
 
-        private ILifetimeSelector AddSelector(IEnumerable<TypeMap> types)
+        private ILifetimeSelector AddSelector(IEnumerable<TypeMap> types, IEnumerable<TypeFactoryMap> factories)
         {
-            var selector = new LifetimeSelector(this, types);
+            var selector = new LifetimeSelector(this, types, factories);
 
             Selectors.Add(selector);
 

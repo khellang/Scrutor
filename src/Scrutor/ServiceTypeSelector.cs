@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-
-#if DEPENDENCY_MODEL
 using Microsoft.Extensions.DependencyModel;
-#endif
 
 namespace Scrutor
 {
@@ -105,7 +102,6 @@ namespace Scrutor
 
         #region Chain Methods
 
-#if NET451
         public IImplementationTypeSelector FromCallingAssembly()
         {
             return Inner.FromCallingAssembly();
@@ -115,9 +111,7 @@ namespace Scrutor
         {
             return Inner.FromExecutingAssembly();
         }
-#endif
 
-#if DEPENDENCY_MODEL
         public IImplementationTypeSelector FromEntryAssembly()
         {
             return Inner.FromEntryAssembly();
@@ -147,7 +141,6 @@ namespace Scrutor
         {
             return Inner.FromDependencyContext(context, predicate);
         }
-#endif
 
         public IImplementationTypeSelector FromAssemblyOf<T>()
         {

@@ -7,11 +7,12 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AssemblyName>Scrutor</AssemblyName>
-    <PackageId>Scrutor</PackageId>
     <PackageTags>Dependency;Injection;DI;Scanning;Conventions;Decoration</PackageTags>
     <PackageProjectUrl>https://github.com/khellang/Scrutor</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/khellang/Scrutor/master/LICENSE</PackageLicenseUrl>
+    <AssemblyOriginatorKeyFile>../signing.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign>true</PublicSign>
   </PropertyGroup>
 
   <ItemGroup>

@@ -78,6 +78,11 @@ namespace Scrutor
             return false;
         }
 
+        public static bool IsInExactNamespace(this Type type, string @namespace)
+        {
+            return type.Namespace == @namespace;
+        }
+
         public static bool HasAttribute(this Type type, Type attributeType)
         {
             return type.GetTypeInfo().IsDefined(attributeType, inherit: true);

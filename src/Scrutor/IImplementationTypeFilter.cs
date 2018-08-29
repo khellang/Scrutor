@@ -97,6 +97,27 @@ namespace Scrutor
         IImplementationTypeFilter InNamespaces(params string[] namespaces);
 
         /// <summary>
+        /// Will match all types in the exact same namespace as the type <typeparamref name="T"/>
+        /// </summary>
+        /// <typeparam name="T">The type in the namespace to include</typeparam>
+        IImplementationTypeFilter InExactNamespaceOf<T>();
+
+        /// <summary>
+        /// Will match all types in the exact same namespace as the type <paramref name="types"/>
+        /// </summary>
+        /// <param name="types">The type in the namespace to include</param>
+        /// <exception cref="ArgumentNullException">If the <paramref name="types"/> argument is <c>null</c>.</exception>
+        IImplementationTypeFilter InExactNamespaceOf(params Type[] types);
+
+
+        /// <summary>
+        /// Will match all types in the exact same namespace as the type <paramref name="namespaces"/>
+        /// </summary>
+        /// <param name="namespaces">The namespace to include</param>
+        /// <exception cref="ArgumentNullException">If the <paramref name="namespaces"/> argument is <c>null</c>.</exception>
+        IImplementationTypeFilter InExactNamespacesOf(params string[] namespaces);
+
+        /// <summary>
         /// Will match all types in any of the <paramref name="namespaces"/> specified.
         /// </summary>
         /// <param name="namespaces">The namespaces to include.</param>

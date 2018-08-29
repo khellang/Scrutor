@@ -7,6 +7,8 @@ using Xunit;
 
 namespace Scrutor.Tests
 {
+    using Scrutor.Tests.ChildNamespace;
+
     public class ScanningTests : TestBase
     {
         private IServiceCollection Collection { get; } = new ServiceCollection();
@@ -377,6 +379,17 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void ShouldNotRegisterTypesInSubNamespace()
+        {
+            Collection.Scan(scan => scan.FromAssembliesOf(GetType())
+                .AddClasses(classes => classes.InExactNamespaceOf<ITransientService>())
+                .AsSelf());
+
+            var provider = Collection.BuildServiceProvider();
+
+            Assert.Null(provider.GetService<ClassInChildNamespace>());
+        }
+
         public void ScanShouldCreateSeparateRegistrationsPerInterface()
         {
             Collection.Scan(scan => scan
@@ -518,6 +531,11 @@ namespace Scrutor.Tests
     public class CompilerGenerated { }
 
     public class CombinedService2: IDefault1, IDefault2, IDefault3Level2 { }
+}
+
+namespace Scrutor.Tests.ChildNamespace
+{
+    public class ClassInChildNamespace { }
 }
 
 namespace UnwantedNamespace

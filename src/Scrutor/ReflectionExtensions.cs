@@ -80,7 +80,7 @@ namespace Scrutor
 
         public static bool IsInExactNamespace(this Type type, string @namespace)
         {
-            return type.Namespace == @namespace;
+            return string.Equals(type.Namespace, @namespace, StringComparison.Ordinal);
         }
 
         public static bool HasAttribute(this Type type, Type attributeType)

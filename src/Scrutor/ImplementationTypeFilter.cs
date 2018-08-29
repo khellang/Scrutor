@@ -107,7 +107,7 @@ namespace Scrutor
             return Where(t => types.Any(x => t.IsInExactNamespace(x.Namespace)));
         }
 
-        public IImplementationTypeFilter InExactNamespacesOf(params string[] namespaces)
+        public IImplementationTypeFilter InExactNamespaces(params string[] namespaces)
         {
             Preconditions.NotNull(namespaces, nameof(namespaces));
 

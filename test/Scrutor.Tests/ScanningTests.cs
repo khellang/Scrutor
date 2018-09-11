@@ -390,6 +390,7 @@ namespace Scrutor.Tests
             Assert.Null(provider.GetService<ClassInChildNamespace>());
         }
 
+        [Fact]
         public void ScanShouldCreateSeparateRegistrationsPerInterface()
         {
             Collection.Scan(scan => scan

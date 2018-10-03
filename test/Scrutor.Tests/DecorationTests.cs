@@ -140,6 +140,25 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void DisposableServicesAreDisposed()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddTransient<IDisposableService, DisposableService>();
+                services.Decorate<IDisposableService, DisposableServiceDecorator>();
+            });
+
+            var disposable = provider.GetRequiredService<IDisposableService>();
+
+            var decorator = Assert.IsType<DisposableServiceDecorator>(disposable);
+
+            provider.Dispose();
+
+            Assert.True(decorator.WasDisposed);
+            Assert.True(decorator.Inner.WasDisposed);
+        }
+
+        [Fact]
         public void DecoratingNonRegisteredServiceThrows()
         {
             Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
@@ -175,5 +194,38 @@ namespace Scrutor.Tests
         }
 
         public class OtherDecorated : IDecoratedService { }
+
+        private interface IDisposableService : IDisposable
+        {
+            bool WasDisposed { get; }
+        }
+
+        private class DisposableService : IDisposableService
+        {
+            public bool WasDisposed { get; private set; }
+
+            public virtual void Dispose()
+            {
+                WasDisposed = true;
+            }
+        }
+
+        private class DisposableServiceDecorator : IDisposableService
+        {
+            public DisposableServiceDecorator(IDisposableService inner)
+            {
+                Inner = inner ?? throw new ArgumentNullException(nameof(inner));
+            }
+
+            public IDisposableService Inner { get; }
+
+            public bool WasDisposed { get; private set; }
+
+            public void Dispose()
+            {
+                Inner.Dispose();
+                WasDisposed = true;
+            }
+        }
     }
 }

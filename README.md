@@ -56,10 +56,10 @@ collection.Scan(scan => scan
             // Now, we just want to register these types as a single interface, IScopedService.
             .As<IScopedService>()
             // And again, just specify the lifetime.
-            .WithScopedLifetime());
+            .WithScopedLifetime()
         // Generic interfaces are also supported too, e.g. public interface IOpenGeneric<T> 
         .AddClasses(classes => classes.AssignableTo(typeof(IOpenGeneric<>))
-            .AsImplementedInterfaces());
+            .AsImplementedInterfaces()
         // And you scan generics with multiple type parameters too
         // e.g. public interface IQueryHandler<TQuery, TResult>
         .AddClasses(classes => classes.AssignableTo(typeof(IQueryHandler<,>))

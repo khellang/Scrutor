@@ -58,13 +58,11 @@ collection.Scan(scan => scan
             // And again, just specify the lifetime.
             .WithScopedLifetime());
         // Generic interfaces are also supported too, e.g. public interface IOpenGeneric<T> 
-        .AddClasses(classes => classes.AssignableTo<IOpenGeneric<>>())
-            .AddClasses()
+        .AddClasses(classes => classes.AssignableTo(typeof(IOpenGeneric<>))
             .AsImplementedInterfaces());
         // And you scan generics with multiple type parameters too
         // e.g. public interface IQueryHandler<TQuery, TResult>
-        .AddClasses(classes => classes.AssignableTo<IQueryHandler<,>>())
-            .AddClasses()
+        .AddClasses(classes => classes.AssignableTo(typeof(IQueryHandler<,>))
             .AsImplementedInterfaces());
 ```
 

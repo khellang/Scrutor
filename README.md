@@ -107,3 +107,4 @@ services.AddComposite<IReporter, CompositeReporter>();
 // Now when we resolve IReporter we'll get an instance of the composite.
 var serviceProvider = collection.BuildServiceProvider();
 var instance = serviceProvider.GetRequiredService<IReporter>();
+```

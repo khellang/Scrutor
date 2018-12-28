@@ -3,7 +3,7 @@
 > Scrutor - I search or examine thoroughly; I probe, investigate or scrutinize  
 > From scrūta, as the original sense of the verb was to search through trash. - https://en.wiktionary.org/wiki/scrutor
 
-Assembly scanning and decoration extensions for Microsoft.Extensions.DependencyInjection
+Assembly scanning, decoration and composition extensions for Microsoft.Extensions.DependencyInjection
 
 ## Installation
 
@@ -23,10 +23,11 @@ dotnet add package Scrutor
 
 ## Usage
 
-The library adds two extension methods to `IServiceCollection`:
+The library adds three extension methods to `IServiceCollection`:
 
 * `Scan` - This is the entry point to set up your assembly scanning.
-* `Decorate` - This method is used to decorate already registered services.
+* `Decorate` - This method is used to decorate already-registered services.
+* `AddComposite` - This method is used to compose already-registered services.
 
 See **Examples** below for usage examples.
 
@@ -87,3 +88,22 @@ var serviceProvider = collection.BuildServiceProvider();
 // OtherDecorator -> Decorator -> Decorated
 var instance = serviceProvider.GetRequiredService<IDecoratedService>();
 ```
+
+### Composite Pattern
+
+```csharp
+
+var services = new ServiceCollection();
+
+// Register any implementations of the service as needed
+services.AddSingleton<IReporter, ConsoleReporter>();
+services.AddScoped<IReporter, TelemetryReporter>();
+services.AddTransient<IReporter, EmailReporter>();
+
+// Then register your composite pattern implementation that can construct
+// on IEnumerable<IReporter>
+services.AddComposite<IReporter, CompositeReporter>();
+
+// Now when we resolve IReporter we'll get an instance of the composite.
+var serviceProvider = collection.BuildServiceProvider();
+var instance = serviceProvider.GetRequiredService<IReporter>();

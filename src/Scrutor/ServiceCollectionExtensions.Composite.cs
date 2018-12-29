@@ -33,20 +33,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.Add(ServiceDescriptor.Describe(
               typeof(TInterface),
-              s => (TInterface)objectFactory(s, new[] { wrappedDescriptors.Select(d => s.CreateInstance(d)).Cast<TInterface>() }),
+              s => (TInterface)objectFactory(s, new[] { wrappedDescriptors.Select(d => s.GetInstance(d)).Cast<TInterface>() }),
               maxWrappedServiceLifetime)
             );
-        }
-
-        private static object CreateInstance(this IServiceProvider services, ServiceDescriptor descriptor)
-        {
-            if (descriptor.ImplementationInstance != null)
-                return descriptor.ImplementationInstance;
-
-            if (descriptor.ImplementationFactory != null)
-                return descriptor.ImplementationFactory(services);
-
-            return ActivatorUtilities.GetServiceOrCreateInstance(services, descriptor.ImplementationType);
         }
     }
 }

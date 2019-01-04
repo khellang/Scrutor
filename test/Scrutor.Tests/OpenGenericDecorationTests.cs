@@ -46,6 +46,37 @@ namespace Scrutor.Tests
         {
             Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IQueryHandler<,>), typeof(QueryHandler<,>))));
         }
+
+        [Fact]
+        public void CanDecorateOpenGenericTypeBasedOnGrandparentInterface()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<ISpecializedQueryHandler, MySpecializedQueryHandler>();
+                services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MySpecializedQueryHandler>();
+                services.Decorate(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
+            });
+
+            var instance = provider.GetRequiredService<IQueryHandler<MyQuery, MyResult>>();
+
+            var loggingDecorator = Assert.IsType<LoggingQueryHandler<MyQuery, MyResult>>(instance);
+            Assert.IsType<MySpecializedQueryHandler>(loggingDecorator.Inner);
+        }
+
+        [Fact]
+        public void DecoratingOpenGenericTypeBasedOnGrandparentInterfaceDoesNotDecorateParentInterface()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<ISpecializedQueryHandler, MySpecializedQueryHandler>();
+                services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MySpecializedQueryHandler>();
+                services.Decorate(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
+            });
+
+            var instance = provider.GetRequiredService<ISpecializedQueryHandler>();
+
+            Assert.IsType<MySpecializedQueryHandler>(instance);
+        }
     }
 
     public class MyQuery { }
@@ -80,4 +111,8 @@ namespace Scrutor.Tests
     {
         IQueryHandler<TQuery, TResult> Inner { get; }
     }
+
+    public interface ISpecializedQueryHandler : IQueryHandler<MyQuery, MyResult> { }
+
+    public class MySpecializedQueryHandler : ISpecializedQueryHandler { }
 }

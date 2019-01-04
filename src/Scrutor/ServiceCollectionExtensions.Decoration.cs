@@ -238,6 +238,11 @@ namespace Microsoft.Extensions.DependencyInjection
             throw new MissingTypeRegistrationException(serviceType);
         }
 
+        private static bool IsSameGenericType(Type t1, Type t2)
+        {
+            return t1.IsGenericType && t2.IsGenericType && t1.GetGenericTypeDefinition() == t2.GetGenericTypeDefinition();
+        }
+
         private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType)
         {
             bool TryDecorate(Type[] typeArguments)
@@ -249,7 +254,7 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             var arguments = services
-                .Where(descriptor => descriptor.ServiceType.IsAssignableTo(serviceType))
+                .Where(descriptor => IsSameGenericType(descriptor.ServiceType, serviceType))
                 .Select(descriptor => descriptor.ServiceType.GenericTypeArguments)
                 .ToArray();
 

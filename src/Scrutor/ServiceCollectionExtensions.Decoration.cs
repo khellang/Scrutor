@@ -9,7 +9,7 @@ namespace Microsoft.Extensions.DependencyInjection
     public static partial class ServiceCollectionExtensions
     {
         /// <summary>
-        /// Decorates all registered services of type <typeparamref name="TService"/>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with its lifetime
         /// using the specified type <typeparamref name="TDecorator"/>.
         /// </summary>
         /// <param name="services">The services to add to.</param>
@@ -20,11 +20,56 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator)));
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of type <typeparamref name="TService"/>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the specified type <typeparamref name="TDecorator"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the type <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If the <paramref name="services"/> argument is <c>null</c>.</exception>
+        public static IServiceCollection DecorateSingleton<TService, TDecorator>(this IServiceCollection services)
+           where TDecorator : TService
+        {
+            Preconditions.NotNull(services, nameof(services));
+
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the specified type <typeparamref name="TDecorator"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the type <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If the <paramref name="services"/> argument is <c>null</c>.</exception>
+        public static IServiceCollection DecorateScoped<TService, TDecorator>(this IServiceCollection services)
+           where TDecorator : TService
+        {
+            Preconditions.NotNull(services, nameof(services));
+
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the specified type <typeparamref name="TDecorator"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the type <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If the <paramref name="services"/> argument is <c>null</c>.</exception>
+        public static IServiceCollection DecorateTransient<TService, TDecorator>(this IServiceCollection services)
+           where TDecorator : TService
+        {
+            Preconditions.NotNull(services, nameof(services));
+
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with its lifetime
         /// using the specified type <typeparamref name="TDecorator"/>.
         /// </summary>
         /// <param name="services">The services to add to.</param>
@@ -34,11 +79,53 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator)));
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of the specified <paramref name="serviceType"/>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the specified type <typeparamref name="TDecorator"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <exception cref="ArgumentNullException">If the <paramref name="services"/> argument is <c>null</c>.</exception>
+        public static bool TryDecorateSingleton<TService, TDecorator>(this IServiceCollection services)
+           where TDecorator : TService
+        {
+            Preconditions.NotNull(services, nameof(services));
+
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the specified type <typeparamref name="TDecorator"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <exception cref="ArgumentNullException">If the <paramref name="services"/> argument is <c>null</c>.</exception>
+        public static bool TryDecorateScoped<TService, TDecorator>(this IServiceCollection services)
+           where TDecorator : TService
+        {
+            Preconditions.NotNull(services, nameof(services));
+
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the specified type <typeparamref name="TDecorator"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <exception cref="ArgumentNullException">If the <paramref name="services"/> argument is <c>null</c>.</exception>
+        public static bool TryDecorateTransient<TService, TDecorator>(this IServiceCollection services)
+           where TDecorator : TService
+        {
+            Preconditions.NotNull(services, nameof(services));
+
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with its lifetime
         /// using the specified <paramref name="decoratorType"/>.
         /// </summary>
         /// <param name="services">The services to add to.</param>
@@ -55,14 +142,86 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
             {
-                return services.DecorateOpenGeneric(serviceType, decoratorType);
+                return services.DecorateOpenGeneric(serviceType, decoratorType, null);
             }
 
-            return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType));
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType, x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of the specified <paramref name="serviceType"/>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the specified <paramref name="decoratorType"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decoratorType">The type to decorate existing services with.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decoratorType"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateSingleton(this IServiceCollection services, Type serviceType, Type decoratorType)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decoratorType, nameof(decoratorType));
+
+            if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
+            {
+                return services.DecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Singleton);
+            }
+
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the specified <paramref name="decoratorType"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decoratorType">The type to decorate existing services with.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decoratorType"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateScoped(this IServiceCollection services, Type serviceType, Type decoratorType)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decoratorType, nameof(decoratorType));
+
+            if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
+            {
+                return services.DecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Scoped);
+            }
+
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the specified <paramref name="decoratorType"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decoratorType">The type to decorate existing services with.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decoratorType"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateTransient(this IServiceCollection services, Type serviceType, Type decoratorType)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decoratorType, nameof(decoratorType));
+
+            if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
+            {
+                return services.DecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Transient);
+            }
+
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with its lifetime
         /// using the specified <paramref name="decoratorType"/>.
         /// </summary>
         /// <param name="services">The services to add to.</param>
@@ -78,14 +237,83 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
             {
-                return services.TryDecorateOpenGeneric(serviceType, decoratorType);
+                return services.TryDecorateOpenGeneric(serviceType, decoratorType, null);
             }
 
-            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decoratorType));
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decoratorType, x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of type <typeparamref name="TService"/>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the specified <paramref name="decoratorType"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decoratorType">The type to decorate existing services with.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decoratorType"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateSingleton(this IServiceCollection services, Type serviceType, Type decoratorType)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decoratorType, nameof(decoratorType));
+
+            if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
+            {
+                return services.TryDecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Singleton);
+            }
+
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the specified <paramref name="decoratorType"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decoratorType">The type to decorate existing services with.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decoratorType"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateScoped(this IServiceCollection services, Type serviceType, Type decoratorType)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decoratorType, nameof(decoratorType));
+
+            if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
+            {
+                return services.TryDecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Scoped);
+            }
+
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the specified <paramref name="decoratorType"/>.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decoratorType">The type to decorate existing services with.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decoratorType"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateTransient(this IServiceCollection services, Type serviceType, Type decoratorType)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decoratorType, nameof(decoratorType));
+
+            if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
+            {
+                return services.TryDecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Transient);
+            }
+
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with its lifetime
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <typeparam name="TService">The type of services to decorate.</typeparam>
@@ -99,11 +327,65 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator));
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator, x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of type <typeparamref name="TService"/>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateSingleton<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateScoped<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateTransient<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with its lifetime
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <typeparam name="TService">The type of services to decorate.</typeparam>
@@ -116,11 +398,62 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(decorator));
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(decorator, x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of type <typeparamref name="TService"/>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateSingleton<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateScoped<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateTransient<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with its lifetime
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <typeparam name="TService">The type of services to decorate.</typeparam>
@@ -134,11 +467,65 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator));
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator, x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of type <typeparamref name="TService"/>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateSingleton<TService>(this IServiceCollection services, Func<TService, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateScoped<TService>(this IServiceCollection services, Func<TService, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateTransient<TService>(this IServiceCollection services, Func<TService, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with its lifetime
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <typeparam name="TService">The type of services to decorate.</typeparam>
@@ -151,11 +538,62 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(decorator));
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(decorator, x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of the specified <paramref name="serviceType"/>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateSingleton<TService>(this IServiceCollection services, Func<TService, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateScoped<TService>(this IServiceCollection services, Func<TService, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of type <typeparamref name="TService"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <typeparam name="TService">The type of services to decorate.</typeparam>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+        /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateTransient<TService>(this IServiceCollection services, Func<TService, TService> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(decorator, ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with its lifetime
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <param name="services">The services to add to.</param>
@@ -170,11 +608,68 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator));
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator, x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of the specified <paramref name="serviceType"/>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateSingleton(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateScoped(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateTransient(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with its lifetime
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <param name="services">The services to add to.</param>
@@ -188,11 +683,65 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decorator));
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decorator, x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of the specified <paramref name="serviceType"/>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateSingleton(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateScoped(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateTransient(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with its lifetime
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <param name="services">The services to add to.</param>
@@ -207,11 +756,68 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator));
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator, x.Lifetime));
         }
 
         /// <summary>
-        /// Decorates all registered services of the specified <paramref name="serviceType"/>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateSingleton(this IServiceCollection services, Type serviceType, Func<object, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateScoped(this IServiceCollection services, Type serviceType, Func<object, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection DecorateTransient(this IServiceCollection services, Type serviceType, Func<object, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Transient));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with its lifetime
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <param name="services">The services to add to.</param>
@@ -225,12 +831,66 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decorator));
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decorator, x.Lifetime));
         }
 
-        private static IServiceCollection DecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType)
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Singleton"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateSingleton(this IServiceCollection services, Type serviceType, Func<object, object> decorator)
         {
-            if (services.TryDecorateOpenGeneric(serviceType, decoratorType))
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Singleton));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Scoped"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateScoped(this IServiceCollection services, Type serviceType, Func<object, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Scoped));
+        }
+
+        /// <summary>
+        /// Decorates all registered services of the specified <paramref name="serviceType"/> with <see cref="ServiceLifetime.Transient"/> lifetime
+        /// using the <paramref name="decorator"/> function.
+        /// </summary>
+        /// <param name="services">The services to add to.</param>
+        /// <param name="serviceType">The type of services to decorate.</param>
+        /// <param name="decorator">The decorator function.</param>
+        /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+        public static bool TryDecorateTransinet(this IServiceCollection services, Type serviceType, Func<object, object> decorator)
+        {
+            Preconditions.NotNull(services, nameof(services));
+            Preconditions.NotNull(serviceType, nameof(serviceType));
+            Preconditions.NotNull(decorator, nameof(decorator));
+
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decorator, ServiceLifetime.Transient));
+        }
+
+        private static IServiceCollection DecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType, ServiceLifetime? lifetime)
+        {
+            if (services.TryDecorateOpenGeneric(serviceType, decoratorType, lifetime))
             {
                 return services;
             }
@@ -238,14 +898,14 @@ namespace Microsoft.Extensions.DependencyInjection
             throw new MissingTypeRegistrationException(serviceType);
         }
 
-        private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType)
+        private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType, ServiceLifetime? lifetime)
         {
             bool TryDecorate(Type[] typeArguments)
             {
                 var closedServiceType = serviceType.MakeGenericType(typeArguments);
                 var closedDecoratorType = decoratorType.MakeGenericType(typeArguments);
 
-                return services.TryDecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
+                return services.TryDecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType, lifetime ?? x.Lifetime));
             }
 
             var arguments = services
@@ -296,24 +956,24 @@ namespace Microsoft.Extensions.DependencyInjection
             return (descriptors = services.Where(service => service.ServiceType == serviceType).ToArray()).Any();
         }
 
-        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)
+        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator, ServiceLifetime lifetime)
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider));
+            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider), lifetime);
         }
 
-        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator)
+        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator, ServiceLifetime lifetime)
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor)));
+            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor)), lifetime);
         }
 
-        private static ServiceDescriptor Decorate(this ServiceDescriptor descriptor, Type decoratorType)
+        private static ServiceDescriptor Decorate(this ServiceDescriptor descriptor, Type decoratorType, ServiceLifetime lifetime)
         {
-            return descriptor.WithFactory(provider => provider.CreateInstance(decoratorType, provider.GetInstance(descriptor)));
+            return descriptor.WithFactory(provider => provider.CreateInstance(decoratorType, provider.GetInstance(descriptor)), lifetime);
         }
 
-        private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object> factory)
+        private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object> factory, ServiceLifetime lifetime)
         {
-            return ServiceDescriptor.Describe(descriptor.ServiceType, factory, descriptor.Lifetime);
+            return ServiceDescriptor.Describe(descriptor.ServiceType, factory, lifetime);
         }
 
         private static object GetInstance(this IServiceProvider provider, ServiceDescriptor descriptor)

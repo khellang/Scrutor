@@ -46,6 +46,61 @@ namespace Scrutor.Tests
         {
             Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IQueryHandler<,>), typeof(QueryHandler<,>))));
         }
+
+        [Fact]
+        public void CheckLifetimeOfDecorateSingleton()
+        {
+            var services = new ServiceCollection();
+            
+            services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+            services.DecorateSingleton(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
+
+            var descriptor = services.GetDescriptor<IQueryHandler<MyQuery, MyResult>>();
+
+            Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
+        }
+
+        [Fact]
+        public void CheckLifetimeOfDecorateScoped()
+        {
+            var services = new ServiceCollection();
+
+            services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+            services.DecorateScoped(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
+
+            var descriptor = services.GetDescriptor<IQueryHandler<MyQuery, MyResult>>();
+
+            Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+        }
+
+        [Fact]
+        public void CheckLifetimeOfDecorateTransient()
+        {
+            var services = new ServiceCollection();
+
+            services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+            services.DecorateTransient(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
+
+            var descriptor = services.GetDescriptor<IQueryHandler<MyQuery, MyResult>>();
+
+            Assert.Equal(ServiceLifetime.Transient, descriptor.Lifetime);
+        }
+
+        [Fact]
+        public void IsSameLifetimeOfDecoratorAndDecorated()
+        {
+            var services = new ServiceCollection();
+
+            services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+
+            var decoratedDescriptor = services.GetDescriptor<IQueryHandler<MyQuery, MyResult>>();
+
+            services.Decorate(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
+
+            var decoratorDescriptor = services.GetDescriptor<IQueryHandler<MyQuery, MyResult>>();
+
+            Assert.Equal(decoratedDescriptor.Lifetime, decoratorDescriptor.Lifetime);
+        }
     }
 
     public class MyQuery { }

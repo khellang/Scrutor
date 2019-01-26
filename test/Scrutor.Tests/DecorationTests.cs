@@ -145,6 +145,7 @@ namespace Scrutor.Tests
             var provider = ConfigureProvider(services =>
             {
                 services.AddTransient<IDisposableService, DisposableService>();
+
                 services.Decorate<IDisposableService, DisposableServiceDecorator>();
             });
 
@@ -162,6 +163,61 @@ namespace Scrutor.Tests
         public void DecoratingNonRegisteredServiceThrows()
         {
             Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
+        }
+
+        [Fact]
+        public void CheckLifetimeOfDecorateSingleton()
+        {
+            var services = new ServiceCollection();
+
+            services.AddSingleton<IDecoratedService, Decorated>();
+            services.DecorateSingleton<IDecoratedService, Decorator>();
+
+            var descriptor = services.GetDescriptor<IDecoratedService>();
+
+            Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
+        }
+
+        [Fact]
+        public void CheckLifetimeOfDecorateScoped()
+        {
+            var services = new ServiceCollection();
+
+            services.AddSingleton<IDecoratedService, Decorated>();
+            services.DecorateScoped<IDecoratedService, Decorator>();
+
+            var descriptor = services.GetDescriptor<IDecoratedService>();
+
+            Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+        }
+
+        [Fact]
+        public void CheckLifetimeOfDecorateTransient()
+        {
+            var services = new ServiceCollection();
+
+            services.AddSingleton<IDecoratedService, Decorated>();
+            services.DecorateTransient<IDecoratedService, Decorator>();
+
+            var descriptor = services.GetDescriptor<IDecoratedService>();
+
+            Assert.Equal(ServiceLifetime.Transient, descriptor.Lifetime);
+        }
+
+        [Fact]
+        public void IsSameLifetimeOfDecoratorAndDecorated()
+        {
+            var services = new ServiceCollection();
+
+            services.AddSingleton<IDecoratedService, Decorated>();
+
+            var decoratedDescriptor = services.GetDescriptor<IDecoratedService>();
+
+            services.Decorate<IDecoratedService, Decorator>();
+
+            var decoratorDescriptor = services.GetDescriptor<IDecoratedService>();
+
+            Assert.Equal(decoratedDescriptor.Lifetime, decoratorDescriptor.Lifetime);
         }
 
         public interface IDecoratedService { }

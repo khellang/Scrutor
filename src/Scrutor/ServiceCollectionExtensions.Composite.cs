@@ -18,7 +18,7 @@ namespace Microsoft.Extensions.DependencyInjection
           where TService : class
           where TImplementation : class, TService
         {
-            var wrappedDescriptors = services.Where(s => s.ServiceType == typeof(TService)).ToList();
+            var wrappedDescriptors = services.Where(s => typeof(TService).IsAssignableFrom(s.ServiceType)).ToList();
             foreach (var descriptor in wrappedDescriptors)
                 services.Remove(descriptor);
 

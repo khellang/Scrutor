@@ -78,10 +78,36 @@ namespace Scrutor.Tests
             Assert.Equal(ServiceLifetime.Transient, descriptor.Lifetime);
         }
 
+        [Fact]
+        public void CanComposeExtensionsOfComposedInterface()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<IService, Service1>();
+                services.AddSingleton<IExtendedService, ExtendedService1>();
+
+                services.AddComposite<IService, Composite>();
+            });
+
+            var instance = provider.GetRequiredService<IService>();
+
+            var composite = Assert.IsType<Composite>(instance);
+
+            Assert.Equal("one,extended", composite.GetMessage());
+            Assert.IsType<Service1>(composite.ConcreteServices[0]);
+            Assert.IsType<ExtendedService1>(composite.ConcreteServices[1]);
+        }
+
         interface IService
         {
             string GetMessage();
         }
+
+        interface IExtendedService : IService
+        {
+            string GetAnotherMessage();
+        }
+
 
         class Service1 : IService
         {
@@ -91,6 +117,12 @@ namespace Scrutor.Tests
         class Service2 : IService
         {
             public string GetMessage() => "two";
+        }
+
+        class ExtendedService1 : IExtendedService
+        {
+            public string GetAnotherMessage() => "extended";
+            public string GetMessage() => "extended";
         }
 
         class Composite : IService

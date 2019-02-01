@@ -8,23 +8,23 @@ namespace Microsoft.Extensions.DependencyInjection
     public static partial class ServiceCollectionExtensions
     {
         /// <summary>
-        /// Registers <typeparamref name="TConcrete"/> as a composite that wraps all
-        /// existing registrations of <typeparamref name="TInterface"/>.
+        /// Registers <typeparamref name="TImplementation"/> as a composite that wraps all
+        /// existing registrations of <typeparamref name="TService"/>.
         /// </summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <typeparam name="TConcrete"></typeparam>
+        /// <typeparam name="TService"></typeparam>
+        /// <typeparam name="TImplementation"></typeparam>
         /// <param name="services"></param>
-        public static void AddComposite<TInterface, TConcrete>(this IServiceCollection services)
-          where TInterface : class
-          where TConcrete : class, TInterface
+        public static void AddComposite<TService, TImplementation>(this IServiceCollection services)
+          where TService : class
+          where TImplementation : class, TService
         {
-            var wrappedDescriptors = services.Where(s => s.ServiceType == typeof(TInterface)).ToList();
+            var wrappedDescriptors = services.Where(s => s.ServiceType == typeof(TService)).ToList();
             foreach (var descriptor in wrappedDescriptors)
                 services.Remove(descriptor);
 
             var objectFactory = ActivatorUtilities.CreateFactory(
-              typeof(TConcrete),
-              new[] { typeof(IEnumerable<TInterface>) });
+              typeof(TImplementation),
+              new[] { typeof(IEnumerable<TService>) });
 
             var maxWrappedServiceLifetime = wrappedDescriptors
                 .Select(d => d.Lifetime)
@@ -32,8 +32,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 .Max();
 
             services.Add(ServiceDescriptor.Describe(
-              typeof(TInterface),
-              s => (TInterface)objectFactory(s, new[] { wrappedDescriptors.Select(d => s.GetInstance(d)).Cast<TInterface>() }),
+              typeof(TService),
+              s => (TService)objectFactory(s, new[] { wrappedDescriptors.Select(d => s.GetInstance(d)).Cast<TService>() }),
               maxWrappedServiceLifetime)
             );
         }

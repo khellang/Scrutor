@@ -16,7 +16,7 @@ namespace Scrutor.Tests
                 services.AddSingleton<IService, Service1>();
                 services.AddSingleton<IService, Service2>();
 
-                services.AddComposite<IService, Composite>();
+                services.AddComposite<IService, Composite>(ServiceLifetime.Transient);
             });
 
             var instance = provider.GetRequiredService<IService>();
@@ -33,7 +33,7 @@ namespace Scrutor.Tests
         {
             var provider = ConfigureProvider(services =>
             {
-                services.AddComposite<IService, Composite>();
+                services.AddComposite<IService, Composite>(ServiceLifetime.Transient);
             });
 
             var instance = provider.GetRequiredService<IService>();
@@ -53,7 +53,7 @@ namespace Scrutor.Tests
                 services.AddSingleton<IService, Service2>();
                 services.AddSingleton<IOtherDependency, OtherDependency>();
 
-                services.AddComposite<IService, CompositeWithOtherDependency>();
+                services.AddComposite<IService, CompositeWithOtherDependency>(ServiceLifetime.Transient);
             });
 
             var instance = provider.GetRequiredService<IService>();
@@ -66,19 +66,6 @@ namespace Scrutor.Tests
         }
 
         [Fact]
-        public void CanComposeMultipleLifetimeScopes()
-        {
-            var services = new ServiceCollection();
-            services.AddScoped<IService, Service1>();
-            services.AddTransient<IService, Service2>();
-
-            services.AddComposite<IService, Composite>();
-
-            var descriptor = services.GetDescriptor<IService>();
-            Assert.Equal(ServiceLifetime.Transient, descriptor.Lifetime);
-        }
-
-        [Fact]
         public void CanComposeExtensionsOfComposedInterface()
         {
             var provider = ConfigureProvider(services =>
@@ -86,7 +73,7 @@ namespace Scrutor.Tests
                 services.AddSingleton<IService, Service1>();
                 services.AddSingleton<IExtendedService, ExtendedService1>();
 
-                services.AddComposite<IService, Composite>();
+                services.AddComposite<IService, Composite>(ServiceLifetime.Transient);
             });
 
             var instance = provider.GetRequiredService<IService>();

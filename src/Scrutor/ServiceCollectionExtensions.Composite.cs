@@ -14,7 +14,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TService"></typeparam>
         /// <typeparam name="TImplementation"></typeparam>
         /// <param name="services"></param>
-        public static void AddComposite<TService, TImplementation>(this IServiceCollection services)
+        /// <param name="serviceLifetime"></param>
+        public static void AddComposite<TService, TImplementation>(this IServiceCollection services, ServiceLifetime serviceLifetime)
           where TService : class
           where TImplementation : class, TService
         {
@@ -26,16 +27,26 @@ namespace Microsoft.Extensions.DependencyInjection
               typeof(TImplementation),
               new[] { typeof(IEnumerable<TService>) });
 
-            var maxWrappedServiceLifetime = wrappedDescriptors
-                .Select(d => d.Lifetime)
-                .DefaultIfEmpty(ServiceLifetime.Scoped)
-                .Max();
-
             services.Add(ServiceDescriptor.Describe(
               typeof(TService),
               s => (TService)objectFactory(s, new[] { wrappedDescriptors.Select(d => s.GetInstance(d)).Cast<TService>() }),
-              maxWrappedServiceLifetime)
+              serviceLifetime)
             );
         }
+
+        public static void AddCompositeTransient<TService, TImplementation>(this IServiceCollection services)
+          where TService : class
+          where TImplementation : class, TService
+         => services.AddComposite<TService, TImplementation>(ServiceLifetime.Transient);
+
+        public static void AddCompositeScoped<TService, TImplementation>(this IServiceCollection services)
+          where TService : class
+          where TImplementation : class, TService
+         => services.AddComposite<TService, TImplementation>(ServiceLifetime.Scoped);
+
+        public static void AddCompositeSingleton<TService, TImplementation>(this IServiceCollection services)
+          where TService : class
+          where TImplementation : class, TService
+         => services.AddComposite<TService, TImplementation>(ServiceLifetime.Singleton);
     }
 }

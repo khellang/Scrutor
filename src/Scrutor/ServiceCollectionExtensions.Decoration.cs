@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using Scrutor;
 
 // ReSharper disable once CheckNamespace
@@ -20,7 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), x.Lifetime));
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TService), typeof(TDecorator), x.Lifetime));
         }
 
         /// <summary>
@@ -35,7 +38,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Singleton));
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TService), typeof(TDecorator), ServiceLifetime.Singleton));
         }
 
         /// <summary>
@@ -50,7 +53,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Scoped));
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TService), typeof(TDecorator), ServiceLifetime.Scoped));
         }
 
         /// <summary>
@@ -65,7 +68,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Transient));
+            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TService), typeof(TDecorator), ServiceLifetime.Transient));
         }
 
         /// <summary>
@@ -79,7 +82,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), x.Lifetime));
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TService), typeof(TDecorator), x.Lifetime));
         }
 
         /// <summary>
@@ -93,7 +96,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Singleton));
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TService), typeof(TDecorator), ServiceLifetime.Singleton));
         }
 
         /// <summary>
@@ -107,7 +110,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Scoped));
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TService), typeof(TDecorator), ServiceLifetime.Scoped));
         }
 
         /// <summary>
@@ -121,7 +124,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator), ServiceLifetime.Transient));
+            return services.TryDecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TService), typeof(TDecorator), ServiceLifetime.Transient));
         }
 
         /// <summary>
@@ -145,7 +148,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services.DecorateOpenGeneric(serviceType, decoratorType, null);
             }
 
-            return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType, x.Lifetime));
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(serviceType, decoratorType, x.Lifetime));
         }
 
         /// <summary>
@@ -169,7 +172,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services.DecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Singleton);
             }
 
-            return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Singleton));
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(serviceType, decoratorType, ServiceLifetime.Singleton));
         }
 
         /// <summary>
@@ -193,7 +196,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services.DecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Scoped);
             }
 
-            return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Scoped));
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(serviceType, decoratorType, ServiceLifetime.Scoped));
         }
 
         /// <summary>
@@ -217,7 +220,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services.DecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Transient);
             }
 
-            return services.DecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Transient));
+            return services.DecorateDescriptors(serviceType, x => x.Decorate(serviceType, decoratorType, ServiceLifetime.Transient));
         }
 
         /// <summary>
@@ -240,7 +243,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services.TryDecorateOpenGeneric(serviceType, decoratorType, null);
             }
 
-            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decoratorType, x.Lifetime));
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(serviceType, decoratorType, x.Lifetime));
         }
 
         /// <summary>
@@ -263,7 +266,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services.TryDecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Singleton);
             }
 
-            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Singleton));
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(serviceType, decoratorType, ServiceLifetime.Singleton));
         }
 
         /// <summary>
@@ -286,7 +289,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services.TryDecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Scoped);
             }
 
-            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Scoped));
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(serviceType, decoratorType, ServiceLifetime.Scoped));
         }
 
         /// <summary>
@@ -309,7 +312,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services.TryDecorateOpenGeneric(serviceType, decoratorType, ServiceLifetime.Transient);
             }
 
-            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decoratorType, ServiceLifetime.Transient));
+            return services.TryDecorateDescriptors(serviceType, x => x.Decorate(serviceType, decoratorType, ServiceLifetime.Transient));
         }
 
         /// <summary>
@@ -905,7 +908,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 var closedServiceType = serviceType.MakeGenericType(typeArguments);
                 var closedDecoratorType = decoratorType.MakeGenericType(typeArguments);
 
-                return services.TryDecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType, lifetime ?? x.Lifetime));
+                return services.TryDecorateDescriptors(closedServiceType, x => x.Decorate(closedServiceType, closedDecoratorType, lifetime ?? x.Lifetime));
             }
 
             var arguments = services
@@ -942,13 +945,37 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 var index = services.IndexOf(descriptor);
 
+                //Change ServiceType of decorated service, 
+                //to prevent Duplicate registeration service as same serviceType
+                //for examle : IDisposableService => IDisposableService_XXX (XXX is Guid)
+                var decoratedDescriptor = descriptor.ChangeServiceType();
+
                 // To avoid reordering descriptors, in case a specific order is expected.
-                services.Insert(index, decorator(descriptor));
+                services.Insert(index, decoratedDescriptor);
 
                 services.Remove(descriptor);
+
+                services.Add(decorator(decoratedDescriptor));
             }
 
             return true;
+        }
+
+        private static ServiceDescriptor ChangeServiceType(this ServiceDescriptor descriptor)
+        {
+            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Scrutor"), AssemblyBuilderAccess.Run);
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule(name: "Scrutor");
+            var typeName = $"{descriptor.ServiceType.Name}_{Guid.NewGuid().ToString("N")}";
+            var typeBuilder = moduleBuilder.DefineType(typeName, attr: TypeAttributes.Public);
+
+            var decortationType = typeBuilder.AsType();
+
+            if (descriptor.ImplementationInstance != null)
+                return new ServiceDescriptor(decortationType, descriptor.ImplementationInstance);
+            else if (descriptor.ImplementationFactory != null)
+                return new ServiceDescriptor(decortationType, descriptor.ImplementationFactory, descriptor.Lifetime);
+            else
+                return new ServiceDescriptor(decortationType, descriptor.ImplementationType, descriptor.Lifetime);
         }
 
         private static bool TryGetDescriptors(this IServiceCollection services, Type serviceType, out ICollection<ServiceDescriptor> descriptors)
@@ -958,22 +985,17 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator, ServiceLifetime lifetime)
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider), lifetime);
+            return ServiceDescriptor.Describe(typeof(TService), provider => decorator((TService)provider.GetInstance(descriptor), provider), lifetime);
         }
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator, ServiceLifetime lifetime)
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor)), lifetime);
+            return ServiceDescriptor.Describe(typeof(TService), provider => decorator((TService)provider.GetInstance(descriptor)), lifetime);
         }
 
-        private static ServiceDescriptor Decorate(this ServiceDescriptor descriptor, Type decoratorType, ServiceLifetime lifetime)
+        private static ServiceDescriptor Decorate(this ServiceDescriptor descriptor,Type serviceType, Type decoratorType, ServiceLifetime lifetime)
         {
-            return descriptor.WithFactory(provider => provider.CreateInstance(decoratorType, provider.GetInstance(descriptor)), lifetime);
-        }
-
-        private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object> factory, ServiceLifetime lifetime)
-        {
-            return ServiceDescriptor.Describe(descriptor.ServiceType, factory, lifetime);
+            return ServiceDescriptor.Describe(serviceType, provider => provider.CreateInstance(decoratorType, provider.GetInstance(descriptor)), lifetime);
         }
 
         private static object GetInstance(this IServiceProvider provider, ServiceDescriptor descriptor)
@@ -985,7 +1007,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (descriptor.ImplementationType != null)
             {
-                return provider.GetServiceOrCreateInstance(descriptor.ImplementationType);
+                return provider.GetServiceOrCreateInstance(descriptor.ServiceType);
             }
 
             return descriptor.ImplementationFactory(provider);

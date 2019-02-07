@@ -220,6 +220,35 @@ namespace Scrutor.Tests
             Assert.Equal(decoratedDescriptor.Lifetime, decoratorDescriptor.Lifetime);
         }
 
+        [Fact]
+        public void DisposableServicesWithDifferentLifetimesAreDisposed()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddScoped<IDisposableService, DisposableService>();//.AddScoped< DisposableService>();
+
+                services.DecorateTransient<IDisposableService, DisposableServiceDecorator>();
+            });
+
+            var disposable1 = provider.GetRequiredService<IDisposableService>();
+            var disposable2 = provider.GetRequiredService<IDisposableService>();
+
+            var decorator1 = Assert.IsType<DisposableServiceDecorator>(disposable1);
+            var decorator2 = Assert.IsType<DisposableServiceDecorator>(disposable2);
+
+            Assert.NotSame(decorator1, decorator2);
+
+            Assert.Same(decorator1.Inner, decorator2.Inner);
+
+            provider.Dispose();
+
+            Assert.True(decorator1.WasDisposed);
+            Assert.True(decorator2.Inner.WasDisposed);
+
+            Assert.True(decorator1.WasDisposed);
+            Assert.True(decorator2.Inner.WasDisposed);
+        }
+
         public interface IDecoratedService { }
 
         public interface IService { }

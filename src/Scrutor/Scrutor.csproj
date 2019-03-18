@@ -17,6 +17,8 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <AssemblyOriginatorKeyFile>../signing.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
+    <!-- Only increase this value in case of incompatible API changes. -->
+    <AssemblyVersion>3.0.2.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>

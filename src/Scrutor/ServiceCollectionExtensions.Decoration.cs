@@ -283,9 +283,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 var index = services.IndexOf(descriptor);
 
                 // To avoid reordering descriptors, in case a specific order is expected.
-                services.Insert(index, decorator(descriptor));
-
-                services.Remove(descriptor);
+                services[index] = decorator(descriptor);
             }
 
             return true;

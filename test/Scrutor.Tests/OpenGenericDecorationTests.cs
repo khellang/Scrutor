@@ -42,6 +42,28 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void CanDecorateOpenGenericTypeBasedOnInterfaceByDecoratorFunc()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MySpecialQueryHandler>();
+                services.Decorate(typeof(IQueryHandler<,>), (handlerObj, serviceProvider) =>
+                {
+                    if (handlerObj is ISpecialInterface specialInterface)
+                    {
+                        specialInterface.InitSomeField();
+                    }
+
+                    return handlerObj;
+                });
+            });
+
+            var instance = provider.GetRequiredService<IQueryHandler<MyQuery, MyResult>>();
+            var myQueryHandler = Assert.IsType<MySpecialQueryHandler>(instance);
+            Assert.True(myQueryHandler.GetSomeField());
+        }
+
+        [Fact]
         public void DecoratingNonRegisteredOpenGenericServiceThrows()
         {
             Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IQueryHandler<,>), typeof(QueryHandler<,>))));
@@ -77,6 +99,22 @@ namespace Scrutor.Tests
 
             Assert.IsType<MySpecializedQueryHandler>(instance);
         }
+    }
+
+    public interface ISpecialInterface
+    {
+        void InitSomeField();
+    }
+
+    public class MySpecialQueryHandler : QueryHandler<MyQuery, MyResult>, ISpecialInterface
+    {
+        private bool _someField = false;
+        public void InitSomeField()
+        {
+            _someField = true;
+        }
+
+        public bool GetSomeField() => _someField;
     }
 
     public class MyQuery { }

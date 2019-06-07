@@ -78,7 +78,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (serviceType.IsOpenGeneric() && decoratorType.IsOpenGeneric())
             {
-                return services.TryDecorateOpenGeneric(serviceType, decoratorType);
+                var openTypeTryDecorator = OpenTypeTryDecorator(services, serviceType, decoratorType);
+                return services.TryDecorateOpenGeneric(serviceType, openTypeTryDecorator);
             }
 
             return services.TryDecorateDescriptors(serviceType, x => x.Decorate(decoratorType));
@@ -170,6 +171,11 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decorator, nameof(decorator));
 
+            if (serviceType.IsOpenGeneric())
+            {
+                return services.DecorateOpenGeneric(serviceType, decorator);
+            }
+
             return services.DecorateDescriptors(serviceType, x => x.Decorate(decorator));
         }
 
@@ -230,7 +236,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static IServiceCollection DecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType)
         {
-            if (services.TryDecorateOpenGeneric(serviceType, decoratorType))
+            var openTypeTryDecorator = OpenTypeTryDecorator(services, serviceType, decoratorType);
+            if (services.TryDecorateOpenGeneric(serviceType, openTypeTryDecorator))
             {
                 return services;
             }
@@ -243,16 +250,19 @@ namespace Microsoft.Extensions.DependencyInjection
             return t1.IsGenericType && t2.IsGenericType && t1.GetGenericTypeDefinition() == t2.GetGenericTypeDefinition();
         }
 
-        private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType)
+        private static IServiceCollection DecorateOpenGeneric(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
         {
-            bool TryDecorate(Type[] typeArguments)
+            var openTypeTryDecorator = OpenTypeTryDecorator(services, serviceType, decorator);
+            if (services.TryDecorateOpenGeneric(serviceType, openTypeTryDecorator))
             {
-                var closedServiceType = serviceType.MakeGenericType(typeArguments);
-                var closedDecoratorType = decoratorType.MakeGenericType(typeArguments);
-
-                return services.TryDecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
+                return services;
             }
 
+            throw new MissingTypeRegistrationException(serviceType);
+        }
+
+        private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Func<Type[], bool> openTypeTryDecorator)
+        {
             var arguments = services
                 .Where(descriptor => IsSameGenericType(descriptor.ServiceType, serviceType))
                 .Select(descriptor => descriptor.ServiceType.GenericTypeArguments)
@@ -263,7 +273,27 @@ namespace Microsoft.Extensions.DependencyInjection
                 return false;
             }
 
-            return arguments.Aggregate(true, (result, args) => result && TryDecorate(args));
+            return arguments.Aggregate(true, (result, args) => result && openTypeTryDecorator(args));
+        }
+
+        private static Func<Type[], bool> OpenTypeTryDecorator(IServiceCollection services, Type serviceType, Type decoratorType)
+        {
+            return typeArguments =>
+            {
+                var closedServiceType = serviceType.MakeGenericType(typeArguments);
+                var closedDecoratorType = decoratorType.MakeGenericType(typeArguments);
+
+                return services.TryDecorateDescriptors(closedServiceType, x => x.Decorate(closedDecoratorType));
+            };
+        }
+
+        private static Func<Type[], bool> OpenTypeTryDecorator(IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+        {
+            return typeArguments =>
+            {
+                var closedServiceType = serviceType.MakeGenericType(typeArguments);
+                return services.TryDecorateDescriptors(closedServiceType, x => x.Decorate(decorator));
+            };
         }
 
         private static IServiceCollection DecorateDescriptors(this IServiceCollection services, Type serviceType, Func<ServiceDescriptor, ServiceDescriptor> decorator)

@@ -287,8 +287,11 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 var index = services.IndexOf(descriptor);
 
+                // replace original descriptor with implementation type
+                services[index] = ReplaceWithImplementation(descriptor);
+
                 // To avoid reordering descriptors, in case a specific order is expected.
-                services[index] = decorator(descriptor);
+                services.Insert(index + 1, decorator(descriptor));
             }
 
             return true;
@@ -311,7 +314,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static ServiceDescriptor Decorate(this ServiceDescriptor descriptor, Type decoratorType)
         {
-            return descriptor.WithFactory(provider => provider.CreateInstance(decoratorType, provider.GetInstance(descriptor)));
+            var decorateeImplType = descriptor.GetImplementationType();
+
+            return descriptor.WithFactory(provider => provider.CreateInstance(decoratorType, provider.GetRequiredService(decorateeImplType)));
         }
 
         private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object> factory)
@@ -342,6 +347,52 @@ namespace Microsoft.Extensions.DependencyInjection
         private static object CreateInstance(this IServiceProvider provider, Type type, params object[] arguments)
         {
             return ActivatorUtilities.CreateInstance(provider, type, arguments);
+        }
+
+        private static Type GetImplementationType(this ServiceDescriptor serviceDescriptor)
+        {
+            if (serviceDescriptor.ImplementationType != null)
+                return serviceDescriptor.ImplementationType;
+
+            if (serviceDescriptor.ImplementationInstance != null)
+                return serviceDescriptor.ImplementationInstance.GetType();
+
+            if (serviceDescriptor.ImplementationFactory != null)
+                return serviceDescriptor.ImplementationFactory.GetType().GenericTypeArguments[1];
+
+            throw new InvalidOperationException("No way to get the decoratee implementation type.");
+        }
+
+        private static ServiceDescriptor ReplaceWithImplementation(ServiceDescriptor decorateeDescriptor)
+        {
+            var decorateeImplType = decorateeDescriptor.GetImplementationType();
+
+            if (decorateeDescriptor.ImplementationFactory != null)
+            {
+                decorateeDescriptor =
+                    ServiceDescriptor.Describe(
+                    serviceType: decorateeImplType,
+                    decorateeDescriptor.ImplementationFactory,
+                    decorateeDescriptor.Lifetime);
+            }
+            else
+            if (decorateeDescriptor.ImplementationInstance != null)
+            {
+                decorateeDescriptor =
+                    ServiceDescriptor.Singleton(
+                    serviceType: decorateeImplType,
+                    decorateeDescriptor.ImplementationInstance);
+            }
+            else
+            {
+                decorateeDescriptor =
+                    ServiceDescriptor.Describe(
+                    decorateeImplType, // Yes, use the same type for both.
+                    decorateeImplType,
+                    decorateeDescriptor.Lifetime);
+            }
+
+            return decorateeDescriptor;
         }
     }
 }

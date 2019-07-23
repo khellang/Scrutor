@@ -25,8 +25,9 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         /// <summary>
-        /// Adapts all registered services of type <typeparamref name="TAdaptee"/>
-        /// using the specified type <typeparamref name="TAdapter"/>.
+        /// Adapts all registered services of type <typeparam name="TAdaptee"/>
+        /// using the specified type <typeparam name="TAdapter"/>.
+        /// returning as Adapted service of type <typeparam name="TTarget"/>
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <exception cref="ArgumentNullException">If the <paramref name="services"/> argument is <c>null</c>.</exception>
@@ -40,7 +41,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
         /// <summary>
         /// Adapts all registered services of the specified <paramref name="serviceType"/>
-        /// using the specified <paramref name="adaptorType"/>.
+        /// using the specified <paramref name="adaptorType"/>
+        /// returning as Adapted service of type <paramref name="targetType"/>.
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to Adapt.</param>
@@ -65,12 +67,13 @@ namespace Microsoft.Extensions.DependencyInjection
 
         /// <summary>
         /// Adapts all registered services of the specified <paramref name="serviceType"/>
-        /// using the specified <paramref name="adaptorType"/>.
+        /// using the specified <paramref name="adaptorType"/>
+        /// returning as Adapted service of type <paramref name="targetType"/>.
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to Adapt.</param>
         /// <param name="adaptorType">The type to Adapt existing services with.</param>
-        /// <param name="targetType"></param>
+        /// <param name="targetType">The resulting service type made available</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
         /// <paramref name="serviceType"/> or <paramref name="adaptorType"/> arguments are <c>null</c>.</exception>
         public static bool TryAdapt(this IServiceCollection services, Type serviceType, Type adaptorType, Type targetType)
@@ -92,7 +95,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <typeparam name="TService">The type of services to Adapt.</typeparam>
-        /// <typeparam name="TTarget"></typeparam>
+        /// <typeparam name="TTarget">The resulting service type made available</typeparam>
         /// <param name="services">The services to add to.</param>
         /// <param name="decorator">The decorator function.</param>
         /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
@@ -111,7 +114,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <typeparam name="TService">The type of services to Adapt.</typeparam>
-        /// <typeparam name="TTarget"></typeparam>
+        /// <typeparam name="TTarget">The resulting service type made available</typeparam>
         /// <param name="services">The services to add to.</param>
         /// <param name="decorator">The decorator function.</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
@@ -129,7 +132,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <typeparam name="TService">The type of services to Adapt.</typeparam>
-        /// <typeparam name="TTarget"></typeparam>
+        /// <typeparam name="TTarget">The resulting service type made available</typeparam>
         /// <param name="services">The services to add to.</param>
         /// <param name="decorator">The decorator function.</param>
         /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
@@ -148,7 +151,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// using the <paramref name="decorator"/> function.
         /// </summary>
         /// <typeparam name="TService">The type of services to Adapt.</typeparam>
-        /// <typeparam name="TTarget"></typeparam>
+        /// <typeparam name="TTarget">The resulting service type made available</typeparam>
         /// <param name="services">The services to add to.</param>
         /// <param name="decorator">The decorator function.</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
@@ -167,7 +170,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to Adapt.</param>
-        /// <param name="targetType"></param>
+        /// <param name="targetType">The resulting service type made available</param>
         /// <param name="adapter">The adapter function</param>
         /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
@@ -187,7 +190,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to Adapt.</param>
-        /// <param name="targetType"></param>
+        /// <param name="targetType">The resulting service type made available</param>
         /// <param name="adapter">The decorator function.</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
         /// <paramref name="serviceType"/> or <paramref name="adapter"/> arguments are <c>null</c>.</exception>
@@ -206,7 +209,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to Adapt.</param>
-        /// <param name="targetType"></param>
+        /// <param name="targetType">The resulting service type made available</param>
         /// <param name="adapter">The decorator function.</param>
         /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
@@ -226,7 +229,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to Adapt.</param>
-        /// <param name="targetType"></param>
+        /// <param name="targetType">The resulting service type made available</param>
         /// <param name="adapter">The decorator function.</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
         /// <paramref name="serviceType"/> or <paramref name="adapter"/> arguments are <c>null</c>.</exception>

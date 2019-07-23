@@ -21,7 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.AdaptDescriptors(typeof(TAdaptee), typeof(TTarget), (adaptee,target) => adaptee.Adapt(target, typeof(TAdapter)));
+            return services.AdaptDescriptors(typeof(TAdaptee), typeof(TTarget), (adaptee) => adaptee.Adapt(typeof(TAdapter), typeof(TTarget)));
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Microsoft.Extensions.DependencyInjection
         { 
             Preconditions.NotNull(services, nameof(services));
 
-            return services.TryAdaptDescriptors(typeof(TAdaptee), typeof(TTarget), (adaptee,target) => adaptee.Adapt(target, typeof(TAdapter)));
+            return services.TryAdaptDescriptors(typeof(TAdaptee), typeof(TTarget), (adaptee) => adaptee.Adapt(typeof(TAdapter), typeof(TTarget)));
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services.AdaptOpenGeneric(serviceType, adaptorType, targetType);
             }
 
-            return services.AdaptDescriptors(serviceType, targetType, (adaptee,target) => adaptee.Adapt(target, adaptorType));
+            return services.AdaptDescriptors(serviceType, targetType, (adaptee) => adaptee.Adapt(targetType, adaptorType));
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return services.TryAdaptOpenGeneric(serviceType, adaptorType, targetType);
             }
 
-            return services.TryAdaptDescriptors(serviceType, targetType, (adaptee,target) => adaptee.Adapt(target, adaptorType));
+            return services.TryAdaptDescriptors(serviceType, targetType, (adaptee) => adaptee.Adapt(targetType, adaptorType));
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.AdaptDescriptors(typeof(TService), typeof(TTarget), (adaptee,target) => adaptee.Adapt(target, typeof(TTarget)));
+            return services.AdaptDescriptors(typeof(TService), typeof(TTarget), (adaptee) => adaptee.Adapt(decorator));
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.TryAdaptDescriptors(typeof(TService), typeof(TTarget), (adaptee,target) => adaptee.Adapt(target, typeof(TTarget)));
+            return services.TryAdaptDescriptors(typeof(TService), typeof(TTarget), (adaptee) => adaptee.Adapt(decorator));
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.AdaptDescriptors(typeof(TService), typeof(TTarget), (adaptee,target) => adaptee.Adapt(target, typeof(TTarget)));
+            return services.AdaptDescriptors(typeof(TService), typeof(TTarget), (adaptee) => adaptee.Adapt(typeof(TTarget), typeof(TTarget)));
         }
 
         /// <summary>
@@ -158,85 +158,85 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            return services.TryAdaptDescriptors(typeof(TService), typeof(TTarget), (adaptee,target) => adaptee.Adapt(target, typeof(TTarget)));
+            return services.TryAdaptDescriptors(typeof(TService), typeof(TTarget), (adaptee) => adaptee.Adapt(typeof(TTarget), typeof(TTarget)));
         }
 
         /// <summary>
         /// Adapts all registered services of the specified <paramref name="serviceType"/>
-        /// using the <paramref name="decorator"/> function.
+        /// using the <paramref name="adapter"/> function.
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to Adapt.</param>
         /// <param name="targetType"></param>
-        /// <param name="decorator">The decorator function.</param>
+        /// <param name="adapter">The adapter function</param>
         /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
-        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static IServiceCollection Adapt(this IServiceCollection services, Type serviceType, Type targetType, Func<object, IServiceProvider, object> decorator)
+        /// <paramref name="serviceType"/> or <paramref name="adapter"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection Adapt(this IServiceCollection services, Type serviceType, Type targetType, Func<object, IServiceProvider, object> adapter)
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(serviceType, nameof(serviceType));
-            Preconditions.NotNull(decorator, nameof(decorator));
+            Preconditions.NotNull(adapter, nameof(adapter));
 
-            return services.AdaptDescriptors(serviceType, targetType, (adaptee,target) => adaptee.Adapt(target, targetType));
+            return services.AdaptDescriptors(serviceType, targetType, (adaptee) => adaptee.Adapt(adapter));
         }
 
         /// <summary>
         /// Adapts all registered services of the specified <paramref name="serviceType"/>
-        /// using the <paramref name="decorator"/> function.
+        /// using the <paramref name="adapter"/> function.
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to Adapt.</param>
         /// <param name="targetType"></param>
-        /// <param name="decorator">The decorator function.</param>
+        /// <param name="adapter">The decorator function.</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
-        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static bool TryAdapt(this IServiceCollection services, Type serviceType, Type targetType, Func<object, IServiceProvider, object> decorator)
+        /// <paramref name="serviceType"/> or <paramref name="adapter"/> arguments are <c>null</c>.</exception>
+        public static bool TryAdapt(this IServiceCollection services, Type serviceType, Type targetType, Func<object, IServiceProvider, object> adapter)
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(serviceType, nameof(serviceType));
-            Preconditions.NotNull(decorator, nameof(decorator));
+            Preconditions.NotNull(adapter, nameof(adapter));
 
-            return services.TryAdaptDescriptors(serviceType, targetType, (adaptee,target) => adaptee.Adapt(target, targetType));
+            return services.TryAdaptDescriptors(serviceType, targetType, (adaptee) => adaptee.Adapt(adapter));
         }
 
         /// <summary>
         /// Adapts all registered services of the specified <paramref name="serviceType"/>
-        /// using the <paramref name="decorator"/> function.
+        /// using the <paramref name="adapter"/> function.
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to Adapt.</param>
         /// <param name="targetType"></param>
-        /// <param name="decorator">The decorator function.</param>
+        /// <param name="adapter">The decorator function.</param>
         /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
-        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static IServiceCollection Adapt(this IServiceCollection services, Type serviceType, Type targetType, Func<object, object> decorator)
+        /// <paramref name="serviceType"/> or <paramref name="adapter"/> arguments are <c>null</c>.</exception>
+        public static IServiceCollection Adapt(this IServiceCollection services, Type serviceType, Type targetType, Func<object, object> adapter)
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(serviceType, nameof(serviceType));
-            Preconditions.NotNull(decorator, nameof(decorator));
+            Preconditions.NotNull(adapter, nameof(adapter));
 
-            return services.AdaptDescriptors(serviceType, targetType, (adaptee,target) => adaptee.Adapt(target, targetType));
+            return services.AdaptDescriptors(serviceType, targetType, (adaptee) => adaptee.Adapt(adapter));
         }
 
         /// <summary>
         /// Adapts all registered services of the specified <paramref name="serviceType"/>
-        /// using the <paramref name="decorator"/> function.
+        /// using the <paramref name="adapter"/> function.
         /// </summary>
         /// <param name="services">The services to add to.</param>
         /// <param name="serviceType">The type of services to Adapt.</param>
         /// <param name="targetType"></param>
-        /// <param name="decorator">The decorator function.</param>
+        /// <param name="adapter">The decorator function.</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
-        /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static bool TryAdapt(this IServiceCollection services, Type serviceType, Type targetType, Func<object, object> decorator)
+        /// <paramref name="serviceType"/> or <paramref name="adapter"/> arguments are <c>null</c>.</exception>
+        public static bool TryAdapt(this IServiceCollection services, Type serviceType, Type targetType, Func<object, object> adapter)
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(serviceType, nameof(serviceType));
-            Preconditions.NotNull(decorator, nameof(decorator));
+            Preconditions.NotNull(adapter, nameof(adapter));
 
-            return services.TryAdaptDescriptors(serviceType, targetType, (adaptee,target) => adaptee.Adapt(target, targetType));
+            return services.TryAdaptDescriptors(serviceType, targetType, (adaptee) => adaptee.Adapt(adapter));
         }
 
         private static IServiceCollection AdaptOpenGeneric(this IServiceCollection services, Type serviceType, Type adaptorType, Type targetType)
@@ -257,7 +257,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 var closedAdaptorType = adaptorType.MakeGenericType(typeArguments);
                 var closedtargetServiceType = targetType.MakeGenericType(typeArguments);
 
-                return services.TryAdaptDescriptors(closedServiceType, closedtargetServiceType, (adaptee,target) => adaptee.Adapt(target, closedtargetServiceType));
+                return services.TryAdaptDescriptors(closedServiceType, closedtargetServiceType, (adaptee) => adaptee.Adapt(closedAdaptorType, closedtargetServiceType));
             }
 
             var arguments = services
@@ -273,7 +273,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return arguments.Aggregate(true, (result, args) => result && TryAdapt(args));
         }
 
-        private static IServiceCollection AdaptDescriptors(this IServiceCollection services, Type adapteeServiceType, Type targetServiceType, Func<ServiceDescriptor, ServiceDescriptor, ServiceDescriptor> decorator)
+        private static IServiceCollection AdaptDescriptors(this IServiceCollection services, Type adapteeServiceType, Type targetServiceType, Func<ServiceDescriptor, ServiceDescriptor> decorator)
         {
             if (services.TryAdaptDescriptors(adapteeServiceType, targetServiceType, decorator))
             {
@@ -283,39 +283,22 @@ namespace Microsoft.Extensions.DependencyInjection
             throw new MissingTypeRegistrationException(adapteeServiceType);
         }
 
-        private static bool TryAdaptDescriptors(this IServiceCollection services, Type adapteeServiceType, Type targetServiceType, Func<ServiceDescriptor, ServiceDescriptor,  ServiceDescriptor> decorator)
+        private static bool TryAdaptDescriptors(this IServiceCollection services, Type adapteeServiceType, Type targetServiceType, Func<ServiceDescriptor, ServiceDescriptor> adapter)
         {
             if (!services.TryGetDescriptors(adapteeServiceType, out var adapteeServiceDescriptors))
             {
                 return false;
             }
 
-            if (!services.TryGetDescriptors(targetServiceType, out var targetDescriptors))
-            {
-                return false;
-            }
-
-            if (targetDescriptors.Count > 1)
-            {
-                //Currently only handle 1 Adapter, in reality only the first would be applied as the descriptors
-                //would be altered after the first anyway.
-                return false;
-            }
-
-            var targetDescriptor = targetDescriptors.First();
-
             foreach (var adapteeDescriptor in adapteeServiceDescriptors)
             {
-                var index = services.IndexOf(adapteeDescriptor);
-
-                // To avoid reordering descriptors, in case a specific order is expected.
-                services[index] = decorator(adapteeDescriptor, targetDescriptor);
+                services.Add(adapter(adapteeDescriptor));
             }
 
             return true;
         }
 
-        private static ServiceDescriptor Adapt<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)
+        private static ServiceDescriptor Adapt<TService,TTarget>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TTarget> decorator)
         {
             return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider));
         }
@@ -325,9 +308,12 @@ namespace Microsoft.Extensions.DependencyInjection
             return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor)));
         }
 
-        private static ServiceDescriptor Adapt(this ServiceDescriptor descriptor, ServiceDescriptor targetServiceDescriptor, Type adaptorType)
+        private static ServiceDescriptor Adapt(this ServiceDescriptor descriptor, Type adaptorType, Type targetType)
         {
-            return targetServiceDescriptor.WithFactory(provider => provider.CreateInstance(adaptorType, provider.GetInstance(descriptor)));
+            return ServiceDescriptor.Describe(
+                targetType, 
+                provider => provider.CreateInstance(adaptorType, provider.GetInstance(descriptor)), 
+                descriptor.Lifetime);
         }
         
     }

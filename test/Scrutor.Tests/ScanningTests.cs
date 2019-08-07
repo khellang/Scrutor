@@ -177,6 +177,18 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void LifetimeIsPropagatedToAllRegistrations()
+        {
+            Collection.Scan(scan => scan.FromAssemblyOf<IScopedService>()
+                .AddClasses(classes => classes.AssignableTo<IScopedService>())
+                .AsImplementedInterfaces()
+                .AsSelf()
+                .WithScopedLifetime());
+
+            Assert.All(Collection, service => Assert.Equal(ServiceLifetime.Scoped, service.Lifetime));
+        }
+
+        [Fact]
         public void CanRegisterGenericTypes()
         {
             Collection.Scan(scan => scan.FromAssemblyOf<IScopedService>()

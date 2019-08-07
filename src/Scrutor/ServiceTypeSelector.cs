@@ -198,6 +198,14 @@ namespace Scrutor
 
         #endregion
 
+        internal void PropagateLifetime(ServiceLifetime lifetime)
+        {
+            foreach (var selector in Selectors.OfType<LifetimeSelector>())
+            {
+                selector.Lifetime = lifetime;
+            }
+        }
+
         void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
             if (Selectors.Count == 0)

@@ -8,20 +8,20 @@ namespace Scrutor
 {
     internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
     {
-        public LifetimeSelector(IServiceTypeSelector inner, IEnumerable<TypeMap> typeMaps, IEnumerable<TypeFactoryMap> typeFactoryMaps)
+        public LifetimeSelector(ServiceTypeSelector inner, IEnumerable<TypeMap> typeMaps, IEnumerable<TypeFactoryMap> typeFactoryMaps)
         {
             Inner = inner;
             TypeMaps = typeMaps;
             TypeFactoryMaps = typeFactoryMaps;
         }
 
-        private IServiceTypeSelector Inner { get; }
+        private ServiceTypeSelector Inner { get; }
 
         private IEnumerable<TypeMap> TypeMaps { get; }
 
         private IEnumerable<TypeFactoryMap> TypeFactoryMaps { get; }
 
-        private ServiceLifetime? Lifetime { get; set; }
+        public ServiceLifetime? Lifetime { get; set; }
 
         public IImplementationTypeSelector WithSingletonLifetime()
         {
@@ -42,7 +42,8 @@ namespace Scrutor
         {
             Preconditions.IsDefined(lifetime, nameof(lifetime));
 
-            Lifetime = lifetime;
+            Inner.PropagateLifetime(lifetime);
+
             return this;
         }
 

@@ -248,9 +248,8 @@ namespace Microsoft.Extensions.DependencyInjection
             bool TryDecorate(ServiceDescriptor descriptor, out Exception err)
             {
                 var descriptorServiceType = descriptor.ServiceType;
-                var typeArguments = descriptorServiceType.GenericTypeArguments;
 
-                if (typeArguments.Length == 0)
+                if (descriptorServiceType.IsGenericTypeDefinition)
                 {
                     // This is a limitation of Microsoft.Extensions.DependencyInjection:
                     // Open generic services requires registering an open generic implementation type.
@@ -258,6 +257,8 @@ namespace Microsoft.Extensions.DependencyInjection
                     err = new InvalidOperationException($"Cannot decorate open generic registrations ({descriptorServiceType}) with open generic decorators ({decoratorType}).");
                     return false;
                 }
+
+                var typeArguments = descriptorServiceType.GenericTypeArguments;
 
                 var closedServiceType = serviceType.MakeGenericType(typeArguments);
                 var closedDecoratorType = decoratorType.MakeGenericType(typeArguments);

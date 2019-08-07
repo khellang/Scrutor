@@ -56,14 +56,23 @@ namespace Scrutor
 
         public ILifetimeSelector AsSelfWithInterfaces()
         {
-            Func<TypeInfo, IEnumerable<Type>> selector = info =>
-                info.ImplementedInterfaces
+            IEnumerable<Type> Selector(TypeInfo info)
+            {
+                if (info.IsGenericTypeDefinition)
+                {
+                    // This prevents trying to register open generic types
+                    // with an ImplementationFactory, which is unsupported.
+                    return Enumerable.Empty<Type>();
+                }
+
+                return info.ImplementedInterfaces
                     .Where(x => x.HasMatchingGenericArity(info))
                     .Select(x => x.GetRegistrationType(info));
+            }
 
             return AddSelector(
                 Types.Select(t => new TypeMap(t, new[] { t })),
-                Types.Select(t => new TypeFactoryMap(x => x.GetRequiredService(t), selector(t.GetTypeInfo()))));
+                Types.Select(t => new TypeFactoryMap(x => x.GetRequiredService(t), Selector(t.GetTypeInfo()))));
         }
 
         public ILifetimeSelector AsMatchingInterface()

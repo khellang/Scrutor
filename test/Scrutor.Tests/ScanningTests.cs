@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Scrutor.Tests
 {
-    using Scrutor.Tests.ChildNamespace;
+    using ChildNamespace;
 
     public class ScanningTests : TestBase
     {
@@ -460,6 +460,19 @@ namespace Scrutor.Tests
             Assert.Same(instance1, instance3);
             Assert.Same(instance1, instance4);
             Assert.Same(instance1, instance5);
+        }
+
+        [Fact]
+        public void AsSelfWithInterfacesHandlesOpenGenericTypes()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.Scan(scan => scan
+                    .FromAssemblyOf<CombinedService2>()
+                    .AddClasses(classes => classes.AssignableTo<IOtherInheritance>())
+                    .AsSelfWithInterfaces()
+                    .WithSingletonLifetime());
+            });
         }
     }
 

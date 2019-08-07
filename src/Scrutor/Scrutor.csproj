@@ -10,7 +10,7 @@
     <PackageId>Scrutor</PackageId>
     <PackageTags>Dependency;Injection;DI;Scanning;Conventions;Decoration</PackageTags>
     <PackageProjectUrl>https://github.com/khellang/Scrutor</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/khellang/Scrutor/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/khellang/Scrutor</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -18,6 +18,8 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <AssemblyOriginatorKeyFile>../signing.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!-- Only increase this value in case of incompatible API changes. -->
     <AssemblyVersion>3.0.2.0</AssemblyVersion>
   </PropertyGroup>

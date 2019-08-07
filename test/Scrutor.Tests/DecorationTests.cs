@@ -164,39 +164,6 @@ namespace Scrutor.Tests
             Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
         }
 
-        [Fact]
-        public void DecoratingOpenGenericServiceWithOpenGenericDecoratorFails()
-        {
-            Assert.Throws<InvalidOperationException>(() => ConfigureProvider(services =>
-            {
-                services.Scan(x =>
-                    x.FromAssemblyOf<Message>()
-                        .AddClasses(classes => classes
-                            .AssignableTo(typeof(IMessageProcessor<>)))
-                        .AsImplementedInterfaces()
-                        .WithTransientLifetime());
-
-                // Because GenericDecorator<> implements IMessageProcessor<>, this will try to decorate itself.
-                services.Decorate(typeof(IMessageProcessor<>), typeof(GenericDecorator<>));
-            }));
-        }
-
-        public interface IMessageProcessor<T> { }
-
-        public class Message { }
-
-        public class MessageProcessor : IMessageProcessor<Message> { }
-
-        public class GenericDecorator<T> : IMessageProcessor<T>
-        {
-            public GenericDecorator(IMessageProcessor<T> decoratee)
-            {
-                Decoratee = decoratee;
-            }
-
-            public IMessageProcessor<T> Decoratee { get; }
-        }
-
         public interface IDecoratedService { }
 
         public interface IService { }

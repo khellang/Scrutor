@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Scrutor.Tests
@@ -77,6 +76,28 @@ namespace Scrutor.Tests
 
             Assert.IsType<MySpecializedQueryHandler>(instance);
         }
+
+        [Fact]
+        public void OpenGenericDecoratorsSkipOpenGenericServiceRegistrations()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.Scan(x =>
+                    x.FromAssemblyOf<Message>()
+                        .AddClasses(classes => classes
+                            .AssignableTo(typeof(IMessageProcessor<>)))
+                        .AsImplementedInterfaces()
+                        .WithTransientLifetime());
+
+                services.Decorate(typeof(IMessageProcessor<>), typeof(GenericDecorator<>));
+            });
+
+            var processor = provider.GetRequiredService<IMessageProcessor<Message>>();
+
+            var decorator = Assert.IsType<GenericDecorator<Message>>(processor);
+
+            Assert.IsType<MessageProcessor>(decorator.Decoratee);
+        }
     }
 
     public class MyQuery { }
@@ -115,4 +136,20 @@ namespace Scrutor.Tests
     public interface ISpecializedQueryHandler : IQueryHandler<MyQuery, MyResult> { }
 
     public class MySpecializedQueryHandler : ISpecializedQueryHandler { }
+
+    public interface IMessageProcessor<T> { }
+
+    public class Message { }
+
+    public class MessageProcessor : IMessageProcessor<Message> { }
+
+    public class GenericDecorator<T> : IMessageProcessor<T>
+    {
+        public GenericDecorator(IMessageProcessor<T> decoratee)
+        {
+            Decoratee = decoratee;
+        }
+
+        public IMessageProcessor<T> Decoratee { get; }
+    }
 }

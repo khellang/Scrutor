@@ -245,21 +245,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType, out Exception error)
         {
-            bool TryDecorate(ServiceDescriptor descriptor, out Exception err)
+            bool TryDecorate(Type[] typeArguments, out Exception err)
             {
-                var descriptorServiceType = descriptor.ServiceType;
-
-                if (descriptorServiceType.IsGenericTypeDefinition)
-                {
-                    // This is a limitation of Microsoft.Extensions.DependencyInjection:
-                    // Open generic services requires registering an open generic implementation type.
-                    // Because we rely on ImplementationFactory as opposed to ImplementationType, this won't work :(
-                    err = new InvalidOperationException($"Cannot decorate open generic registrations ({descriptorServiceType}) with open generic decorators ({decoratorType}).");
-                    return false;
-                }
-
-                var typeArguments = descriptorServiceType.GenericTypeArguments;
-
                 var closedServiceType = serviceType.MakeGenericType(typeArguments);
                 var closedDecoratorType = decoratorType.MakeGenericType(typeArguments);
 
@@ -267,7 +254,9 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             var arguments = services
-                .Where(descriptor => IsSameGenericType(descriptor.ServiceType, serviceType))
+                .Where(x => !x.ServiceType.IsGenericTypeDefinition)
+                .Where(x => IsSameGenericType(x.ServiceType, serviceType))
+                .Select(x => x.ServiceType.GenericTypeArguments)
                 .ToArray();
 
             if (arguments.Length == 0)

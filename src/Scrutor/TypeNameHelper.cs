@@ -15,6 +15,8 @@
 //
 // From https://github.com/aspnet/Common/blob/62018e351c9bed107075d0139b551fb086f9693d/shared/Microsoft.Extensions.TypeNameHelper.Sources/TypeNameHelper.cs
 
+// ReSharper disable All
+
 using System;
 using System.Text;
 using System.Collections.Generic;
@@ -43,11 +45,6 @@ namespace Microsoft.Extensions.Internal
             { typeof(ulong), "ulong" },
             { typeof(ushort), "ushort" }
         };
-
-        public static string GetTypeDisplayName(object item, bool fullName = true)
-        {
-            return item == null ? null : GetTypeDisplayName(item.GetType(), fullName);
-        }
 
         /// <summary>
         /// Pretty print a type name.

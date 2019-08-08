@@ -100,6 +100,8 @@ namespace Scrutor.Tests
         }
     }
 
+    // ReSharper disable UnusedTypeParameter
+
     public class MyQuery { }
 
     public class MyResult { }

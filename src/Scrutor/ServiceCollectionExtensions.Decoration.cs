@@ -273,7 +273,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 }
             }
 
-            error = default;
+            error = default!; // TODO: error should be annotated with [NotNullWhen(false)], but that attribute is only available in netcoreapp3.0 and netstandard2.0.
             return true;
         }
 
@@ -303,7 +303,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 services[index] = decorator(descriptor);
             }
 
-            error = default;
+            error = default!; // TODO: error should be annotated with [NotNullWhen(false)], but that attribute is only available in netcoreapp3.0 and netstandard2.0.
             return true;
         }
 
@@ -314,12 +314,14 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider));
+            // TODO: Annotate TService with notnull when preview 8 is out.
+            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider)!);
         }
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator)
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor)));
+            // TODO: Annotate TService with notnull when preview 8 is out.
+            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor))!);
         }
 
         private static ServiceDescriptor Decorate(this ServiceDescriptor descriptor, Type decoratorType)
@@ -358,3 +360,4 @@ namespace Microsoft.Extensions.DependencyInjection
         }
     }
 }
+

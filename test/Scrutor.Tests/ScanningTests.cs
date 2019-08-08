@@ -477,7 +477,7 @@ namespace Scrutor.Tests
         [Fact]
         public void AsSelfWithInterfacesHandlesOpenGenericTypes()
         {
-            var provider = ConfigureProvider(services =>
+            ConfigureProvider(services =>
             {
                 services.Scan(scan => scan
                     .FromAssemblyOf<CombinedService2>()
@@ -487,6 +487,8 @@ namespace Scrutor.Tests
             });
         }
     }
+
+    // ReSharper disable UnusedTypeParameter
 
     public interface ITransientService { }
 

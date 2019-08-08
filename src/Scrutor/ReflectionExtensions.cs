@@ -139,7 +139,7 @@ namespace Scrutor
 
             var baseTypeInfo = typeInfo.BaseType?.GetTypeInfo();
 
-            if (baseTypeInfo == null)
+            if (baseTypeInfo is null)
             {
                 return false;
             }
@@ -153,7 +153,7 @@ namespace Scrutor
         /// <param name="typeInfo"></param>
         /// <param name="action"></param>
         /// <returns></returns>
-        public static IEnumerable<Type> FindMatchingInterface(this TypeInfo typeInfo, Action<TypeInfo, IImplementationTypeFilter> action)
+        public static IEnumerable<Type> FindMatchingInterface(this TypeInfo typeInfo, Action<TypeInfo, IImplementationTypeFilter>? action)
         {
             var matchingInterfaceName = $"I{typeInfo.Name}";
 
@@ -162,7 +162,11 @@ namespace Scrutor
                 .ToArray();
 
             Type type;
-            if (action != null)
+            if (action is null)
+            {
+                type = matchedInterfaces.FirstOrDefault();
+            }
+            else
             {
                 var filter = new ImplementationTypeFilter(matchedInterfaces);
 
@@ -170,15 +174,13 @@ namespace Scrutor
 
                 type = filter.Types.FirstOrDefault();
             }
-            else
+
+            if (type is null)
             {
-                type = matchedInterfaces.FirstOrDefault();
+                yield break;
             }
 
-            if (type != null)
-            {
-                yield return type;
-            }
+            yield return type;
         }
 
         private static IEnumerable<Type> GetImplementedInterfacesToMap(TypeInfo typeInfo)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Scrutor;
 
@@ -243,16 +244,8 @@ namespace Microsoft.Extensions.DependencyInjection
             return t1.IsGenericType && t2.IsGenericType && t1.GetGenericTypeDefinition() == t2.GetGenericTypeDefinition();
         }
 
-        private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType, out Exception error)
+        private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType, [NotNullWhen(false)] out Exception? error)
         {
-            bool TryDecorate(Type[] typeArguments, out Exception err)
-            {
-                var closedServiceType = serviceType.MakeGenericType(typeArguments);
-                var closedDecoratorType = decoratorType.MakeGenericType(typeArguments);
-
-                return services.TryDecorateDescriptors(closedServiceType, out err, x => x.Decorate(closedDecoratorType));
-            }
-
             var arguments = services
                 .Where(x => !x.ServiceType.IsGenericTypeDefinition)
                 .Where(x => IsSameGenericType(x.ServiceType, serviceType))
@@ -267,13 +260,16 @@ namespace Microsoft.Extensions.DependencyInjection
 
             foreach (var argument in arguments)
             {
-                if (!TryDecorate(argument, out error))
+                var closedServiceType = serviceType.MakeGenericType(argument);
+                var closedDecoratorType = decoratorType.MakeGenericType(argument);
+
+                if (!services.TryDecorateDescriptors(closedServiceType, out error, x => x.Decorate(closedDecoratorType)))
                 {
                     return false;
                 }
             }
 
-            error = default!; // TODO: error should be annotated with [NotNullWhen(false)], but that attribute is only available in netcoreapp3.0 and netstandard2.0.
+            error = default;
             return true;
         }
 
@@ -287,7 +283,7 @@ namespace Microsoft.Extensions.DependencyInjection
             throw error;
         }
 
-        private static bool TryDecorateDescriptors(this IServiceCollection services, Type serviceType, out Exception error, Func<ServiceDescriptor, ServiceDescriptor> decorator)
+        private static bool TryDecorateDescriptors(this IServiceCollection services, Type serviceType, [NotNullWhen(false)] out Exception? error, Func<ServiceDescriptor, ServiceDescriptor> decorator)
         {
             if (!services.TryGetDescriptors(serviceType, out var descriptors))
             {
@@ -303,7 +299,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 services[index] = decorator(descriptor);
             }
 
-            error = default!; // TODO: error should be annotated with [NotNullWhen(false)], but that attribute is only available in netcoreapp3.0 and netstandard2.0.
+            error = default;
             return true;
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Scrutor;
 
 // ReSharper disable once CheckNamespace
@@ -282,6 +283,8 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 return false;
             }
+            
+            services.TryAddTransient<DecoratedServiceDisposer>();
 
             foreach (var descriptor in descriptors)
             {
@@ -331,17 +334,32 @@ namespace Microsoft.Extensions.DependencyInjection
                 return provider.GetServiceOrCreateInstance(descriptor.ImplementationType);
             }
 
-            return descriptor.ImplementationFactory(provider);
+            var service = descriptor.ImplementationFactory(provider);
+            TryTrackDisposable(provider, service);
+
+            return service;
         }
 
         private static object GetServiceOrCreateInstance(this IServiceProvider provider, Type type)
         {
-            return ActivatorUtilities.GetServiceOrCreateInstance(provider, type);
+            // Emulates ActivatorUtilities.GetServiceOrCreateInstance, but tracks the manually created object
+            return provider.GetService(type) ?? provider.CreateInstance(type);
         }
 
         private static object CreateInstance(this IServiceProvider provider, Type type, params object[] arguments)
         {
-            return ActivatorUtilities.CreateInstance(provider, type, arguments);
+            var service = ActivatorUtilities.CreateInstance(provider, type, arguments);
+            TryTrackDisposable(provider, service);
+            return service;
+        }
+        
+        private static void TryTrackDisposable(IServiceProvider provider, object service)
+        {
+            if (service is IDisposable disposable)
+            {
+                var tracker = provider.GetRequiredService<DecoratedServiceDisposer>();
+                tracker.Set(disposable);
+            }
         }
     }
 }

@@ -175,6 +175,27 @@ namespace Scrutor.Tests
             provider.Dispose();
 
             Assert.True(decorated.WasDisposed);
+            Assert.Equal(1, decorated.DisposeCount);
+        }
+
+        [Fact]
+        public void WrappedDisposableServicesUsingFactoryAreDisposed()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddTransient<IDecoratedService>(ctx => new DisposableInnerService());
+                services.Decorate<IDecoratedService, Decorator>();
+            });
+
+            var service = provider.GetRequiredService<IDecoratedService>();
+
+            var decorator = Assert.IsType<Decorator>(service);
+            var decorated = Assert.IsType<DisposableInnerService>(decorator.Inner);
+
+            provider.Dispose();
+
+            Assert.True(decorated.WasDisposed);
+            Assert.Equal(1, decorated.DisposeCount);
         }
 
         [Fact]
@@ -249,11 +270,12 @@ namespace Scrutor.Tests
 
         private class DisposableInnerService: IDecoratedService, IDisposableService
         {
-            public bool WasDisposed { get; private set; }
+            public int DisposeCount { get; private set; }
+            public bool WasDisposed => DisposeCount > 0;
 
             public void Dispose()
             {
-                WasDisposed = true;
+                DisposeCount++;
             }
         }
     }

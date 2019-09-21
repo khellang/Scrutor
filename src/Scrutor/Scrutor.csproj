@@ -26,6 +26,7 @@
     <AssemblyVersion>3.0.2.0</AssemblyVersion>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
+    <NullableReferenceTypes>true</NullableReferenceTypes>
   </PropertyGroup>
 
   <ItemGroup>

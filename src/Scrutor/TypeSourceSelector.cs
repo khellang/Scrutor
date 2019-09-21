@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyModel;
 
 namespace Scrutor
 {
-    internal class TypeSourceSelector : ITypeSourceSelector, ISelector
+    public class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
         private List<ISelector> Selectors { get; } = new List<ISelector>();
 
@@ -151,7 +151,7 @@ namespace Scrutor
             return selector.AddClasses();
         }
 
-        void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
+        public void Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
         {
             foreach (var selector in Selectors)
             {

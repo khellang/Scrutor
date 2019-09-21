@@ -24,7 +24,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!-- Only increase this value in case of incompatible API changes. -->
     <AssemblyVersion>3.0.2.0</AssemblyVersion>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 

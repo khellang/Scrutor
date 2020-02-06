@@ -13,6 +13,11 @@ namespace Scrutor
         {
             var typeInfo = type.GetTypeInfo();
 
+            if (typeInfo.IsSpecialName)
+            {
+                return false;
+            }
+
             if (typeInfo.IsClass && !typeInfo.IsAbstract)
             {
                 if (typeInfo.IsDefined(typeof(CompilerGeneratedAttribute), inherit: true))

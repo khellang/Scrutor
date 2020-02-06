@@ -120,6 +120,21 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void UsingRegistrationStrategy_Throw()
+        {
+            Assert.Throws<DuplicateTypeRegistrationException>(() =>
+                Collection.Scan(scan => scan
+                    .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                    .AsImplementedInterfaces()
+                    .WithTransientLifetime()
+                    .AddClasses(classes => classes.AssignableTo<ITransientService>())
+                    .UsingRegistrationStrategy(RegistrationStrategy.Throw)
+                    .AsImplementedInterfaces()
+                    .WithSingletonLifetime()));
+        }
+
+        [Fact]
         public void CanFilterTypesToScan()
         {
             Collection.Scan(scan => scan

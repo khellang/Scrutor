@@ -11,9 +11,14 @@ namespace Scrutor
         public static readonly RegistrationStrategy Skip = new SkipRegistrationStrategy();
 
         /// <summary>
-        /// Appends a new registration for existing sevices.
+        /// Appends a new registration for existing services.
         /// </summary>
         public static readonly RegistrationStrategy Append = new AppendRegistrationStrategy();
+
+        /// <summary>
+        /// Throws when trying to register an existing service.
+        /// </summary>
+        public static readonly RegistrationStrategy Throw = new ThrowRegistrationStrategy();
 
         /// <summary>
         /// Replaces existing service registrations using <see cref="ReplacementBehavior.Default"/>.
@@ -47,6 +52,19 @@ namespace Scrutor
         private sealed class AppendRegistrationStrategy : RegistrationStrategy
         {
             public override void Apply(IServiceCollection services, ServiceDescriptor descriptor) => services.Add(descriptor);
+        }
+
+        private sealed class ThrowRegistrationStrategy : RegistrationStrategy
+        {
+            public override void Apply(IServiceCollection services, ServiceDescriptor descriptor)
+            {
+                if (services.HasRegistration(descriptor.ServiceType))
+                {
+                    throw new DuplicateTypeRegistrationException(descriptor.ServiceType);
+                }
+
+                services.Add(descriptor);
+            }
         }
 
         private sealed class ReplaceRegistrationStrategy : RegistrationStrategy

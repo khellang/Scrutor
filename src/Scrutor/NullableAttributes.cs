@@ -4,6 +4,7 @@
 
 // Copied from https://github.com/dotnet/coreclr/blob/16697076c0a6af47fbcce75e11c45d35a12b7d4e/src/System.Private.CoreLib/shared/System/Diagnostics/CodeAnalysis/NullableAttributes.cs
 
+// ReSharper disable once CheckNamespace
 namespace System.Diagnostics.CodeAnalysis
 {
     /// <summary>Specifies that null is allowed as an input even if the corresponding type disallows it.</summary>

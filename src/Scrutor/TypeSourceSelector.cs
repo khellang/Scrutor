@@ -64,19 +64,7 @@ namespace Scrutor
             var assemblyNames = context.RuntimeLibraries
                 .SelectMany(library => library.GetDefaultAssemblyNames(context));
 
-            var assemblies = new List<Assembly>();
-            foreach (var assemblyName in assemblyNames)
-            {
-                try
-                {
-                    // Try to load the referenced assembly...
-                    assemblies.Add(Assembly.Load(assemblyName));
-                }
-                catch
-                {
-                    // Failed to load assembly. Skip it.
-                }
-            }
+            var assemblies = LoadAssemblies(assemblyNames);
 
             return InternalFromAssemblies(assemblies.Where(predicate));
         }
@@ -91,18 +79,7 @@ namespace Scrutor
             {
                 var dependencyNames = assembly.GetReferencedAssemblies();
 
-                foreach (var dependencyName in dependencyNames)
-                {
-                    try
-                    {
-                        // Try to load the referenced assembly...
-                        assemblies.Add(Assembly.Load(dependencyName));
-                    }
-                    catch
-                    {
-                        // Failed to load assembly. Skip it.
-                    }
-                }
+                assemblies.AddRange(LoadAssemblies(dependencyNames));
 
                 return InternalFromAssemblies(assemblies);
             }
@@ -178,6 +155,26 @@ namespace Scrutor
         private IImplementationTypeSelector InternalFromAssemblies(IEnumerable<Assembly> assemblies)
         {
             return AddSelector(assemblies.SelectMany(asm => asm.DefinedTypes).Select(x => x.AsType()));
+        }
+
+        private static IEnumerable<Assembly> LoadAssemblies(IEnumerable<AssemblyName> assemblyNames)
+        {
+            var assemblies = new List<Assembly>();
+
+            foreach (var assemblyName in assemblyNames)
+            {
+                try
+                {
+                    // Try to load the referenced assembly...
+                    assemblies.Add(Assembly.Load(assemblyName));
+                }
+                catch
+                {
+                    // Failed to load assembly. Skip it.
+                }
+            }
+
+            return assemblies;
         }
 
         private IImplementationTypeSelector AddSelector(IEnumerable<Type> types)

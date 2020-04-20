@@ -61,13 +61,24 @@ namespace Scrutor
             Preconditions.NotNull(context, nameof(context));
             Preconditions.NotNull(predicate, nameof(predicate));
 
-            var assemblies = context.RuntimeLibraries
-                .SelectMany(library => library.GetDefaultAssemblyNames(context))
-                .Select(Assembly.Load)
-                .Where(predicate)
-                .ToArray();
+            var assemblyNames = context.RuntimeLibraries
+                .SelectMany(library => library.GetDefaultAssemblyNames(context));
 
-            return InternalFromAssemblies(assemblies);
+            var assemblies = new List<Assembly>();
+            foreach (var assemblyName in assemblyNames)
+            {
+                try
+                {
+                    // Try to load the referenced assembly...
+                    assemblies.Add(Assembly.Load(assemblyName));
+                }
+                catch
+                {
+                    // Failed to load assembly. Skip it.
+                }
+            }
+
+            return InternalFromAssemblies(assemblies.Where(predicate));
         }
 
         public IImplementationTypeSelector FromAssemblyDependencies(Assembly assembly)

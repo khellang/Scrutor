@@ -239,29 +239,32 @@ namespace Microsoft.Extensions.DependencyInjection
             throw error;
         }
 
-        private static bool IsSameGenericType(Type t1, Type t2)
+        private static bool HasSameTypeDefinition(Type t1, Type t2)
         {
             return t1.IsGenericType && t2.IsGenericType && t1.GetGenericTypeDefinition() == t2.GetGenericTypeDefinition();
         }
 
         private static bool TryDecorateOpenGeneric(this IServiceCollection services, Type serviceType, Type decoratorType, [NotNullWhen(false)] out Exception? error)
         {
-            var arguments = services
+            var closedGenericServiceTypes = services
                 .Where(x => !x.ServiceType.IsGenericTypeDefinition)
-                .Where(x => IsSameGenericType(x.ServiceType, serviceType))
-                .Select(x => x.ServiceType.GenericTypeArguments)
-                .ToArray();
+                .Where(x => HasSameTypeDefinition(x.ServiceType, serviceType))
+                .Select(x => x.ServiceType)
+                .Distinct()
+                .ToList();
 
-            if (arguments.Length == 0)
+            if (closedGenericServiceTypes.Count == 0)
             {
                 error = new MissingTypeRegistrationException(serviceType);
                 return false;
             }
 
-            foreach (var argument in arguments)
+            foreach (var closedGenericServiceType in closedGenericServiceTypes)
             {
-                var closedServiceType = serviceType.MakeGenericType(argument);
-                var closedDecoratorType = decoratorType.MakeGenericType(argument);
+                var arguments = closedGenericServiceType.GenericTypeArguments;
+
+                var closedServiceType = serviceType.MakeGenericType(arguments);
+                var closedDecoratorType = decoratorType.MakeGenericType(arguments);
 
                 if (!services.TryDecorateDescriptors(closedServiceType, out error, x => x.Decorate(closedDecoratorType)))
                 {

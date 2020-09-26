@@ -1,7 +1,6 @@
 ﻿using System;
 using Scrutor;
 
-// ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static partial class ServiceCollectionExtensions

@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Scrutor;
 
-// ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static partial class ServiceCollectionExtensions
@@ -314,13 +313,13 @@ namespace Microsoft.Extensions.DependencyInjection
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)
         {
             // TODO: Annotate TService with notnull when preview 8 is out.
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider)!);
+            return descriptor.WithFactory(provider => decorator((TService)provider.GetInstance(descriptor), provider)!);
         }
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator)
         {
             // TODO: Annotate TService with notnull when preview 8 is out.
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor))!);
+            return descriptor.WithFactory(provider => decorator((TService)provider.GetInstance(descriptor))!);
         }
 
         private static ServiceDescriptor Decorate(this ServiceDescriptor descriptor, Type decoratorType)

@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scrutor", "src\Scrutor\Scru
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scrutor.Tests", "test\Scrutor.Tests\Scrutor.Tests.csproj", "{B065DC10-3AD1-462B-A90E-9BE86403243E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scrutor.Analyzers", "src\Scrutor.Analyzers\Scrutor.Analyzers.csproj", "{413885A5-EB8B-4097-BC7C-B4EF5159F106}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{B065DC10-3AD1-462B-A90E-9BE86403243E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B065DC10-3AD1-462B-A90E-9BE86403243E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B065DC10-3AD1-462B-A90E-9BE86403243E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{413885A5-EB8B-4097-BC7C-B4EF5159F106}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{413885A5-EB8B-4097-BC7C-B4EF5159F106}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{413885A5-EB8B-4097-BC7C-B4EF5159F106}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{413885A5-EB8B-4097-BC7C-B4EF5159F106}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -38,5 +44,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{1D63DA77-E425-4FEA-BC82-94A8F6C3024E} = {3F8D19AB-70F9-4640-BEDE-BBDA2AA4EE9D}
 		{B065DC10-3AD1-462B-A90E-9BE86403243E} = {34EEB067-2738-4DD0-8596-D67A9461833A}
+		{413885A5-EB8B-4097-BC7C-B4EF5159F106} = {3F8D19AB-70F9-4640-BEDE-BBDA2AA4EE9D}
 	EndGlobalSection
 EndGlobal

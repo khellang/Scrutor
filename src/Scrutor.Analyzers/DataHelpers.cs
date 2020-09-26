@@ -47,6 +47,8 @@ namespace Scrutor.Analyzers
                 expression = body;
             }
 
+            rootExpression = expression;
+
             if (expression.Expression is MemberAccessExpressionSyntax memberAccessExpressionSyntax
              && memberAccessExpressionSyntax.IsKind(SyntaxKind.SimpleMemberAccessExpression))
             {

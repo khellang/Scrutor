@@ -13,10 +13,10 @@ using static Scrutor.Tests.GenerationHelpers;
 
 namespace Scrutor.Tests
 {
-
     public class StaticScanningTests
     {
         private readonly ITestOutputHelper _testOutputHelper;
+
         public StaticScanningTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
@@ -62,18 +62,14 @@ public static class Program {{
 			.AddClasses(x => x.AssignableTo<IService>(), false)
             .AsSelf()
             .AsImplementedInterfaces()
-            .With{
-                    serviceLifetime
-                }Lifetime()
+            .With{serviceLifetime}Lifetime()
         );
 	    Services.ScanStatic(z => z
 			.FromAssemblies()
 			.AddClasses(x => x.AssignableTo<IServiceB>(), false)
             .AsSelf()
             .AsMatchingInterface()
-            .WithLifetime(ServiceLifetime.{
-                    serviceLifetime
-                })
+            .WithLifetime(ServiceLifetime.{serviceLifetime})
         );
     }}
 }}
@@ -93,20 +89,12 @@ namespace Scrutor.Static
             switch (lineNumber)
             {{
                 case 30:
-                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(Service), typeof(Service), ServiceLifetime.{
-                    serviceLifetime
-                }));
-                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IService), _ => _.GetRequiredService(typeof(Service)), ServiceLifetime.{
-                    serviceLifetime
-                }));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(Service), typeof(Service), ServiceLifetime.{serviceLifetime}));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IService), _ => _.GetRequiredService(typeof(Service)), ServiceLifetime.{serviceLifetime}));
                     break;
                 case 37:
-                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(ServiceB), typeof(ServiceB), ServiceLifetime.{
-                    serviceLifetime
-                }));
-                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IServiceB), _ => _.GetRequiredService(typeof(ServiceB)), ServiceLifetime.{
-                    serviceLifetime
-                }));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(ServiceB), typeof(ServiceB), ServiceLifetime.{serviceLifetime}));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IServiceB), _ => _.GetRequiredService(typeof(ServiceB)), ServiceLifetime.{serviceLifetime}));
                     break;
             }}
 
@@ -118,7 +106,7 @@ namespace Scrutor.Static
 
 
             await AssertGeneratedAsExpected<StaticScrutorGenerator>(
-                new[] { typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly },
+                new[] {typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly},
                 source,
                 expected,
                 "Scrutor.Static.Populate.cs"
@@ -186,7 +174,7 @@ public static class Program {{
 }}
 ";
             var compilation = await CreateProject<StaticScrutorGenerator>(
-                new[] { typeof(IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly },
+                new[] {typeof(IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly},
                 source
             ).ConfigureAwait(false);
 
@@ -337,9 +325,9 @@ namespace Scrutor.Static
 
 
             await AssertGeneratedAsExpected<StaticScrutorGenerator>(
-                new[] { typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly },
-                new[] { source, source1, source2 },
-                new[] { expected },
+                new[] {typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly},
+                new[] {source, source1, source2},
+                new[] {expected},
                 "Scrutor.Static.Populate.cs"
             ).ConfigureAwait(false);
         }
@@ -416,7 +404,7 @@ public static class Program2 {
 }
 ";
             var compilation = await CreateProject<StaticScrutorGenerator>(
-                new[] { typeof(IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly },
+                new[] {typeof(IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly},
                 source, source1, source2
             ).ConfigureAwait(false);
 
@@ -463,8 +451,8 @@ public static class Program2 {
             var services2 = servicesField2!.GetValue(null) as IServiceCollection;
             Assert.NotNull(services2);
 
-            method1.Invoke(null, new object[] {  });
-            method2.Invoke(null, new object[] {  });
+            method1.Invoke(null, new object[] { });
+            method2.Invoke(null, new object[] { });
 
             Assert.Equal(2, services1.Count());
             Assert.Equal(1, services1.Count(z => z.ImplementationFactory is not null));

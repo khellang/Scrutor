@@ -1,18 +1,227 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Scrutor.Tests
 {
+    public class GeneratorTester : IDisposable
+    {
+        private readonly List<MetadataReference> _references;
+        private readonly List<Assembly> _assemblies;
+        private readonly List<SourceText> _sources;
+        private readonly CollectibleTestAssemblyLoadContext _context;
+        private readonly string _testProjectName;
+        private readonly string _filePathPrefix;
+        private readonly string _fileExt;
+#if NETCOREAPP3_1
+        [AllowNull, MaybeNull]
+#endif
+        private Project _project = null;
+#if NETCOREAPP3_1
+        [AllowNull, MaybeNull]
+#endif
+        private CSharpCompilation _lastCompilation = null;
+        private ImmutableArray<SyntaxTree> _lastSyntax = ImmutableArray<SyntaxTree>.Empty;
+        private ImmutableArray<Diagnostic> _generatorDiagnostics = ImmutableArray<Diagnostic>.Empty;
+
+        public GeneratorTester(
+            CollectibleTestAssemblyLoadContext context,
+            string testProjectName = "TestProject",
+            string filePathPrefix = "Test",
+            string fileExt = "cs")
+        {
+            _context = context;
+            _testProjectName = testProjectName;
+            _filePathPrefix = filePathPrefix;
+            _fileExt = fileExt;
+            _assemblies = new List<Assembly>();
+            _sources = new List<SourceText>();
+            _references = new List<MetadataReference>(GenerationHelpers.MetadataReferences);
+            AddReferences(typeof(IServiceCollection).Assembly, typeof(ServiceCollection).Assembly, typeof(IFluentInterface).Assembly);
+        }
+
+        public GeneratorTester AddCompilationReference(CSharpCompilation compilation)
+        {
+            _references.Add(compilation.CreateMetadataReference());
+            _project = null;
+            _lastCompilation = null;
+            return this;
+        }
+
+        public GeneratorTester AddReferences(IEnumerable<MetadataReference> additionalSources)
+        {
+            _references.AddRange(additionalSources);
+            return this;
+        }
+
+        public GeneratorTester AddReferences(MetadataReference reference, params MetadataReference[] additionalReferences)
+        {
+            _references.Add(reference);
+            _references.AddRange(additionalReferences);
+            _project = null;
+            _lastCompilation = null;
+            return this;
+        }
+
+        public GeneratorTester AddReferences(IEnumerable<Assembly> additionalSources)
+        {
+            _assemblies.AddRange(additionalSources);
+            return this;
+        }
+
+        public GeneratorTester AddReferences(Assembly assembly, params Assembly[] additionalAssemblies)
+        {
+            _assemblies.Add(assembly);
+            _assemblies.AddRange(additionalAssemblies);
+            _project = null;
+            _lastCompilation = null;
+            return this;
+        }
+
+        public GeneratorTester AddSources(SourceText source, params SourceText[] additionalSources)
+        {
+            _sources.Add(source);
+            _sources.AddRange(additionalSources);
+            return this;
+        }
+
+        public GeneratorTester AddSources(IEnumerable<SourceText> additionalSources)
+        {
+            _sources.AddRange(additionalSources);
+            return this;
+        }
+
+        public GeneratorTester AddSources(string source, params string[] additionalSources)
+        {
+            _sources.Add(SourceText.From(source, Encoding.UTF8));
+            _sources.AddRange(additionalSources.Select(s => SourceText.From(s, Encoding.UTF8)));
+            return this;
+        }
+
+        public GeneratorTester AddSources(IEnumerable<string> additionalSources)
+        {
+            _sources.AddRange(additionalSources.Select(s => SourceText.From(s, Encoding.UTF8)));
+            return this;
+        }
+
+        public CSharpCompilation Compile()
+        {
+            var project = CreateProject();
+
+            var compilation = (CSharpCompilation) project.GetCompilationAsync().ConfigureAwait(false).GetAwaiter().GetResult()!;
+            if (compilation is null)
+            {
+                throw new InvalidOperationException("Could not compile the sources");
+            }
+
+            return _lastCompilation = compilation;
+        }
+
+        public IEnumerable<SyntaxTree> Generate<T>()
+            where T : ISourceGenerator, new()
+        {
+            var project = CreateProject();
+
+            var compilation = (CSharpCompilation) project.GetCompilationAsync().ConfigureAwait(false).GetAwaiter().GetResult()!;
+            if (compilation is null)
+            {
+                throw new InvalidOperationException("Could not compile the sources");
+            }
+
+            var startingSyntaxTress = compilation.SyntaxTrees.Length;
+
+            // var diagnostics = compilation.GetDiagnostics();
+            // Assert.Empty(diagnostics.Where(x => x.Severity > DiagnosticSeverity.Warning));
+
+            ISourceGenerator generator = new T();
+
+            var driver = new CSharpGeneratorDriver(compilation.SyntaxTrees[0].Options, ImmutableArray.Create(generator), default, ImmutableArray<AdditionalText>.Empty);
+
+            driver.RunFullGeneration(compilation, out var outputCompilation, out _generatorDiagnostics);
+            _lastCompilation = outputCompilation as CSharpCompilation;
+
+            // the syntax tree added by the generator will be the last one in the compilation
+            return _lastSyntax = outputCompilation.SyntaxTrees.TakeLast(outputCompilation.SyntaxTrees.Count() - startingSyntaxTress).ToImmutableArray();
+        }
+
+        public void AssertCompilationWasSuccessful()
+        {
+            Assert.NotNull(_lastCompilation);
+            var diagnostics = Compilation.GetDiagnostics();
+            Assert.Empty(diagnostics.Where(x => x.Severity > DiagnosticSeverity.Warning));
+        }
+
+        public Assembly Emit()
+        {
+            using var stream = new MemoryStream();
+            var emitResult = Compilation!.Emit(stream, options: new EmitOptions());
+            if (!emitResult.Success)
+            {
+                Assert.Empty(emitResult.Diagnostics);
+            }
+
+            var data = stream.ToArray();
+
+            using var assemblyStream = new MemoryStream(data);
+            return _context.LoadFromStream(assemblyStream);
+        }
+
+        public CSharpCompilation Compilation => _lastCompilation!;
+        public ImmutableArray<Diagnostic> CompilationDiagnostics => Compilation.GetDiagnostics();
+        public ImmutableArray<SyntaxTree> GeneratorSyntaxTrees => _lastSyntax!;
+        public ImmutableArray<Diagnostic> GeneratorDiagnostics => _generatorDiagnostics;
+
+        public void Dispose() { }
+
+        private Project CreateProject()
+        {
+            if (_project != null) return _project;
+            var projectId = ProjectId.CreateNewId(_testProjectName);
+            var solution = new AdhocWorkspace()
+                .CurrentSolution
+                .AddProject(projectId, _testProjectName, _testProjectName, LanguageNames.CSharp)
+                .WithProjectCompilationOptions(
+                    projectId,
+                    new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                )
+                .WithProjectParseOptions(
+                    projectId,
+                    new CSharpParseOptions(preprocessorSymbols: new[] {"SOMETHING_ACTIVE"})
+                )
+                .AddMetadataReferences(projectId, _references.Concat(_assemblies.Distinct().Select(z => MetadataReference.CreateFromFile(z.Location))));
+
+            var count = 0;
+            foreach (var source in _sources)
+            {
+                var newFileName = _filePathPrefix + count + "." + _fileExt;
+                var documentId = DocumentId.CreateNewId(projectId, newFileName);
+                solution = solution.AddDocument(documentId, newFileName, source);
+                count++;
+            }
+
+            var project = solution.GetProject(projectId);
+            if (project is null)
+            {
+                throw new InvalidOperationException($"The ad hoc workspace does not contain a project with the id {projectId.Id}");
+            }
+
+            return _project = project;
+        }
+    }
+
     public static class GenerationHelpers
     {
         static GenerationHelpers()
@@ -39,35 +248,68 @@ namespace Scrutor.Tests
 
         internal const string CrLf = "\r\n";
         internal const string Lf = "\n";
-        internal const string DefaultFilePathPrefix = "Test";
-        internal const string CSharpDefaultFileExt = "cs";
-        internal const string TestProjectName = "TestProject";
 
         // internal static readonly string NormalizedPreamble = NormalizeToLf(Preamble.GeneratedByATool + Lf);
 
         internal static readonly ImmutableArray<PortableExecutableReference> MetadataReferences;
 
-        public static async Task AssertGeneratedAsExpected<T>(IEnumerable<Assembly> metadataReferences, string source, string expected, string? pathHint = null)
+        public static string NormalizeToLf(string input) => input.Replace(CrLf, Lf);
+
+        public static Assembly EmitInto(this CSharpCompilation compilation, AssemblyLoadContext context)
+        {
+            using var stream = new MemoryStream();
+            var emitResult = compilation.Emit(stream, options: new EmitOptions());
+            if (!emitResult.Success)
+            {
+                Assert.Empty(emitResult.Diagnostics);
+            }
+
+            var data = stream.ToArray();
+
+            using var assemblyStream = new MemoryStream(data);
+            return context.LoadFromStream(assemblyStream);
+        }
+
+        public static MetadataReference CreateMetadataReference(this CSharpCompilation compilation)
+        {
+            using var stream = new MemoryStream();
+            var emitResult = compilation.Emit(stream, options: new EmitOptions());
+            if (!emitResult.Success)
+            {
+                Assert.Empty(emitResult.Diagnostics);
+            }
+
+            var data = stream.ToArray();
+
+            using var assemblyStream = new MemoryStream(data);
+            return MetadataReference.CreateFromStream(assemblyStream, MetadataReferenceProperties.Assembly);
+        }
+
+        private static Func<SyntaxTree, bool> ApplyPathHint(string? pathHint) =>
+            z => pathHint == null || z.FilePath.Contains(pathHint, StringComparison.OrdinalIgnoreCase);
+
+        public static void AssertGeneratedAsExpected<T>(this GeneratorTester generator, string source, string expected, string? pathHint = null)
             where T : ISourceGenerator, new()
         {
-            var generatedTree = await GenerateAsync<T>(new[] { source }, metadataReferences).ConfigureAwait(false);
+            var generatedTree = generator.Generate<T>(new[] {source});
             // normalize line endings to just LF
             var generatedText = generatedTree
-                .Where(z => pathHint == null || z.FilePath.Contains(pathHint, StringComparison.OrdinalIgnoreCase))
+                .Where(ApplyPathHint(pathHint))
                 .Select(z => NormalizeToLf(z.GetText().ToString()));
             // and append preamble to the expected
             var expectedText = NormalizeToLf(expected).Trim();
-            Assert.Equal(generatedText.Last(), expectedText);
+            Assert.Equal(generatedText.LastOrDefault()!, expectedText);
         }
 
-        public static async Task AssertGeneratedAsExpected<T>(IEnumerable<Assembly> metadataReferences, IEnumerable<string> sources, IEnumerable<string> expected, string? pathHint = null)
+        public static void AssertGeneratedAsExpected<T>(this GeneratorTester generator, IEnumerable<string> sources, IEnumerable<string> expected, string? pathHint = null)
             where T : ISourceGenerator, new()
         {
-            var generatedTree = await GenerateAsync<T>(sources, metadataReferences).ConfigureAwait(false);
+            var generatedTree = generator.Generate<T>(sources);
             // normalize line endings to just LF
             var generatedText = generatedTree
-                .Where(z => pathHint == null || z.FilePath.Contains(pathHint, StringComparison.OrdinalIgnoreCase))
-                .Select(z => NormalizeToLf(z.GetText().ToString())).ToArray();
+                .Where(ApplyPathHint(pathHint))
+                .Select(z => NormalizeToLf(z.GetText().ToString()))
+                .ToArray();
             // and append preamble to the expected
             var expectedText = expected.Select(z => NormalizeToLf(z).Trim()).ToArray();
 
@@ -78,169 +320,27 @@ namespace Scrutor.Tests
             }
         }
 
-        public static async Task AssertGeneratedAsExpected<T>(string source, string expected, string? pathHint = null)
+        public static IEnumerable<SyntaxTree> Generate<T>(this GeneratorTester generator, string source, string? pathHint = null)
             where T : ISourceGenerator, new()
         {
-            var generatedTree = await GenerateAsync<T>(new[] { source }, Array.Empty<Assembly>()).ConfigureAwait(false);
+            var generatedTree = generator.AddSources(source).Generate<T>();
             // normalize line endings to just LF
-            var generatedText = generatedTree
-                .Where(z => pathHint == null || z.FilePath.Contains(pathHint, StringComparison.OrdinalIgnoreCase))
-                .Select(z => NormalizeToLf(z.GetText().ToString()));
+            var generatedText = generatedTree.Where(ApplyPathHint(pathHint));
             // and append preamble to the expected
-            var expectedText = NormalizeToLf(expected).Trim();
-            Assert.Equal(generatedText.Last(), expectedText);
+            return generatedText;
         }
 
-        public static async Task<string> Generate<T>(IEnumerable<Assembly> metadataReferences, string source, string? pathHint = null)
+        public static IEnumerable<SyntaxTree> Generate<T>(this GeneratorTester generator, IEnumerable<string> sources, string? pathHint = null)
             where T : ISourceGenerator, new()
         {
-            var generatedTree = await GenerateAsync<T>(new[] { source }, metadataReferences).ConfigureAwait(false);
+            var generatedTree = generator.AddSources(sources).Generate<T>();
             // normalize line endings to just LF
-            var generatedText = generatedTree
-                .Where(z => pathHint == null || z.FilePath.Contains(pathHint, StringComparison.OrdinalIgnoreCase))
-                .Select(z => NormalizeToLf(z.GetText().ToString()));
-            // and append preamble to the expected
-            return generatedText.Last();
-        }
-
-        public static async Task<string[]> Generate<T>(IEnumerable<Assembly> metadataReferences, IEnumerable<string> sources)
-            where T : ISourceGenerator, new()
-        {
-            var generatedTree = await GenerateAsync<T>(sources, metadataReferences).ConfigureAwait(false);
-            // normalize line endings to just LF
-            var generatedText = generatedTree
-                .Select(z => NormalizeToLf(z.GetText().ToString()));
+            var generatedText = generatedTree.Where(ApplyPathHint(pathHint));
             // and append preamble to the expected
             return generatedText.ToArray();
         }
 
-        public static async Task<string> Generate<T>(string source)
-            where T : ISourceGenerator, new()
-        {
-            var generatedTree = await GenerateAsync<T>(new[] { source }, Array.Empty<Assembly>()).ConfigureAwait(false);
-            // normalize line endings to just LF
-            var generatedText = generatedTree
-                .Select(z => NormalizeToLf(z.GetText().ToString()));
-            // and append preamble to the expected
-            return generatedText.Last();
-        }
-
-        public static string NormalizeToLf(string input) => input.Replace(CrLf, Lf);
-
-        public static async Task<IEnumerable<SyntaxTree>> GenerateAsync<T>(IEnumerable<string> sources, IEnumerable<Assembly> metadataReferences)
-            where T : ISourceGenerator, new()
-        {
-            var references = metadataReferences
-                .Concat(
-                    new[]
-                    {
-                        typeof(IServiceCollection).Assembly,
-                        typeof(ServiceCollection).Assembly,
-                        typeof(IFluentInterface).Assembly,
-                    }
-                )
-                .Distinct()
-                .Select(x => MetadataReference.CreateFromFile(x.Location))
-                .ToArray();
-            var project = CreateProject(references, sources.ToArray());
-
-            var compilation = (CSharpCompilation?)await project.GetCompilationAsync().ConfigureAwait(false);
-            if (compilation is null)
-            {
-                throw new InvalidOperationException("Could not compile the sources");
-            }
-
-            var startingSyntaxTress = compilation.SyntaxTrees.Length;
-
-            // var diagnostics = compilation.GetDiagnostics();
-            // Assert.Empty(diagnostics.Where(x => x.Severity > DiagnosticSeverity.Warning));
-
-            ISourceGenerator generator = new T();
-
-            var driver = new CSharpGeneratorDriver(compilation.SyntaxTrees[0].Options, ImmutableArray.Create(generator), default, ImmutableArray<AdditionalText>.Empty);
-
-            driver.RunFullGeneration(compilation, out var outputCompilation, out var innerDiagnostics);
-
-            var diagnostics = outputCompilation.GetDiagnostics();
-            Assert.Empty(diagnostics.Where(x => x.Severity > DiagnosticSeverity.Warning));
-            // Assert.Empty(diagnostics.Where(x => x.Severity >= DiagnosticSeverity.Warning));
-
-            // the syntax tree added by the generator will be the last one in the compilation
-            return outputCompilation.SyntaxTrees.TakeLast(outputCompilation.SyntaxTrees.Count() - startingSyntaxTress);
-        }
-
-        public static async Task<CSharpCompilation> CreateProject<T>(IEnumerable<Assembly> metadataReferences, params string[] sources)
-            where T : ISourceGenerator, new()
-        {
-            var references = metadataReferences
-                .Concat(
-                    new[]
-                    {
-                        typeof(IServiceCollection).Assembly,
-                        typeof(ServiceCollection).Assembly,
-                        typeof(IFluentInterface).Assembly,
-                    }
-                )
-                .Distinct()
-                .Select(x => MetadataReference.CreateFromFile(x.Location))
-                .ToArray();
-
-            var project = CreateProject(references, sources);
-
-
-            var compilation = (CSharpCompilation?)await project.GetCompilationAsync().ConfigureAwait(false);
-            if (compilation is null)
-            {
-                throw new InvalidOperationException("Could not compile the sources");
-            }
-
-            // var diagnostics = compilation.GetDiagnostics();
-            // Assert.Empty(diagnostics.Where(x => x.Severity > DiagnosticSeverity.Warning));
-
-            ISourceGenerator generator = new T();
-
-            var driver = new CSharpGeneratorDriver(compilation.SyntaxTrees[0].Options, ImmutableArray.Create(generator), default, ImmutableArray<AdditionalText>.Empty);
-
-            driver.RunFullGeneration(compilation, out var outputCompilation, out var innerDiagnostics);
-
-            var diagnostics = outputCompilation.GetDiagnostics();
-            // Assert.Empty(diagnostics.Where(x => x.Severity > DiagnosticSeverity.Warning));
-
-            return (outputCompilation as CSharpCompilation)!;
-        }
-
-        public static Project CreateProject(IEnumerable<MetadataReference> metadataReferences, params string[] sources)
-        {
-            var projectId = ProjectId.CreateNewId(TestProjectName);
-            var solution = new AdhocWorkspace()
-                .CurrentSolution
-                .AddProject(projectId, TestProjectName, TestProjectName, LanguageNames.CSharp)
-                .WithProjectCompilationOptions(
-                    projectId,
-                    new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-                )
-                .WithProjectParseOptions(
-                    projectId,
-                    new CSharpParseOptions(preprocessorSymbols: new[] { "SOMETHING_ACTIVE" })
-                )
-                .AddMetadataReferences(projectId, MetadataReferences.Concat(metadataReferences ?? Array.Empty<MetadataReference>()));
-
-            var count = 0;
-            foreach (var source in sources)
-            {
-                var newFileName = DefaultFilePathPrefix + count + "." + CSharpDefaultFileExt;
-                var documentId = DocumentId.CreateNewId(projectId, newFileName);
-                solution = solution.AddDocument(documentId, newFileName, SourceText.From(source));
-                count++;
-            }
-
-            var project = solution.GetProject(projectId);
-            if (project is null)
-            {
-                throw new InvalidOperationException($"The ad hoc workspace does not contain a project with the id {projectId.Id}");
-            }
-
-            return project;
-        }
+        public static IEnumerable<string> Normalize(this IEnumerable<SyntaxTree> syntaxTrees) =>
+            syntaxTrees.Select(z => NormalizeToLf(z.GetText().ToString()));
     }
 }

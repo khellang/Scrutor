@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -25,6 +27,7 @@ namespace Scrutor.Analyzers
             @"
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Loader;
 using Scrutor;
 using Scrutor.Static;
 namespace Microsoft.Extensions.DependencyInjection
@@ -39,7 +42,7 @@ namespace Microsoft.Extensions.DependencyInjection
 	        [CallerLineNumberAttribute] int lineNumber = 0
         )
         {
-            return PopulateExtensions.Populate(services, RegistrationStrategy.Append, filePath, memberName, lineNumber);
+            return PopulateExtensions.Populate(services, RegistrationStrategy.Append, AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.GetLoadContext(typeof(StaticScrutorExtensions).Assembly) ?? AssemblyLoadContext.Default, filePath, memberName, lineNumber);
         }
 
         public static IServiceCollection ScanStatic(
@@ -51,7 +54,32 @@ namespace Microsoft.Extensions.DependencyInjection
 	        [CallerLineNumberAttribute] int lineNumber = 0
         )
         {
-            return PopulateExtensions.Populate(services, strategy, filePath, memberName, lineNumber);
+            return PopulateExtensions.Populate(services, strategy, AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.GetLoadContext(typeof(StaticScrutorExtensions).Assembly) ?? AssemblyLoadContext.Default, filePath, memberName, lineNumber);
+        }
+
+        public static IServiceCollection ScanStatic(
+            this IServiceCollection services,
+            Action<ICompiledAssemblySelector> action,
+            AssemblyLoadContext context,
+	        [CallerFilePathAttribute] string filePath = """",
+	        [CallerMemberName] string memberName = """",
+	        [CallerLineNumberAttribute] int lineNumber = 0
+        )
+        {
+            return PopulateExtensions.Populate(services, RegistrationStrategy.Append, context, filePath, memberName, lineNumber);
+        }
+
+        public static IServiceCollection ScanStatic(
+            this IServiceCollection services,
+            Action<ICompiledAssemblySelector> action,
+            RegistrationStrategy strategy,
+            AssemblyLoadContext context,
+	        [CallerFilePathAttribute] string filePath = """",
+	        [CallerMemberName] string memberName = """",
+	        [CallerLineNumberAttribute] int lineNumber = 0
+        )
+        {
+            return PopulateExtensions.Populate(services, strategy, context, filePath, memberName, lineNumber);
         }
     }
 }
@@ -62,13 +90,16 @@ namespace Microsoft.Extensions.DependencyInjection
         static SourceText populateSourceText = SourceText.From(
             @"
 using System;
+using System.Reflection;
+using System.Runtime.Loader;
 using Microsoft.Extensions.DependencyInjection;
 using Scrutor;
+
 namespace Scrutor.Static
 {
     internal static class PopulateExtensions
     {
-        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, string filePath, string memberName, int lineNumber)
+        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, AssemblyLoadContext context, string filePath, string memberName, int lineNumber)
         {
             return services;
         }
@@ -133,10 +164,10 @@ namespace Scrutor.Static
                 var containingMethod = rootExpression.Ancestors().OfType<MethodDeclarationSyntax>().First();
 
                 var methodCallSyntax = rootExpression.Ancestors()
-                   .OfType<InvocationExpressionSyntax>()
-                   .First(
+                    .OfType<InvocationExpressionSyntax>()
+                    .First(
                         ies => ies.Expression is MemberAccessExpressionSyntax mae
-                         && mae.Name.ToFullString().EndsWith("ScanStatic", StringComparison.Ordinal)
+                               && mae.Name.ToFullString().EndsWith("ScanStatic", StringComparison.Ordinal)
                     );
 
                 groups.Add(
@@ -167,6 +198,7 @@ namespace Scrutor.Static
             var lineNumberIdentifier = IdentifierName("lineNumber");
             var filePathIdentifier = IdentifierName("filePath");
             var block = Block();
+            var privateAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
 
             var switchStatement = SwitchStatement(lineNumberIdentifier);
             foreach (var lineGrouping in groups.GroupBy(z => z.lineNumber))
@@ -178,12 +210,14 @@ namespace Scrutor.Static
                     var types = NarrowListOfTypes(assemblies, allNamedTypes, compilationWithMethod, classFilter, typeFilters);
 
                     var localBlock = GenerateDescriptors(
+                        compilationWithMethod,
                         types,
                         serviceTypes,
                         innerBlock,
                         strategyName,
                         serviceCollectionName,
-                        lifetime
+                        lifetime,
+                        privateAssemblies
                     );
 
                     blocks.Add((filePath, memberName, localBlock));
@@ -201,20 +235,14 @@ namespace Scrutor.Static
                     {
                         var (_, _, localBlock) = blocks[0];
                         return SwitchSection()
-                           .AddStatements(localBlock.Statements.ToArray())
-                           .AddStatements(BreakStatement());
+                            .AddStatements(localBlock.Statements.ToArray())
+                            .AddStatements(BreakStatement());
                     }
 
                     var section = SwitchStatement(identifier);
                     foreach (var item in blocks.GroupBy(regroup))
                     {
-                        section = section
-                           .AddSections(
-                                next(item)
-                                   .AddLabels(
-                                        CaseSwitchLabel(literalFactory(item.Key))
-                                    )
-                            );
+                        section = section.AddSections(next(item).AddLabels(CaseSwitchLabel(literalFactory(item.Key))));
                     }
 
                     return SwitchSection().AddStatements(section, BreakStatement());
@@ -231,7 +259,7 @@ namespace Scrutor.Static
                                 Literal(value)
                             )
                     )
-                   .AddLabels(
+                    .AddLabels(
                         CaseSwitchLabel(
                             LiteralExpression(
                                 SyntaxKind.NumericLiteralExpression,
@@ -240,9 +268,7 @@ namespace Scrutor.Static
                         )
                     );
 
-                static SwitchSectionSyntax GenerateFilePathSwitchStatement(
-                    IGrouping<string, (string filePath, string memberName, BlockSyntax block)> innerGroup
-                ) => CreateNestedSwitchSections(
+                static SwitchSectionSyntax GenerateFilePathSwitchStatement(IGrouping<string, (string filePath, string memberName, BlockSyntax block)> innerGroup) => CreateNestedSwitchSections(
                     innerGroup.ToArray(),
                     IdentifierName("memberName"),
                     x => x.memberName,
@@ -254,10 +280,8 @@ namespace Scrutor.Static
                         )
                 );
 
-                static SwitchSectionSyntax GenerateMemberNameSwitchStatement(
-                    IGrouping<string, (string filePath, string memberName, BlockSyntax block)> innerGroup
-                ) => SwitchSection()
-                   .AddLabels(
+                static SwitchSectionSyntax GenerateMemberNameSwitchStatement(IGrouping<string, (string filePath, string memberName, BlockSyntax block)> innerGroup) => SwitchSection()
+                    .AddLabels(
                         CaseSwitchLabel(
                             LiteralExpression(
                                 SyntaxKind.StringLiteralExpression,
@@ -265,8 +289,8 @@ namespace Scrutor.Static
                             )
                         )
                     )
-                   .AddStatements(innerGroup.FirstOrDefault().block?.Statements.ToArray() ?? Array.Empty<StatementSyntax>())
-                   .AddStatements(BreakStatement());
+                    .AddStatements(innerGroup.FirstOrDefault().block?.Statements.ToArray() ?? Array.Empty<StatementSyntax>())
+                    .AddStatements(BreakStatement());
 
 
                 switchStatement = switchStatement.AddSections(lineSwitchSection);
@@ -276,19 +300,34 @@ namespace Scrutor.Static
                 var root = CSharpSyntaxTree.ParseText(populateSourceText).GetCompilationUnitRoot();
                 var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().Single();
 
-                root = root.ReplaceNode(method, method.WithBody(block.AddStatements(switchStatement).AddStatements(method.Body!.Statements.ToArray())));
+                var assemblyContext = IdentifierName("context");
+
+                var newMethod = method
+                    .WithBody(block.AddStatements(switchStatement).AddStatements(method.Body!.Statements.ToArray()));
+
+                root = root.ReplaceNode(method, newMethod);
+
+                if (privateAssemblies.Any())
+                {
+                    var @class = root.DescendantNodes().OfType<ClassDeclarationSyntax>().Single();
+                    var privateAssemblyNodes = privateAssemblies
+                        .SelectMany(StatementGeneration.AssemblyDeclaration);
+                    root = root.ReplaceNode(@class, @class.AddMembers(privateAssemblyNodes.ToArray()));
+                }
 
                 context.AddSource("Scrutor.Static.Populate.cs", root.NormalizeWhitespace().GetText());
             }
         }
 
         private static BlockSyntax GenerateDescriptors(
+            CSharpCompilation compilation,
             ImmutableArray<INamedTypeSymbol> types,
             List<IServiceTypeDescriptor> serviceTypes,
             BlockSyntax innerBlock,
             IdentifierNameSyntax strategyName,
             IdentifierNameSyntax serviceCollectionName,
-            ExpressionSyntax lifetime
+            ExpressionSyntax lifetime,
+            HashSet<IAssemblySymbol> privateAssemblies
         )
         {
             var asSelf = serviceTypes.OfType<SelfServiceTypeDescriptor>().Any();
@@ -298,11 +337,17 @@ namespace Scrutor.Static
                 asSelf = true;
             foreach (var type in types)
             {
+                if (!compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
+                {
+                    privateAssemblies.Add(type.ContainingAssembly);
+                }
+
                 if (asSelf)
                 {
                     innerBlock = innerBlock.AddStatements(
                         ExpressionStatement(
                             StatementGeneration.GenerateServiceType(
+                                compilation,
                                 strategyName,
                                 serviceCollectionName,
                                 type,
@@ -321,6 +366,7 @@ namespace Scrutor.Static
                             innerBlock = innerBlock.AddStatements(
                                 ExpressionStatement(
                                     StatementGeneration.GenerateServiceFactory(
+                                        compilation,
                                         strategyName,
                                         serviceCollectionName,
                                         @interface,
@@ -329,6 +375,10 @@ namespace Scrutor.Static
                                     )
                                 )
                             );
+                            if (!compilation.IsSymbolAccessibleWithin(@interface, compilation.Assembly))
+                            {
+                                privateAssemblies.Add(type.ContainingAssembly);
+                            }
                         }
                     }
                     else if (asImplementedInterfaces)
@@ -338,6 +388,7 @@ namespace Scrutor.Static
                             innerBlock = innerBlock.AddStatements(
                                 ExpressionStatement(
                                     StatementGeneration.GenerateServiceFactory(
+                                        compilation,
                                         strategyName,
                                         serviceCollectionName,
                                         @interface,
@@ -346,6 +397,10 @@ namespace Scrutor.Static
                                     )
                                 )
                             );
+                            if (!compilation.IsSymbolAccessibleWithin(@interface, compilation.Assembly))
+                            {
+                                privateAssemblies.Add(type.ContainingAssembly);
+                            }
                         }
                     }
                 }
@@ -360,6 +415,7 @@ namespace Scrutor.Static
                             innerBlock = innerBlock.AddStatements(
                                 ExpressionStatement(
                                     StatementGeneration.GenerateServiceType(
+                                        compilation,
                                         strategyName,
                                         serviceCollectionName,
                                         @interface,
@@ -368,6 +424,33 @@ namespace Scrutor.Static
                                     )
                                 )
                             );
+                            if (!compilation.IsSymbolAccessibleWithin(@interface, compilation.Assembly))
+                            {
+                                privateAssemblies.Add(type.ContainingAssembly);
+                            }
+
+                            if (asImplementedInterfaces)
+                            {
+                                foreach (var asImplementedInterface in type.AllInterfaces)
+                                {
+                                    innerBlock = innerBlock.AddStatements(
+                                        ExpressionStatement(
+                                            StatementGeneration.GenerateServiceType(
+                                                compilation,
+                                                strategyName,
+                                                serviceCollectionName,
+                                                asImplementedInterface,
+                                                @interface,
+                                                lifetime
+                                            )
+                                        )
+                                    );
+                                    if (!compilation.IsSymbolAccessibleWithin(asImplementedInterface, compilation.Assembly))
+                                    {
+                                        privateAssemblies.Add(type.ContainingAssembly);
+                                    }
+                                }
+                            }
                         }
                     }
                     else if (asImplementedInterfaces)
@@ -377,6 +460,7 @@ namespace Scrutor.Static
                             innerBlock = innerBlock.AddStatements(
                                 ExpressionStatement(
                                     StatementGeneration.GenerateServiceType(
+                                        compilation,
                                         strategyName,
                                         serviceCollectionName,
                                         @interface,
@@ -385,6 +469,10 @@ namespace Scrutor.Static
                                     )
                                 )
                             );
+                            if (!compilation.IsSymbolAccessibleWithin(@interface, compilation.Assembly))
+                            {
+                                privateAssemblies.Add(type.ContainingAssembly);
+                            }
                         }
                     }
                 }
@@ -406,9 +494,9 @@ namespace Scrutor.Static
                 : TypeSymbolVisitor.GetTypes(
                     cSharpCompilation,
                     assemblies
-                       .OfType<ICompiledAssemblyDescriptor>()
-                       .Select(z => z.TypeFromAssembly.ContainingAssembly)
-                       .Distinct(SymbolEqualityComparer.Default)
+                        .OfType<ICompiledAssemblyDescriptor>()
+                        .Select(z => z.TypeFromAssembly.ContainingAssembly)
+                        .Distinct(SymbolEqualityComparer.Default)
                 );
 
             if (classFilter == ClassFilter.PublicOnly)

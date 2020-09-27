@@ -4,12 +4,13 @@
     <VersionPrefix>3.2.2</VersionPrefix>
     <Authors>Kristian Hellang</Authors>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageId>Scrutor</PackageId>
+    <PackageId>Scrutor.Analyzers</PackageId>
     <PackageTags>Dependency;Injection;DI;Scanning;Conventions;Decoration</PackageTags>
     <PackageProjectUrl>https://github.com/khellang/Scrutor</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -20,8 +21,6 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <AssemblyOriginatorKeyFile>../signing.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!-- Only increase this value in case of incompatible API changes. -->
     <AssemblyVersion>3.0.2.0</AssemblyVersion>
   </PropertyGroup>

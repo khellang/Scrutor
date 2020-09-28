@@ -14,6 +14,7 @@ using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Scrutor.Tests
 {
@@ -26,6 +27,7 @@ namespace Scrutor.Tests
         private readonly string _testProjectName;
         private readonly string _filePathPrefix;
         private readonly string _fileExt;
+        private readonly IDictionary<Type, CSharpCompilation> _lastCompilations = new Dictionary<Type, CSharpCompilation>();
 #if NETCOREAPP3_1
         [AllowNull, MaybeNull]
 #endif
@@ -33,9 +35,10 @@ namespace Scrutor.Tests
 #if NETCOREAPP3_1
         [AllowNull, MaybeNull]
 #endif
-        private CSharpCompilation _lastCompilation = null;
         private ImmutableArray<SyntaxTree> _lastSyntax = ImmutableArray<SyntaxTree>.Empty;
+
         private ImmutableArray<Diagnostic> _generatorDiagnostics = ImmutableArray<Diagnostic>.Empty;
+        private ITestOutputHelper? _testOutputHelper;
 
         public GeneratorTester(
             CollectibleTestAssemblyLoadContext context,
@@ -53,17 +56,28 @@ namespace Scrutor.Tests
             AddReferences(typeof(IServiceCollection).Assembly, typeof(ServiceCollection).Assembly, typeof(IFluentInterface).Assembly);
         }
 
-        public GeneratorTester AddCompilationReference(CSharpCompilation compilation)
+        public GeneratorTester AddCompilationReference(IEnumerable<CSharpCompilation> additionalCompilations)
         {
-            _references.Add(compilation.CreateMetadataReference());
-            _project = null;
-            _lastCompilation = null;
+            _references.AddRange(additionalCompilations.Select(z => z.CreateMetadataReference()));
+            return this;
+        }
+
+        public GeneratorTester AddCompilationReference(CSharpCompilation compilation, params CSharpCompilation[] additionalCompilations)
+        {
+            return AddReferences(compilation.CreateMetadataReference(), additionalCompilations.Select(z => z.CreateMetadataReference()).ToArray());
+        }
+
+        public GeneratorTester Output(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
             return this;
         }
 
         public GeneratorTester AddReferences(IEnumerable<MetadataReference> additionalSources)
         {
             _references.AddRange(additionalSources);
+            _project = null;
+            _lastCompilations.Clear();
             return this;
         }
 
@@ -72,13 +86,15 @@ namespace Scrutor.Tests
             _references.Add(reference);
             _references.AddRange(additionalReferences);
             _project = null;
-            _lastCompilation = null;
+            _lastCompilations.Clear();
             return this;
         }
 
         public GeneratorTester AddReferences(IEnumerable<Assembly> additionalSources)
         {
             _assemblies.AddRange(additionalSources);
+            _project = null;
+            _lastCompilations.Clear();
             return this;
         }
 
@@ -87,7 +103,7 @@ namespace Scrutor.Tests
             _assemblies.Add(assembly);
             _assemblies.AddRange(additionalAssemblies);
             _project = null;
-            _lastCompilation = null;
+            _lastCompilations.Clear();
             return this;
         }
 
@@ -95,12 +111,16 @@ namespace Scrutor.Tests
         {
             _sources.Add(source);
             _sources.AddRange(additionalSources);
+            _project = null;
+            _lastCompilations.Clear();
             return this;
         }
 
         public GeneratorTester AddSources(IEnumerable<SourceText> additionalSources)
         {
             _sources.AddRange(additionalSources);
+            _project = null;
+            _lastCompilations.Clear();
             return this;
         }
 
@@ -108,12 +128,16 @@ namespace Scrutor.Tests
         {
             _sources.Add(SourceText.From(source, Encoding.UTF8));
             _sources.AddRange(additionalSources.Select(s => SourceText.From(s, Encoding.UTF8)));
+            _project = null;
+            _lastCompilations.Clear();
             return this;
         }
 
         public GeneratorTester AddSources(IEnumerable<string> additionalSources)
         {
             _sources.AddRange(additionalSources.Select(s => SourceText.From(s, Encoding.UTF8)));
+            _project = null;
+            _lastCompilations.Clear();
             return this;
         }
 
@@ -121,13 +145,18 @@ namespace Scrutor.Tests
         {
             var project = CreateProject();
 
+            if (_lastCompilations.TryGetValue(typeof(CSharpCompilation), out var outCompilation))
+            {
+                return outCompilation;
+            }
+
             var compilation = (CSharpCompilation) project.GetCompilationAsync().ConfigureAwait(false).GetAwaiter().GetResult()!;
             if (compilation is null)
             {
                 throw new InvalidOperationException("Could not compile the sources");
             }
 
-            return _lastCompilation = compilation;
+            return _lastCompilations[typeof(CSharpCompilation)] = compilation;
         }
 
         public IEnumerable<SyntaxTree> Generate<T>()
@@ -141,6 +170,12 @@ namespace Scrutor.Tests
                 throw new InvalidOperationException("Could not compile the sources");
             }
 
+
+            if (_lastCompilations.TryGetValue(typeof(CSharpCompilation), out var outCompilation))
+            {
+                return _lastSyntax = outCompilation.SyntaxTrees.TakeLast(outCompilation.SyntaxTrees.Count() - compilation.SyntaxTrees.Length).ToImmutableArray();
+            }
+
             var startingSyntaxTress = compilation.SyntaxTrees.Length;
 
             // var diagnostics = compilation.GetDiagnostics();
@@ -151,23 +186,37 @@ namespace Scrutor.Tests
             var driver = new CSharpGeneratorDriver(compilation.SyntaxTrees[0].Options, ImmutableArray.Create(generator), default, ImmutableArray<AdditionalText>.Empty);
 
             driver.RunFullGeneration(compilation, out var outputCompilation, out _generatorDiagnostics);
-            _lastCompilation = outputCompilation as CSharpCompilation;
+            _lastCompilations[typeof(T)] = outputCompilation as CSharpCompilation;
 
             // the syntax tree added by the generator will be the last one in the compilation
-            return _lastSyntax = outputCompilation.SyntaxTrees.TakeLast(outputCompilation.SyntaxTrees.Count() - startingSyntaxTress).ToImmutableArray();
+            return _lastSyntax = outputCompilation.SyntaxTrees.TakeLast(outputCompilation.SyntaxTrees.Count() - startingSyntaxTress).Select(z =>
+            {
+                _testOutputHelper?.WriteLine(z.GetText().ToString());
+                return z;
+            }).ToImmutableArray();
         }
 
-        public void AssertCompilationWasSuccessful()
+        public void AssertCompilationWasSuccessful(Type? type = null)
         {
-            Assert.NotNull(_lastCompilation);
-            var diagnostics = Compilation.GetDiagnostics();
-            Assert.Empty(diagnostics.Where(x => x.Severity > DiagnosticSeverity.Warning));
+            if (type == null && _lastCompilations.Count > 1) return;
+            var compilation = _lastCompilations.Single(z => type == null || z.Key == type).Value;
+            Assert.NotNull(compilation);
+            var diagnostics = CompilationDiagnostics;
+            Assert.Empty(diagnostics.Where(x => x.Severity >= DiagnosticSeverity.Warning));
         }
 
-        public Assembly Emit()
+        public void AssertGenerationWasSuccessful(Type? type = null)
+        {
+            if (type == null && _lastCompilations.Count > 1) return;
+            var compilation = _lastCompilations.Single(z => type == null || z.Key == type).Value;
+            Assert.NotNull(compilation);
+            Assert.Empty(GeneratorDiagnostics.Where(x => x.Severity >= DiagnosticSeverity.Warning));
+        }
+
+        public Assembly Emit(string? outputName = null)
         {
             using var stream = new MemoryStream();
-            var emitResult = Compilation!.Emit(stream, options: new EmitOptions());
+            var emitResult = _lastCompilations.Values.Single().Emit(stream, options: new EmitOptions(outputNameOverride: outputName));
             if (!emitResult.Success)
             {
                 Assert.Empty(emitResult.Diagnostics);
@@ -179,12 +228,13 @@ namespace Scrutor.Tests
             return _context.LoadFromStream(assemblyStream);
         }
 
-        public CSharpCompilation Compilation => _lastCompilation!;
-        public ImmutableArray<Diagnostic> CompilationDiagnostics => Compilation.GetDiagnostics();
+        public ImmutableArray<Diagnostic> CompilationDiagnostics => _lastCompilations.Values.SelectMany(z => z.GetDiagnostics()).ToImmutableArray();
         public ImmutableArray<SyntaxTree> GeneratorSyntaxTrees => _lastSyntax!;
         public ImmutableArray<Diagnostic> GeneratorDiagnostics => _generatorDiagnostics;
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+        }
 
         private Project CreateProject()
         {
@@ -255,10 +305,10 @@ namespace Scrutor.Tests
 
         public static string NormalizeToLf(string input) => input.Replace(CrLf, Lf);
 
-        public static Assembly EmitInto(this CSharpCompilation compilation, AssemblyLoadContext context)
+        public static Assembly EmitInto(this CSharpCompilation compilation, AssemblyLoadContext context, string? outputName = null)
         {
             using var stream = new MemoryStream();
-            var emitResult = compilation.Emit(stream, options: new EmitOptions());
+            var emitResult = compilation.Emit(stream, options: new EmitOptions(outputNameOverride: outputName));
             if (!emitResult.Success)
             {
                 Assert.Empty(emitResult.Diagnostics);
@@ -270,10 +320,10 @@ namespace Scrutor.Tests
             return context.LoadFromStream(assemblyStream);
         }
 
-        public static MetadataReference CreateMetadataReference(this CSharpCompilation compilation)
+        public static MetadataReference CreateMetadataReference(this CSharpCompilation compilation, string? outputName = null)
         {
             using var stream = new MemoryStream();
-            var emitResult = compilation.Emit(stream, options: new EmitOptions());
+            var emitResult = compilation.Emit(stream, options: new EmitOptions(outputNameOverride: outputName));
             if (!emitResult.Success)
             {
                 Assert.Empty(emitResult.Diagnostics);

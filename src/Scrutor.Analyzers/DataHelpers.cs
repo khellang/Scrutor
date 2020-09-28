@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,6 +13,7 @@ namespace Scrutor.Analyzers
     static class DataHelpers
     {
         public static void HandleInvocationExpressionSyntax(
+            SourceGeneratorContext context,
             CSharpCompilation compilation,
             SemanticModel semanticModel,
             ExpressionSyntax rootExpression,
@@ -26,35 +28,32 @@ namespace Scrutor.Analyzers
             {
                 if (!(rootExpression is SimpleLambdaExpressionSyntax simpleLambdaExpressionSyntax))
                 {
-                    // report diagnostic
+                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MustBeAnExpression, rootExpression.GetLocation()));
                     return;
                 }
 
                 if (simpleLambdaExpressionSyntax.ExpressionBody == null)
                 {
-                    // we don't support blocks
-                    // report diagnostic
+                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MustBeAnExpression, rootExpression.GetLocation()));
                     return;
                 }
 
                 if (!(simpleLambdaExpressionSyntax.ExpressionBody is InvocationExpressionSyntax body))
                 {
-                    // we only support invocation expressions
-                    // report diagnostic
+                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MustBeAnExpression, rootExpression.GetLocation()));
                     return;
                 }
 
                 expression = body;
             }
 
-            rootExpression = expression;
-
             if (expression.Expression is MemberAccessExpressionSyntax memberAccessExpressionSyntax
-             && memberAccessExpressionSyntax.IsKind(SyntaxKind.SimpleMemberAccessExpression))
+                && memberAccessExpressionSyntax.IsKind(SyntaxKind.SimpleMemberAccessExpression))
             {
                 if (memberAccessExpressionSyntax.Expression is InvocationExpressionSyntax childExpression)
                 {
                     HandleInvocationExpressionSyntax(
+                        context,
                         compilation,
                         semanticModel,
                         childExpression,
@@ -102,24 +101,26 @@ namespace Scrutor.Analyzers
 
                     if (typeName == "Scrutor.Static.ICompiledImplementationTypeFilter")
                     {
-                        typeFilters.AddRange(HandleCompiledImplementationTypeFilter(semanticModel, expression, memberAccessExpressionSyntax.Name));
+                        typeFilters.AddRange(HandleCompiledImplementationTypeFilter(context, semanticModel, expression, memberAccessExpressionSyntax.Name));
                     }
 
                     if (typeName == "Scrutor.Static.ICompiledServiceTypeSelector")
                     {
-                        serviceTypes.AddRange(HandleCompiledServiceTypeSelector(semanticModel, expression, memberAccessExpressionSyntax.Name));
+                        serviceTypes.AddRange(HandleCompiledServiceTypeSelector(context, semanticModel, expression, memberAccessExpressionSyntax.Name));
                     }
 
                     if (typeName == "Scrutor.Static.ICompiledLifetimeSelector")
                     {
-                        serviceTypes.AddRange(HandleCompiledServiceTypeSelector(semanticModel, expression, memberAccessExpressionSyntax.Name));
-                        lifetimeExpressionSyntax = HandleCompiledLifetimeSelector(semanticModel, expression, memberAccessExpressionSyntax.Name) ?? lifetimeExpressionSyntax;
+                        serviceTypes.AddRange(HandleCompiledServiceTypeSelector(context, semanticModel, expression, memberAccessExpressionSyntax.Name));
+                        lifetimeExpressionSyntax = HandleCompiledLifetimeSelector(context, semanticModel, expression, memberAccessExpressionSyntax.Name) ??
+                                                   lifetimeExpressionSyntax;
                     }
                 }
 
-                foreach (var argument in expression.ArgumentList.Arguments)
+                foreach (var argument in expression.ArgumentList.Arguments.Where(argument => argument.Expression is SimpleLambdaExpressionSyntax))
                 {
                     HandleInvocationExpressionSyntax(
+                        context,
                         compilation,
                         semanticModel,
                         argument.Expression,
@@ -134,6 +135,7 @@ namespace Scrutor.Analyzers
         }
 
         static MemberAccessExpressionSyntax? HandleCompiledLifetimeSelector(
+            SourceGeneratorContext context,
             SemanticModel semanticModel,
             InvocationExpressionSyntax expression,
             NameSyntax name
@@ -141,28 +143,28 @@ namespace Scrutor.Analyzers
         {
             if (name.ToFullString() == nameof(ICompiledLifetimeSelector.WithSingletonLifetime))
             {
-                return SyntaxFactory.MemberAccessExpression(
+                return MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
-                    SyntaxFactory.IdentifierName("ServiceLifetime"),
-                    SyntaxFactory.IdentifierName("Singleton")
+                    IdentifierName("ServiceLifetime"),
+                    IdentifierName("Singleton")
                 );
             }
 
             if (name.ToFullString() == nameof(ICompiledLifetimeSelector.WithScopedLifetime))
             {
-                return SyntaxFactory.MemberAccessExpression(
+                return MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
-                    SyntaxFactory.IdentifierName("ServiceLifetime"),
-                    SyntaxFactory.IdentifierName("Scoped")
+                    IdentifierName("ServiceLifetime"),
+                    IdentifierName("Scoped")
                 );
             }
 
             if (name.ToFullString() == nameof(ICompiledLifetimeSelector.WithTransientLifetime))
             {
-                return SyntaxFactory.MemberAccessExpression(
+                return MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
-                    SyntaxFactory.IdentifierName("ServiceLifetime"),
-                    SyntaxFactory.IdentifierName("Transient")
+                    IdentifierName("ServiceLifetime"),
+                    IdentifierName("Transient")
                 );
             }
 
@@ -170,13 +172,13 @@ namespace Scrutor.Analyzers
             {
                 if (expression.ArgumentList.Arguments[0].Expression is MemberAccessExpressionSyntax memberAccessExpressionSyntax)
                     return memberAccessExpressionSyntax;
-                throw new NotSupportedException();
             }
 
             return null;
         }
 
         static IEnumerable<IServiceTypeDescriptor> HandleCompiledServiceTypeSelector(
+            SourceGeneratorContext context,
             SemanticModel semanticModel,
             InvocationExpressionSyntax expression,
             NameSyntax name
@@ -218,10 +220,11 @@ namespace Scrutor.Analyzers
                 var typeInfo = semanticModel.GetTypeInfo(typeSyntax).Type;
                 switch (typeInfo)
                 {
-                    case null:
-                        yield break;
                     case INamedTypeSymbol nts:
                         yield return new CompiledServiceTypeDescriptor(nts);
+                        yield break;
+                    default:
+                        context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
                         yield break;
                 }
             }
@@ -275,6 +278,7 @@ namespace Scrutor.Analyzers
         }
 
         static IEnumerable<ITypeFilterDescriptor> HandleCompiledImplementationTypeFilter(
+            SourceGeneratorContext context,
             SemanticModel semanticModel,
             InvocationExpressionSyntax expression,
             NameSyntax name
@@ -282,7 +286,6 @@ namespace Scrutor.Analyzers
         {
             if (name.ToFullString() == nameof(ICompiledImplementationTypeFilter.AssignableToAny))
             {
-                // diagnostic if not using typeof
                 foreach (var argument in expression.ArgumentList.Arguments!)
                 {
                     if (argument.Expression is TypeOfExpressionSyntax typeOfExpressionSyntax)
@@ -290,15 +293,17 @@ namespace Scrutor.Analyzers
                         var typeInfo = semanticModel.GetTypeInfo(typeOfExpressionSyntax.Type).Type;
                         switch (typeInfo)
                         {
-                            case null:
-                                yield break;
                             case INamedTypeSymbol nts:
                                 yield return new CompiledAssignableToAnyTypeFilterDescriptor(nts);
                                 continue;
+
+                            default:
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                yield break;
                         }
                     }
 
-                    // todo diagnostic
+                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MustBeTypeOf, argument.Expression.GetLocation()));
                 }
 
                 yield break;
@@ -314,15 +319,17 @@ namespace Scrutor.Analyzers
                         var typeInfo = semanticModel.GetTypeInfo(type).Type;
                         switch (typeInfo)
                         {
-                            case null:
-                                yield break;
                             case INamedTypeSymbol nts:
                                 yield return new CompiledAssignableToTypeFilterDescriptor(nts);
+                                yield break;
+
+                            default:
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
                                 yield break;
                         }
                     }
 
-                    // todo diagnostic
+                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MustBeTypeOf, genericNameSyntax.Identifier.GetLocation()));
                     yield break;
                 }
 
@@ -348,7 +355,6 @@ namespace Scrutor.Analyzers
                     yield return new NamespaceFilterDescriptor(filter.Value, symbol.ContainingNamespace.ToDisplayString());
                 }
 
-                // todo diagnostic
                 yield break;
             }
 
@@ -362,15 +368,15 @@ namespace Scrutor.Analyzers
                         var typeInfo = semanticModel.GetTypeInfo(type).Type;
                         switch (typeInfo)
                         {
-                            case null:
-                                yield break;
                             case INamedTypeSymbol nts:
                                 yield return new CompiledAssignableToTypeFilterDescriptor(nts);
+                                yield break;
+                            default:
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
                                 yield break;
                         }
                     }
 
-                    // todo diagnostic
                     yield break;
                 }
 
@@ -395,13 +401,13 @@ namespace Scrutor.Analyzers
                     foreach (var argument in expression.ArgumentList.Arguments!)
                     {
                         if (argument.Expression is LiteralExpressionSyntax literalExpressionSyntax
-                         && literalExpressionSyntax.Token.IsKind(SyntaxKind.StringLiteralExpression))
+                            && literalExpressionSyntax.Token.IsKind(SyntaxKind.StringLiteralExpression))
                         {
                             yield return new NamespaceFilterDescriptor(filter.Value, literalExpressionSyntax.Token.ValueText);
                         }
                         else
                         {
-                            // todo diagnostic
+                            context.ReportDiagnostic(Diagnostic.Create(Diagnostics.NamespaceMustBeAString, argument.GetLocation()));
                         }
                     }
 
@@ -431,10 +437,48 @@ namespace Scrutor.Analyzers
                 }
             }
 
-            // we only support typeof or closed generic arguments
-            // report diagnostic
-
             return null;
         }
+    }
+
+    internal static class Diagnostics
+    {
+        private const string Category = "Scrutor";
+
+        public static DiagnosticDescriptor MustBeAnExpression { get; } = new DiagnosticDescriptor(
+            "SCTR0001",
+            "Must be a expression",
+            "Methods that will be analyzed statically must be an expression, blocks and variables are not allowed",
+            Category,
+            DiagnosticSeverity.Error,
+            true
+        );
+
+        public static DiagnosticDescriptor MustBeTypeOf { get; } = new DiagnosticDescriptor(
+            "SCTR0002",
+            "Must use typeof",
+            "Method must be called with typeof, variables are not allowed",
+            Category,
+            DiagnosticSeverity.Error,
+            true
+        );
+
+        public static DiagnosticDescriptor TypeNotResolved { get; } = new DiagnosticDescriptor(
+            "SCTR0003",
+            "Type could not be resolved",
+            "The indicated type could not be resolved",
+            Category,
+            DiagnosticSeverity.Warning,
+            true
+        );
+
+        public static DiagnosticDescriptor NamespaceMustBeAString { get; } = new DiagnosticDescriptor(
+            "SCTR0003",
+            "Namespace must be a string",
+            "The given namespace must be a constant string",
+            Category,
+            DiagnosticSeverity.Warning,
+            true
+        );
     }
 }

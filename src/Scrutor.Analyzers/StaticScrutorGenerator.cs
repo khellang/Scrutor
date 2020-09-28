@@ -151,6 +151,7 @@ namespace Scrutor.Static
                     );
 
                 DataHelpers.HandleInvocationExpressionSyntax(
+                    context,
                     compilationWithMethod,
                     semanticModel,
                     rootExpression,
@@ -268,29 +269,31 @@ namespace Scrutor.Static
                         )
                     );
 
-                static SwitchSectionSyntax GenerateFilePathSwitchStatement(IGrouping<string, (string filePath, string memberName, BlockSyntax block)> innerGroup) => CreateNestedSwitchSections(
-                    innerGroup.ToArray(),
-                    IdentifierName("memberName"),
-                    x => x.memberName,
-                    GenerateMemberNameSwitchStatement,
-                    value =>
-                        LiteralExpression(
-                            SyntaxKind.StringLiteralExpression,
-                            Literal(value)
-                        )
-                );
-
-                static SwitchSectionSyntax GenerateMemberNameSwitchStatement(IGrouping<string, (string filePath, string memberName, BlockSyntax block)> innerGroup) => SwitchSection()
-                    .AddLabels(
-                        CaseSwitchLabel(
+                static SwitchSectionSyntax GenerateFilePathSwitchStatement(IGrouping<string, (string filePath, string memberName, BlockSyntax block)> innerGroup) =>
+                    CreateNestedSwitchSections(
+                        innerGroup.ToArray(),
+                        IdentifierName("memberName"),
+                        x => x.memberName,
+                        GenerateMemberNameSwitchStatement,
+                        value =>
                             LiteralExpression(
                                 SyntaxKind.StringLiteralExpression,
-                                Literal(innerGroup.Key)
+                                Literal(value)
+                            )
+                    );
+
+                static SwitchSectionSyntax GenerateMemberNameSwitchStatement(IGrouping<string, (string filePath, string memberName, BlockSyntax block)> innerGroup) =>
+                    SwitchSection()
+                        .AddLabels(
+                            CaseSwitchLabel(
+                                LiteralExpression(
+                                    SyntaxKind.StringLiteralExpression,
+                                    Literal(innerGroup.Key)
+                                )
                             )
                         )
-                    )
-                    .AddStatements(innerGroup.FirstOrDefault().block?.Statements.ToArray() ?? Array.Empty<StatementSyntax>())
-                    .AddStatements(BreakStatement());
+                        .AddStatements(innerGroup.FirstOrDefault().block?.Statements.ToArray() ?? Array.Empty<StatementSyntax>())
+                        .AddStatements(BreakStatement());
 
 
                 switchStatement = switchStatement.AddSections(lineSwitchSection);
@@ -337,6 +340,8 @@ namespace Scrutor.Static
                 asSelf = true;
             foreach (var type in types)
             {
+                var typeIsOpenGeneric = type.IsUnboundGenericType ||
+                                        type.IsGenericType && type.TypeArguments.All(z => z is ITypeParameterSymbol);
                 if (!compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
                 {
                     privateAssemblies.Add(type.ContainingAssembly);
@@ -365,6 +370,16 @@ namespace Scrutor.Static
                         {
                             innerBlock = innerBlock.AddStatements(
                                 ExpressionStatement(
+                                    typeIsOpenGeneric ?
+                                        StatementGeneration.GenerateServiceType(
+                                            compilation,
+                                            strategyName,
+                                            serviceCollectionName,
+                                            @interface,
+                                            type,
+                                            lifetime
+                                        )
+                                :
                                     StatementGeneration.GenerateServiceFactory(
                                         compilation,
                                         strategyName,
@@ -387,6 +402,16 @@ namespace Scrutor.Static
                         {
                             innerBlock = innerBlock.AddStatements(
                                 ExpressionStatement(
+                                    typeIsOpenGeneric ?
+                                        StatementGeneration.GenerateServiceType(
+                                            compilation,
+                                            strategyName,
+                                            serviceCollectionName,
+                                            @interface,
+                                            type,
+                                            lifetime
+                                        )
+                                        :
                                     StatementGeneration.GenerateServiceFactory(
                                         compilation,
                                         strategyName,
@@ -484,7 +509,7 @@ namespace Scrutor.Static
         static ImmutableArray<INamedTypeSymbol> NarrowListOfTypes(
             List<IAssemblyDescriptor> assemblies,
             ImmutableArray<INamedTypeSymbol> iNamedTypeSymbols,
-            CSharpCompilation cSharpCompilation,
+            CSharpCompilation compilation,
             ClassFilter classFilter,
             List<ITypeFilterDescriptor> typeFilters
         )
@@ -492,7 +517,7 @@ namespace Scrutor.Static
             var types = assemblies.OfType<AllAssemblyDescriptor>().Any()
                 ? iNamedTypeSymbols
                 : TypeSymbolVisitor.GetTypes(
-                    cSharpCompilation,
+                    compilation,
                     assemblies
                         .OfType<ICompiledAssemblyDescriptor>()
                         .Select(z => z.TypeFromAssembly.ContainingAssembly)
@@ -506,9 +531,39 @@ namespace Scrutor.Static
 
             foreach (var filter in typeFilters.OfType<CompiledAssignableToTypeFilterDescriptor>())
             {
-                types = types.RemoveAll(
-                    toSymbol => SymbolEqualityComparer.Default.Equals(filter.Type, toSymbol) || !cSharpCompilation.HasImplicitConversion(toSymbol, filter.Type)
-                );
+                if (filter.Type.Arity > 0 && filter.Type.IsUnboundGenericType)
+                {
+                    types = types.RemoveAll(toSymbol =>
+                    {
+                        if (SymbolEqualityComparer.Default.Equals(filter.Type, toSymbol)) return true;
+
+                        var matchingBaseTypes = GetBaseTypes(toSymbol)
+                            .Select(z => z.IsGenericType ? z.IsUnboundGenericType ? z : z.ConstructUnboundGenericType() : null!)
+                            .Where(z => z is not null)
+                            .Where(symbol => compilation.HasImplicitConversion(symbol, filter.Type));
+                        if (matchingBaseTypes.Any())
+                        {
+                            return false;
+                        }
+
+                        var matchingInterfaces = toSymbol.AllInterfaces
+                            .Select(z => z.IsGenericType ? z.IsUnboundGenericType ? z : z.ConstructUnboundGenericType() : null!)
+                            .Where(z => z is not null)
+                            .Where(symbol => compilation.HasImplicitConversion(symbol, filter.Type));
+                        if (matchingInterfaces.Any())
+                        {
+                            return false;
+                        }
+
+                        return true;
+                    });
+                }
+                else
+                {
+                    types = types.RemoveAll(toSymbol => SymbolEqualityComparer.Default.Equals(filter.Type, toSymbol)
+                                                        || !compilation.HasImplicitConversion(toSymbol, filter.Type)
+                    );
+                }
             }
 
             var anyFilters = typeFilters.OfType<CompiledAssignableToAnyTypeFilterDescriptor>().ToArray();
@@ -516,7 +571,7 @@ namespace Scrutor.Static
             {
                 types = types.RemoveAll(
                     toSymbol => anyFilters.Any(
-                        filter => SymbolEqualityComparer.Default.Equals(filter.Type, toSymbol) || cSharpCompilation.HasImplicitConversion(toSymbol, filter.Type)
+                        filter => SymbolEqualityComparer.Default.Equals(filter.Type, toSymbol) || compilation.HasImplicitConversion(toSymbol, filter.Type)
                     )
                 );
             }
@@ -539,6 +594,15 @@ namespace Scrutor.Static
             // {
             // }
             return types;
+        }
+
+        static IEnumerable<INamedTypeSymbol> GetBaseTypes(INamedTypeSymbol namedTypeSymbol)
+        {
+            while (namedTypeSymbol.BaseType != null)
+            {
+                yield return namedTypeSymbol.BaseType;
+                namedTypeSymbol = namedTypeSymbol.BaseType;
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Scrutor.Analyzers
 {
     static class StatementGeneration
     {
-        private static Regex SpecialCharacterRemover = new Regex("[^\\w\\d]");
+        private static Regex SpecialCharacterRemover = new Regex("[^\\w\\d]", RegexOptions.Compiled);
 
         private static MemberAccessExpressionSyntax Describe = MemberAccessExpression(
             SyntaxKind.SimpleMemberAccessExpression,
@@ -36,7 +36,7 @@ namespace Scrutor.Analyzers
                         InvocationExpression(
                             MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("_"), GenericName("GetRequiredService")
                                 .WithTypeArgumentList(
-                                    TypeArgumentList(SingletonSeparatedList<TypeSyntax>(IdentifierName(Helpers.GetFullMetadataName(implementationType))))
+                                    TypeArgumentList(SingletonSeparatedList<TypeSyntax>(IdentifierName(Helpers.GetGenericDisplayName(implementationType))))
                                 )
                             )
                         )
@@ -56,7 +56,7 @@ namespace Scrutor.Analyzers
                                 .WithArgumentList(
                                     ArgumentList(SingletonSeparatedList(Argument(GetTypeOfExpression(compilation, implementationType))))
                                 ),
-                            IdentifierName(Helpers.GetFullMetadataName(serviceType))
+                            IdentifierName(Helpers.GetGenericDisplayName(serviceType))
                         )
                     );
                 return GenerateServiceType(strategyName, serviceCollectionName, serviceTypeExpression, implementationTypeExpression, lifetime);
@@ -116,13 +116,6 @@ namespace Scrutor.Analyzers
                 )
             );
 
-        private static ExpressionSyntax GetTypeOfExpression(CSharpCompilation compilation, INamedTypeSymbol type) =>
-            compilation.IsSymbolAccessibleWithin(type, compilation.Assembly)
-                ? TypeOfExpression(
-                    ParseTypeName(type.ToDisplayString()) // might be a better way to do this
-                ) as ExpressionSyntax
-                : GetPrivateType(type);
-
         public static string AssemblyVariableName(IAssemblySymbol symbol) => SpecialCharacterRemover.Replace(symbol.Identity.GetDisplayName(true), "");
 
         public static IEnumerable<MemberDeclarationSyntax> AssemblyDeclaration(IAssemblySymbol symbol)
@@ -151,6 +144,12 @@ namespace Scrutor.Analyzers
                 )
                 .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
+
+        private static ExpressionSyntax GetTypeOfExpression(CSharpCompilation compilation, INamedTypeSymbol type) =>
+            compilation.IsSymbolAccessibleWithin(type, compilation.Assembly)
+                ? TypeOfExpression(ParseTypeName(Helpers.GetGenericDisplayName(type)) // might be a better way to do this
+                ) as ExpressionSyntax
+                : GetPrivateType(type);
 
         private static InvocationExpressionSyntax GetPrivateType(INamedTypeSymbol type)
         {

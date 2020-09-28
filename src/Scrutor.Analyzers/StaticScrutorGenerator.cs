@@ -299,6 +299,8 @@ namespace Scrutor.Static
                 switchStatement = switchStatement.AddSections(lineSwitchSection);
             }
 
+
+
             {
                 var root = CSharpSyntaxTree.ParseText(populateSourceText).GetCompilationUnitRoot();
                 var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().Single();
@@ -340,8 +342,7 @@ namespace Scrutor.Static
                 asSelf = true;
             foreach (var type in types)
             {
-                var typeIsOpenGeneric = type.IsUnboundGenericType ||
-                                        type.IsGenericType && type.TypeArguments.All(z => z is ITypeParameterSymbol);
+                var typeIsOpenGeneric = type.IsOpenGenericType();
                 if (!compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
                 {
                     privateAssemblies.Add(type.ContainingAssembly);
@@ -370,8 +371,8 @@ namespace Scrutor.Static
                         {
                             innerBlock = innerBlock.AddStatements(
                                 ExpressionStatement(
-                                    typeIsOpenGeneric ?
-                                        StatementGeneration.GenerateServiceType(
+                                    typeIsOpenGeneric
+                                        ? StatementGeneration.GenerateServiceType(
                                             compilation,
                                             strategyName,
                                             serviceCollectionName,
@@ -379,15 +380,14 @@ namespace Scrutor.Static
                                             type,
                                             lifetime
                                         )
-                                :
-                                    StatementGeneration.GenerateServiceFactory(
-                                        compilation,
-                                        strategyName,
-                                        serviceCollectionName,
-                                        @interface,
-                                        type,
-                                        lifetime
-                                    )
+                                        : StatementGeneration.GenerateServiceFactory(
+                                            compilation,
+                                            strategyName,
+                                            serviceCollectionName,
+                                            @interface,
+                                            type,
+                                            lifetime
+                                        )
                                 )
                             );
                             if (!compilation.IsSymbolAccessibleWithin(@interface, compilation.Assembly))
@@ -402,8 +402,8 @@ namespace Scrutor.Static
                         {
                             innerBlock = innerBlock.AddStatements(
                                 ExpressionStatement(
-                                    typeIsOpenGeneric ?
-                                        StatementGeneration.GenerateServiceType(
+                                    typeIsOpenGeneric
+                                        ? StatementGeneration.GenerateServiceType(
                                             compilation,
                                             strategyName,
                                             serviceCollectionName,
@@ -411,15 +411,14 @@ namespace Scrutor.Static
                                             type,
                                             lifetime
                                         )
-                                        :
-                                    StatementGeneration.GenerateServiceFactory(
-                                        compilation,
-                                        strategyName,
-                                        serviceCollectionName,
-                                        @interface,
-                                        type,
-                                        lifetime
-                                    )
+                                        : StatementGeneration.GenerateServiceFactory(
+                                            compilation,
+                                            strategyName,
+                                            serviceCollectionName,
+                                            @interface,
+                                            type,
+                                            lifetime
+                                        )
                                 )
                             );
                             if (!compilation.IsSymbolAccessibleWithin(@interface, compilation.Assembly))
@@ -531,49 +530,13 @@ namespace Scrutor.Static
 
             foreach (var filter in typeFilters.OfType<CompiledAssignableToTypeFilterDescriptor>())
             {
-                if (filter.Type.Arity > 0 && filter.Type.IsUnboundGenericType)
-                {
-                    types = types.RemoveAll(toSymbol =>
-                    {
-                        if (SymbolEqualityComparer.Default.Equals(filter.Type, toSymbol)) return true;
-
-                        var matchingBaseTypes = GetBaseTypes(toSymbol)
-                            .Select(z => z.IsGenericType ? z.IsUnboundGenericType ? z : z.ConstructUnboundGenericType() : null!)
-                            .Where(z => z is not null)
-                            .Where(symbol => compilation.HasImplicitConversion(symbol, filter.Type));
-                        if (matchingBaseTypes.Any())
-                        {
-                            return false;
-                        }
-
-                        var matchingInterfaces = toSymbol.AllInterfaces
-                            .Select(z => z.IsGenericType ? z.IsUnboundGenericType ? z : z.ConstructUnboundGenericType() : null!)
-                            .Where(z => z is not null)
-                            .Where(symbol => compilation.HasImplicitConversion(symbol, filter.Type));
-                        if (matchingInterfaces.Any())
-                        {
-                            return false;
-                        }
-
-                        return true;
-                    });
-                }
-                else
-                {
-                    types = types.RemoveAll(toSymbol => SymbolEqualityComparer.Default.Equals(filter.Type, toSymbol)
-                                                        || !compilation.HasImplicitConversion(toSymbol, filter.Type)
-                    );
-                }
+                types = types.RemoveAll(toSymbol => StatementGeneration.RemoveImplicitGenericConversion(compilation, filter.Type, toSymbol));
             }
 
             var anyFilters = typeFilters.OfType<CompiledAssignableToAnyTypeFilterDescriptor>().ToArray();
             if (anyFilters.Length > 0)
             {
-                types = types.RemoveAll(
-                    toSymbol => anyFilters.Any(
-                        filter => SymbolEqualityComparer.Default.Equals(filter.Type, toSymbol) || compilation.HasImplicitConversion(toSymbol, filter.Type)
-                    )
-                );
+                types = types.RemoveAll(toSymbol => anyFilters.Any(filter => StatementGeneration.RemoveImplicitGenericConversion(compilation, filter.Type, toSymbol)));
             }
 
             foreach (var filter in typeFilters.OfType<NamespaceFilterDescriptor>())
@@ -594,15 +557,6 @@ namespace Scrutor.Static
             // {
             // }
             return types;
-        }
-
-        static IEnumerable<INamedTypeSymbol> GetBaseTypes(INamedTypeSymbol namedTypeSymbol)
-        {
-            while (namedTypeSymbol.BaseType != null)
-            {
-                yield return namedTypeSymbol.BaseType;
-                namedTypeSymbol = namedTypeSymbol.BaseType;
-            }
         }
     }
 }

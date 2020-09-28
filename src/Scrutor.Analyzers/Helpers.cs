@@ -52,13 +52,29 @@ namespace Scrutor.Analyzers
             }
 
             var sb = new StringBuilder(symbol.MetadataName);
-            if (symbol is INamedTypeSymbol namedTypeSymbol && (namedTypeSymbol.IsUnboundGenericType || namedTypeSymbol.IsGenericType && namedTypeSymbol.TypeArguments.All(z => z is ITypeParameterSymbol)))
+            if (symbol is INamedTypeSymbol namedTypeSymbol && (namedTypeSymbol.IsOpenGenericType() || namedTypeSymbol.IsGenericType))
             {
                 sb = new StringBuilder(symbol.Name);
-                sb.Append("<");
-                for (var i = 1; i < namedTypeSymbol.Arity-1; i++)
-                    sb.Append(",");
-                sb.Append(">");
+                if (namedTypeSymbol.IsOpenGenericType())
+                {
+                    sb.Append("<");
+                    for (var i = 1; i < namedTypeSymbol.Arity - 1; i++)
+                        sb.Append(",");
+                    sb.Append(">");
+                }
+                else
+                {
+                    sb.Append("<");
+                    for (var index = 0; index < namedTypeSymbol.TypeArguments.Length; index++)
+                    {
+                        var argument = namedTypeSymbol.TypeArguments[index];
+                        sb.Append(GetGenericDisplayName(argument));
+                        if (index < namedTypeSymbol.TypeArguments.Length -1)
+                        sb.Append(",");
+                    }
+
+                    sb.Append(">");
+                }
             }
 
             var last = symbol;

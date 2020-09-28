@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -26,7 +27,7 @@ namespace Scrutor.Analyzers
             ExpressionSyntax lifetime
         )
         {
-            var serviceTypeExpression = GetTypeOfExpression(compilation, serviceType);
+            var serviceTypeExpression = GetTypeOfExpression(compilation, serviceType, implementationType);
             var isAccessible = compilation.IsSymbolAccessibleWithin(implementationType, compilation.Assembly);
 
             if (isAccessible)
@@ -54,7 +55,7 @@ namespace Scrutor.Analyzers
                                     MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("_"), IdentifierName("GetRequiredService"))
                                 )
                                 .WithArgumentList(
-                                    ArgumentList(SingletonSeparatedList(Argument(GetTypeOfExpression(compilation, implementationType))))
+                                    ArgumentList(SingletonSeparatedList(Argument(GetTypeOfExpression(compilation, implementationType, serviceType))))
                                 ),
                             IdentifierName(Helpers.GetGenericDisplayName(serviceType))
                         )
@@ -72,8 +73,8 @@ namespace Scrutor.Analyzers
             ExpressionSyntax lifetime
         )
         {
-            var serviceTypeExpression = GetTypeOfExpression(compilation, serviceType);
-            var implementationTypeExpression = GetTypeOfExpression(compilation, implementationType);
+            var serviceTypeExpression = GetTypeOfExpression(compilation, serviceType, implementationType);
+            var implementationTypeExpression = GetTypeOfExpression(compilation, implementationType, serviceType);
             return GenerateServiceType(strategyName, serviceCollectionName, serviceTypeExpression, implementationTypeExpression, lifetime);
         }
 
@@ -145,15 +146,115 @@ namespace Scrutor.Analyzers
                 .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
 
-        private static ExpressionSyntax GetTypeOfExpression(CSharpCompilation compilation, INamedTypeSymbol type) =>
-            compilation.IsSymbolAccessibleWithin(type, compilation.Assembly)
-                ? TypeOfExpression(ParseTypeName(Helpers.GetGenericDisplayName(type)) // might be a better way to do this
-                ) as ExpressionSyntax
-                : GetPrivateType(type);
 
-        private static InvocationExpressionSyntax GetPrivateType(INamedTypeSymbol type)
+        public static bool FilterImplicitGenericConversion(
+            CSharpCompilation compilation,
+            INamedTypeSymbol assignableToType,
+            INamedTypeSymbol type
+        )
         {
-            return InvocationExpression(
+            return !RemoveImplicitGenericConversion(compilation, type, assignableToType);
+        }
+
+
+        public static bool RemoveImplicitGenericConversion(
+            CSharpCompilation compilation,
+            INamedTypeSymbol assignableToType,
+            INamedTypeSymbol type
+        )
+        {
+            if (SymbolEqualityComparer.Default.Equals(assignableToType, type)) return true;
+            if (assignableToType.Arity > 0 && assignableToType.IsUnboundGenericType)
+            {
+                var matchingBaseTypes = GetBaseTypes(type)
+                    .Select(z => z.IsGenericType ? z.IsUnboundGenericType ? z : z.ConstructUnboundGenericType() : null!)
+                    .Where(z => z is not null)
+                    .Where(symbol => compilation.HasImplicitConversion(symbol, assignableToType));
+                if (matchingBaseTypes.Any())
+                {
+                    return false;
+                }
+
+                var matchingInterfaces = type.AllInterfaces
+                    .Select(z => z.IsGenericType ? z.IsUnboundGenericType ? z : z.ConstructUnboundGenericType() : null!)
+                    .Where(z => z is not null)
+                    .Where(symbol => compilation.HasImplicitConversion(symbol, assignableToType));
+                if (matchingInterfaces.Any())
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            return !compilation.HasImplicitConversion(type, assignableToType);
+        }
+
+        private static IEnumerable<INamedTypeSymbol> GetBaseTypes(INamedTypeSymbol namedTypeSymbol)
+        {
+            while (namedTypeSymbol.BaseType != null)
+            {
+                yield return namedTypeSymbol.BaseType;
+                namedTypeSymbol = namedTypeSymbol.BaseType;
+            }
+        }
+
+        private static ExpressionSyntax GetTypeOfExpression(CSharpCompilation compilation, INamedTypeSymbol type, INamedTypeSymbol? relatedType)
+        {
+            if (type.IsUnboundGenericType && relatedType != null)
+            {
+                if (relatedType.IsGenericType && relatedType.Arity == type.Arity)
+                {
+                    type = type.Construct(relatedType.TypeArguments.ToArray());
+                }
+                else
+                {
+                    var baseType = GetBaseTypes(type).FirstOrDefault(z => z.IsGenericType && compilation.HasImplicitConversion(z, type));
+                    if (baseType == null)
+                    {
+                        baseType = type.AllInterfaces.FirstOrDefault(z => z.IsGenericType && compilation.HasImplicitConversion(z, type));
+                    }
+
+                    if (baseType != null)
+                    {
+                        type = type.Construct(baseType.TypeArguments.ToArray());
+                    }
+                }
+            }
+
+            if (compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
+            {
+                return TypeOfExpression(ParseTypeName(Helpers.GetGenericDisplayName(type)));
+            }
+
+            if (type.IsGenericType && !type.IsOpenGenericType())
+            {
+                var result = compilation.IsSymbolAccessibleWithin(type.ConstructUnboundGenericType(), compilation.Assembly);
+                if (result)
+                {
+                    var name = ParseTypeName(type.ConstructUnboundGenericType().ToDisplayString());
+                    if (name is GenericNameSyntax genericNameSyntax)
+                    {
+                        name = genericNameSyntax.WithTypeArgumentList(TypeArgumentList(SeparatedList<TypeSyntax>(
+                            genericNameSyntax.TypeArgumentList.Arguments.Select(_ => OmittedTypeArgument()).ToArray()
+                        )));
+                    }
+
+                    return InvocationExpression(
+                            MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, TypeOfExpression(name), IdentifierName("MakeGenericType")))
+                        .WithArgumentList(ArgumentList(SeparatedList(
+                            type.TypeArguments
+                                .Select(t => Argument(GetTypeOfExpression(compilation, (t as INamedTypeSymbol)!, null)))
+                        )));
+                }
+            }
+
+            return GetPrivateType(compilation, type);
+        }
+
+        private static InvocationExpressionSyntax GetPrivateType(CSharpCompilation compilation, INamedTypeSymbol type)
+        {
+            var expression = InvocationExpression(
                     MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
                         InvocationExpression(
@@ -173,6 +274,22 @@ namespace Scrutor.Analyzers
                         Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(Helpers.GetFullMetadataName(type))))
                     ))
                 );
+            if (type.IsGenericType && !type.IsOpenGenericType())
+            {
+                return InvocationExpression(
+                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, expression, IdentifierName("MakeGenericType")))
+                    .WithArgumentList(ArgumentList(SeparatedList(
+                        type.TypeArguments
+                            .Select(t => Argument(GetTypeOfExpression(compilation, (t as INamedTypeSymbol)!, null)))
+                    )));
+            }
+
+            return expression;
+        }
+
+        public static bool IsOpenGenericType(this INamedTypeSymbol type)
+        {
+            return type.IsGenericType && (type.IsUnboundGenericType || type.TypeArguments.All(z => z.TypeKind == TypeKind.TypeParameter));
         }
     }
 }

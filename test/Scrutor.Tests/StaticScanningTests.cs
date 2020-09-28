@@ -298,8 +298,7 @@ namespace Scrutor.Static
             using var context = new CollectibleTestAssemblyLoadContext();
 
             var dependencies = new List<CSharpCompilation>();
-            using var rootGenerator = new GeneratorTester(context, "RootDependencyProject")
-                .Output(_testOutputHelper);
+            using var rootGenerator = new GeneratorTester(context, "RootDependencyProject");
             var root = rootGenerator
                 .AddSources(@"
 namespace RootDependencyProject
@@ -369,6 +368,7 @@ namespace Scrutor.Static
 ";
             using var generator = new GeneratorTester(context)
                 .Output(_testOutputHelper);
+
             generator
                 .AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
                 .AddCompilationReference(dependencies)
@@ -389,11 +389,304 @@ namespace Scrutor.Static
         }
 
         [Fact]
+        public void Should_Handle_Public_Closed_Generic_Types()
+        {
+            using var context = new CollectibleTestAssemblyLoadContext();
+
+            var dependencies = new List<CSharpCompilation>();
+            using var rootGenerator = new GeneratorTester(context, "RootDependencyProject")
+                .Output(_testOutputHelper);
+            var root = rootGenerator
+                .AddSources(@"
+namespace RootDependencyProject
+{
+    public interface IRequest<T> { }
+    public interface IRequestHandler<T, R> where T : IRequest<R> { }
+    public class Request : IRequest<Response> { }
+
+    public class Response { }
+    public class RequestHandler : IRequestHandler<Request, Response> { }
+}
+").Compile();
+            rootGenerator.AssertCompilationWasSuccessful();
+            rootGenerator.AssertGenerationWasSuccessful();
+            rootGenerator.Emit();
+            dependencies.Add(root);
+
+            var source = @"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+using RootDependencyProject;
+
+namespace TestProject
+{
+    public static class Program
+    {
+        static void Main() { }
+        static IServiceCollection LoadServices()
+        {
+            var services = new ServiceCollection();
+	        services.ScanStatic(
+            z => z
+			    .FromAssemblies()
+			    .AddClasses(x => x.AssignableTo(typeof(IRequestHandler<,>)))
+                .AsImplementedInterfaces()
+                .WithSingletonLifetime()
+            );
+            return services;
+        }
+    }
+}
+";
+
+            var expected = @"using System;
+using System.Reflection;
+using System.Runtime.Loader;
+using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
+
+namespace Scrutor.Static
+{
+    internal static class PopulateExtensions
+    {
+        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, AssemblyLoadContext context, string filePath, string memberName, int lineNumber)
+        {
+            switch (lineNumber)
+            {
+                case 15:
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(RootDependencyProject.IRequestHandler<RootDependencyProject.Request, RootDependencyProject.Response>), typeof(RootDependencyProject.RequestHandler), ServiceLifetime.Singleton));
+                    break;
+            }
+
+            return services;
+        }
+    }
+}";
+
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator
+                .AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .AddCompilationReference(dependencies)
+                .AssertGeneratedAsExpected<StaticScrutorGenerator>(
+                    source,
+                    expected,
+                    "Scrutor.Static.Populate.cs"
+                );
+
+            generator.AssertCompilationWasSuccessful();
+            generator.AssertGenerationWasSuccessful();
+
+            var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
+            Assert.Equal(1, services.Count());
+            Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
+            Assert.Equal(1, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
+        }
+
+
+        [Fact]
+        public void Should_Handle_Private_Closed_Generic_Types()
+        {
+            using var context = new CollectibleTestAssemblyLoadContext();
+
+            var dependencies = new List<CSharpCompilation>();
+            using var rootGenerator = new GeneratorTester(context, "RootDependencyProject")
+                .Output(_testOutputHelper);
+            var root = rootGenerator
+                .AddSources(@"
+namespace RootDependencyProject
+{
+    public interface IRequest<T> { }
+    public interface IRequestHandler<T, R> where T : IRequest<R> { }
+    class Request : IRequest<Response> { }
+
+    class Response { }
+    class RequestHandler : IRequestHandler<Request, Response> { }
+}
+").Compile();
+            rootGenerator.AssertCompilationWasSuccessful();
+            rootGenerator.AssertGenerationWasSuccessful();
+            rootGenerator.Emit();
+            dependencies.Add(root);
+
+            var source = @"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+using RootDependencyProject;
+
+namespace TestProject
+{
+    public static class Program
+    {
+        static void Main() { }
+        static IServiceCollection LoadServices()
+        {
+            var services = new ServiceCollection();
+	        services.ScanStatic(
+            z => z
+			    .FromAssemblies()
+			    .AddClasses(x => x.AssignableTo(typeof(IRequestHandler<,>)))
+                .AsImplementedInterfaces()
+                .WithSingletonLifetime()
+            );
+            return services;
+        }
+    }
+}
+";
+
+            var expected = @"using System;
+using System.Reflection;
+using System.Runtime.Loader;
+using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
+
+namespace Scrutor.Static
+{
+    internal static class PopulateExtensions
+    {
+        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, AssemblyLoadContext context, string filePath, string memberName, int lineNumber)
+        {
+            switch (lineNumber)
+            {
+                case 15:
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(RootDependencyProject.IRequestHandler<, >).MakeGenericType(context.LoadFromAssemblyName(RootDependencyProjectVersion0000CultureneutralPublicKeyTokennull).GetType(""RootDependencyProject.Request""), context.LoadFromAssemblyName(RootDependencyProjectVersion0000CultureneutralPublicKeyTokennull).GetType(""RootDependencyProject.Response"")), context.LoadFromAssemblyName(RootDependencyProjectVersion0000CultureneutralPublicKeyTokennull).GetType(""RootDependencyProject.RequestHandler""), ServiceLifetime.Singleton));
+                    break;
+            }
+
+            return services;
+        }
+
+        private static AssemblyName _RootDependencyProjectVersion0000CultureneutralPublicKeyTokennull;
+        private static AssemblyName RootDependencyProjectVersion0000CultureneutralPublicKeyTokennull => _RootDependencyProjectVersion0000CultureneutralPublicKeyTokennull ??= new AssemblyName(""RootDependencyProject, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"");
+    }
+}";
+
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator
+                .AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .AddCompilationReference(dependencies)
+                .AssertGeneratedAsExpected<StaticScrutorGenerator>(
+                    source,
+                    expected,
+                    "Scrutor.Static.Populate.cs"
+                );
+
+            generator.AssertCompilationWasSuccessful();
+            generator.AssertGenerationWasSuccessful();
+
+            var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
+            Assert.Equal(1, services.Count());
+            Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
+            Assert.Equal(1, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
+        }
+
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(3)]
+        [InlineData(4)]
+        [InlineData(5)]
+        public void Should_Handle_Private_Generic_Classes_Within_Multiple_Dependencies(int dependencyCount)
+        {
+            using var context = new CollectibleTestAssemblyLoadContext();
+
+            var dependencies = new List<CSharpCompilation>();
+            using var rootGenerator = new GeneratorTester(context, "RootDependencyProject")
+                .Output(_testOutputHelper);
+            var root = rootGenerator
+                .AddSources(@"
+namespace RootDependencyProject
+{
+    public interface IRequest<T> { }
+    public interface IRequestHandler<T, R> where T : IRequest<R> { }
+}
+").Compile();
+            rootGenerator.AssertCompilationWasSuccessful();
+            rootGenerator.AssertGenerationWasSuccessful();
+            rootGenerator.Emit();
+            dependencies.Add(root);
+
+            for (var i = 0; i < dependencyCount; i++)
+            {
+                using var dependencyGenerator = new GeneratorTester(context, $"Dependency{i}Project");
+                var dependency = dependencyGenerator
+                    .AddCompilationReference(root)
+                    .AddSources($@"
+using RootDependencyProject;
+
+namespace Dependency{1}Project
+{{    
+    {(i % 2 == 0 ? "public" : "")} class Request{i} : IRequest<Response{i}> {{ }}
+    {(i % 2 == 0 ? "public" : "")} class Response{i} {{ }}
+    {(i % 2 == 0 ? "public" : "")} class RequestHandler{i} : IRequestHandler<Request{i}, Response{i}>  {{ }}
+}}
+").Compile();
+                dependencies.Add(dependency);
+                dependency.EmitInto(context);
+            }
+
+
+            var source = @"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+using RootDependencyProject;
+
+namespace TestProject
+{
+    public static class Program
+    {
+        static void Main() { }
+        static IServiceCollection LoadServices()
+        {
+            var services = new ServiceCollection();
+	        services.ScanStatic(
+            z => z
+			    .FromAssemblies()
+			    .AddClasses(x => x.AssignableTo(typeof(IRequestHandler<,>)))
+                .AsImplementedInterfaces()
+                .WithSingletonLifetime()
+            );
+            return services;
+        }
+    }
+}
+";
+
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            var result = generator
+                .AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .AddCompilationReference(dependencies)
+                .AddSources(source)
+                .Generate<StaticScrutorGenerator>();
+
+            foreach (var tree in result)
+            {
+                _testOutputHelper.WriteLine(tree.GetText().ToString());
+            }
+
+            generator.AssertCompilationWasSuccessful();
+            generator.AssertGenerationWasSuccessful();
+
+            var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
+            Assert.Equal(dependencyCount, services.Count());
+            Assert.Equal(dependencyCount, services.Count(z => z.ImplementationType is not null));
+            Assert.Equal(dependencyCount, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
+        }
+
+
+        [Fact]
         public void Should_Handle_Private_Classes_Within_Self()
         {
             using var context = new CollectibleTestAssemblyLoadContext();
-            using var dependencyGenerator = new GeneratorTester(context, "DependencyProject")
-                .Output(_testOutputHelper);
+            using var dependencyGenerator = new GeneratorTester(context, "DependencyProject");
             var dependency = dependencyGenerator
                 .AddSources(@"
 namespace DependencyProject
@@ -493,8 +786,7 @@ namespace Scrutor.Static
             using var context = new CollectibleTestAssemblyLoadContext();
 
             var dependencies = new List<CSharpCompilation>();
-            using var rootGenerator = new GeneratorTester(context, "RootDependencyProject")
-                .Output(_testOutputHelper);
+            using var rootGenerator = new GeneratorTester(context, "RootDependencyProject");
             var root = rootGenerator
                 .AddSources(@"
 namespace RootDependencyProject
@@ -509,8 +801,7 @@ namespace RootDependencyProject
 
             for (var i = 0; i < dependencyCount; i++)
             {
-                using var dependencyGenerator = new GeneratorTester(context, $"Dependency{i}Project")
-                    .Output(_testOutputHelper);
+                using var dependencyGenerator = new GeneratorTester(context, $"Dependency{i}Project");
                 var dependency = dependencyGenerator
                     .AddCompilationReference(root)
                     .AddSources($@"

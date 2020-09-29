@@ -48,18 +48,19 @@ namespace Scrutor.Analyzers
 
         public override void VisitAssembly(IAssemblySymbol symbol)
         {
-            Accept(symbol.Modules);
+            symbol.GlobalNamespace.Accept(this);
         }
 
         public override void VisitNamedType(INamedTypeSymbol symbol)
         {
             if (symbol.TypeKind == TypeKind.Class || symbol.TypeKind == TypeKind.Delegate || symbol.TypeKind == TypeKind.Struct)
             {
-                if (symbol.IsAbstract) return;
+                if (symbol.IsAbstract || !symbol.CanBeReferencedByName) return;
                 _types.Add(symbol);
             }
+            Accept(symbol.GetMembers());
         }
 
-        public ImmutableArray<INamedTypeSymbol> GetTypes() => _types.ToImmutableArray();
+        public ImmutableArray<INamedTypeSymbol> GetTypes() => _types.Distinct(SymbolEqualityComparer.Default).OfType<INamedTypeSymbol>().ToImmutableArray();
     }
 }

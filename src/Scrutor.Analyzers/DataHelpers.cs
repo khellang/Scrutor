@@ -250,10 +250,10 @@ namespace Scrutor.Analyzers
                 return null;
             return typeInfo switch
             {
-                INamedTypeSymbol nts when name.ToFullString() == nameof(ICompiledAssemblySelector.FromAssemblyDependenciesOf) => new CompiledAssemblyDependenciesDescriptor(
-                    nts
-                ),
-                INamedTypeSymbol nts when name.ToFullString() == nameof(ICompiledAssemblySelector.FromAssemblyOf) => new CompiledAssemblyDescriptor(nts),
+                INamedTypeSymbol nts when name.ToFullString().StartsWith(nameof(ICompiledAssemblySelector.FromAssemblyDependenciesOf)) =>
+                    new CompiledAssemblyDependenciesDescriptor(nts),
+                INamedTypeSymbol nts when name.ToFullString().StartsWith(nameof(ICompiledAssemblySelector.FromAssemblyOf)) =>
+                    new CompiledAssemblyDescriptor(nts),
                 _ => null
             };
         }
@@ -382,17 +382,20 @@ namespace Scrutor.Analyzers
                 }
 
                 NamespaceFilter? filter = null;
-                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaces) || simpleNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaceOf))
+                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaces) ||
+                    simpleNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaceOf))
                 {
                     filter = NamespaceFilter.Exact;
                 }
 
-                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.InNamespaces) || simpleNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.InNamespaceOf))
+                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.InNamespaces) ||
+                    simpleNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.InNamespaceOf))
                 {
                     filter = NamespaceFilter.In;
                 }
 
-                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.NotInNamespaces) || simpleNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.NotInNamespaceOf))
+                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.NotInNamespaces) ||
+                    simpleNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.NotInNamespaceOf))
                 {
                     filter = NamespaceFilter.NotIn;
                 }

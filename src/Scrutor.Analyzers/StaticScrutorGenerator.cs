@@ -478,19 +478,34 @@ namespace Scrutor.Static
             List<ITypeFilterDescriptor> typeFilters
         )
         {
-            var types = assemblies.OfType<AllAssemblyDescriptor>().Any()
-                ? iNamedTypeSymbols
-                : TypeSymbolVisitor.GetTypes(
-                    compilation,
-                    assemblies
-                        .OfType<ICompiledAssemblyDescriptor>()
-                        .Select(z => z.TypeFromAssembly.ContainingAssembly)
+            ImmutableArray<INamedTypeSymbol> types;
+            if (assemblies.OfType<AllAssemblyDescriptor>().Any())
+            {
+                types = iNamedTypeSymbols;
+            }
+            else
+            {
+                var assemblyReferences = assemblies
+                    .OfType<CompiledAssemblyDependenciesDescriptor>()
+                    .SelectMany(descriptor => compilation.References
+                        .Select(compilation.GetAssemblyOrModuleSymbol)
+                        .SelectMany(z => z is IAssemblySymbol assemblySymbol ? assemblySymbol.Modules : z is IModuleSymbol moduleSymbol ? new [] { moduleSymbol } : Array.Empty<IModuleSymbol>())
+                        .Where(module => module.ReferencedAssemblySymbols.Any(reference => SymbolEqualityComparer.Default.Equals(descriptor.TypeFromAssembly.ContainingAssembly, reference)))
+                        .Select(z => z.ContainingAssembly)
                         .Distinct(SymbolEqualityComparer.Default)
-                );
+                    )
+                    .ToArray();
+
+                var allAssemblyReferences = assemblyReferences
+                    .Concat(assemblies.OfType<CompiledAssemblyDescriptor>().Select(z => z.TypeFromAssembly.ContainingAssembly))
+                    .Distinct(SymbolEqualityComparer.Default);
+
+                types = TypeSymbolVisitor.GetTypes(compilation, allAssemblyReferences);
+            }
 
             if (classFilter == ClassFilter.PublicOnly)
             {
-                types = types.RemoveAll(symbol => symbol.DeclaredAccessibility == Accessibility.Public);
+                types = types.RemoveAll(symbol => symbol.DeclaredAccessibility != Accessibility.Public);
             }
 
             foreach (var filter in typeFilters.OfType<CompiledAssignableToTypeFilterDescriptor>())

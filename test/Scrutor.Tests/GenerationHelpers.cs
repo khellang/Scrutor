@@ -320,10 +320,10 @@ namespace Scrutor.Tests
             return context.LoadFromStream(assemblyStream);
         }
 
-        public static MetadataReference CreateMetadataReference(this CSharpCompilation compilation, string? outputName = null)
+        public static MetadataReference CreateMetadataReference(this CSharpCompilation compilation)
         {
             using var stream = new MemoryStream();
-            var emitResult = compilation.Emit(stream, options: new EmitOptions(outputNameOverride: outputName));
+            var emitResult = compilation.Emit(stream, options: new EmitOptions(outputNameOverride: compilation.AssemblyName));
             if (!emitResult.Success)
             {
                 Assert.Empty(emitResult.Diagnostics);

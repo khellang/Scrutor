@@ -1524,7 +1524,7 @@ namespace Scrutor.Static
                     strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.IService), _ => _.GetRequiredService<TestProject.A.ServiceA>(), ServiceLifetime.Scoped));
                     strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.B.ServiceB), typeof(TestProject.B.ServiceB), ServiceLifetime.Scoped));
                     strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.IService), _ => _.GetRequiredService<TestProject.B.ServiceB>(), ServiceLifetime.Scoped));"
-                    }}
+                }}
                     break;
             }}
 
@@ -1537,18 +1537,293 @@ namespace Scrutor.Static
             using var generator = new GeneratorTester(context)
                 .Output(_testOutputHelper);
             generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
-                .Generate<StaticScrutorGenerator>(source);
-                // .AssertGeneratedAsExpected<StaticScrutorGenerator>(
-                //     source,
-                //     expected,
-                //     "Scrutor.Static.Populate.cs"
-                // );
+                .AssertGeneratedAsExpected<StaticScrutorGenerator>(
+                    source,
+                    expected,
+                    "Scrutor.Static.Populate.cs"
+                );
 
             generator.AssertGenerationWasSuccessful();
 
             var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
             Assert.Equal(count, services.Count());
         }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void Should_Select_Specific_Assemblies_Using_FromAssemblyOf(bool useTypeof)
+        {
+            using var context = new CollectibleTestAssemblyLoadContext();
+
+            var dependencies = new List<CSharpCompilation>();
+
+            static CSharpCompilation CreateServiceDependency(CollectibleTestAssemblyLoadContext context, string suffix, params CSharpCompilation[] dependencies)
+            {
+                using var generator = new GeneratorTester(context, "DependencyProject" + suffix);
+                var root = generator
+                    .AddCompilationReference(dependencies)
+                    .AddSources($@"
+namespace DependencyProject{suffix}
+{{
+    public interface IService{suffix} {{ }}
+    public class Service{suffix} : IService{suffix} {{ }}
+}}
+").Compile();
+                generator.AssertCompilationWasSuccessful();
+                generator.AssertGenerationWasSuccessful();
+                generator.Emit();
+                return root;
+            }
+
+            var dependencyA = CreateServiceDependency(context, "A");
+            var dependencyB = CreateServiceDependency(context, "B");
+            var dependencyC = CreateServiceDependency(context, "C", dependencyA);
+            var dependencyD = CreateServiceDependency(context, "D", dependencyC);
+            dependencies.Add(dependencyA);
+            dependencies.Add(dependencyB);
+            dependencies.Add(dependencyC);
+            dependencies.Add(dependencyD);
+
+            var source = $@"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+using DependencyProjectA;
+using DependencyProjectB;
+using DependencyProjectC;
+using DependencyProjectD;
+
+namespace TestProject
+{{
+    public static class Program
+    {{
+        static void Main() {{ }}
+        static IServiceCollection LoadServices()
+        {{
+            var services = new ServiceCollection();
+	        services.ScanStatic(
+            z => z
+                .FromAssemblyOf{(useTypeof ? $"(typeof(IServiceB))" : $"<IServiceB>()")}
+                .AddClasses()
+                .AsSelf()
+                .AsImplementedInterfaces()
+                .WithSingletonLifetime()
+            );
+            return services;
+        }}
+    }}
+}}
+";
+
+            var expected = @"
+using System;
+using System.Reflection;
+using System.Runtime.Loader;
+using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
+
+namespace Scrutor.Static
+{
+    internal static class PopulateExtensions
+    {
+        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, AssemblyLoadContext context, string filePath, string memberName, int lineNumber)
+        {
+            switch (lineNumber)
+            {
+                case 18:
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(DependencyProjectB.ServiceB), typeof(DependencyProjectB.ServiceB), ServiceLifetime.Singleton));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(DependencyProjectB.IServiceB), _ => _.GetRequiredService<DependencyProjectB.ServiceB>(), ServiceLifetime.Singleton));
+                    break;
+            }
+
+            return services;
+        }
+    }
+}
+";
+
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator
+                .AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .AddCompilationReference(dependencies)
+                .AssertGeneratedAsExpected<StaticScrutorGenerator>(
+                    source,
+                    expected,
+                    "Scrutor.Static.Populate.cs"
+                );
+
+            foreach (var tree in generator.GeneratorSyntaxTrees)
+            {
+                _testOutputHelper.WriteLine(tree.GetText().ToString());
+            }
+
+            generator.AssertGenerationWasSuccessful();
+
+            var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
+            Assert.Equal(1, services.Count(z => z.ImplementationFactory is not null));
+            Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
+            Assert.Equal(2, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
+        }
+
+
+        [Theory]
+        [InlineData("ServiceA", false, 2)]
+        [InlineData("ServiceB", false, 0)]
+        [InlineData("ServiceC", false, 1)]
+        [InlineData("ServiceA", true, 2)]
+        [InlineData("ServiceB", true, 0)]
+        [InlineData("ServiceC", true, 1)]
+        public void Should_Select_Specific_Assemblies_Using_FromAssemblyDependenciesOf(string className, bool useTypeof, int expectedCount)
+        {
+            using var context = new CollectibleTestAssemblyLoadContext();
+
+            var dependencies = new List<CSharpCompilation>();
+
+            static CSharpCompilation CreateRoot(CollectibleTestAssemblyLoadContext context, params CSharpCompilation[] dependencies)
+            {
+                using var generator = new GeneratorTester(context, "RootDependencyProject");
+                var dep = generator
+                    .AddCompilationReference(dependencies)
+                    .AddSources($@"
+namespace RootDependencyProject
+{{
+    public interface IService {{ }}
+}}
+").Compile();
+                generator.AssertCompilationWasSuccessful();
+                generator.AssertGenerationWasSuccessful();
+                generator.Emit();
+                return dep;
+            }
+
+            static CSharpCompilation CreateServiceDependency(CollectibleTestAssemblyLoadContext context, string suffix, params CSharpCompilation[] dependencies)
+            {
+                using var generator = new GeneratorTester(context, "DependencyProject" + suffix);
+                var additionalCode = dependencies
+                    .Where(z => z.AssemblyName?.StartsWith("DependencyProject") == true)
+                    .Select(z =>
+                        $"class HardReference{z.AssemblyName?.Substring(z.AssemblyName.Length - 1)} : {z.AssemblyName + ".Service" + z.AssemblyName?.Substring(z.AssemblyName.Length - 1)} {{ }}");
+                var dep = generator
+                    .AddCompilationReference(dependencies)
+                    .AddSources($@"
+namespace DependencyProject{suffix}
+{{
+    {string.Join("\n", additionalCode)}
+    public class Service{suffix} : RootDependencyProject.IService {{ }}
+}}
+").Compile();
+                generator.AssertCompilationWasSuccessful();
+                generator.AssertGenerationWasSuccessful();
+                generator.Emit();
+                return dep;
+            }
+
+            var root = CreateRoot(context);
+            var dependencyA = CreateServiceDependency(context, "A", root);
+            var dependencyB = CreateServiceDependency(context, "B", root);
+            var dependencyC = CreateServiceDependency(context, "C", dependencyA, root);
+            var dependencyD = CreateServiceDependency(context, "D", dependencyA, dependencyC, root);
+            dependencies.Add(root);
+            dependencies.Add(dependencyA);
+            dependencies.Add(dependencyB);
+            dependencies.Add(dependencyC);
+            dependencies.Add(dependencyD);
+
+            var source = $@"
+
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+using RootDependencyProject;
+using DependencyProjectA;
+using DependencyProjectB;
+using DependencyProjectC;
+using DependencyProjectD;
+
+namespace TestProject
+{{
+    public static class Program
+    {{
+        static void Main() {{ }}
+        static IServiceCollection LoadServices()
+        {{
+            var services = new ServiceCollection();
+	        services.ScanStatic(
+            z => z
+			    .FromAssemblyDependenciesOf{(useTypeof ? $"(typeof({className}))" : $"<{className}>()")}
+                .AddClasses(x => x.AssignableTo(typeof(IService)), true)
+                .AsSelf()
+                .AsImplementedInterfaces()
+                .WithSingletonLifetime()
+            );
+            return services;
+        }}
+    }}
+}}
+";
+
+            var expected = $@"
+using System;
+using System.Reflection;
+using System.Runtime.Loader;
+using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
+
+namespace Scrutor.Static
+{{
+    internal static class PopulateExtensions
+    {{
+        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, AssemblyLoadContext context, string filePath, string memberName, int lineNumber)
+        {{
+            switch (lineNumber)
+            {{
+                case 20:{className switch {
+                "ServiceA" => @"
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(DependencyProjectC.ServiceC), typeof(DependencyProjectC.ServiceC), ServiceLifetime.Singleton));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(RootDependencyProject.IService), _ => _.GetRequiredService<DependencyProjectC.ServiceC>(), ServiceLifetime.Singleton));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(DependencyProjectD.ServiceD), typeof(DependencyProjectD.ServiceD), ServiceLifetime.Singleton));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(RootDependencyProject.IService), _ => _.GetRequiredService<DependencyProjectD.ServiceD>(), ServiceLifetime.Singleton));",
+                "ServiceB" => @"",
+                "ServiceC" => @"
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(DependencyProjectD.ServiceD), typeof(DependencyProjectD.ServiceD), ServiceLifetime.Singleton));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(RootDependencyProject.IService), _ => _.GetRequiredService<DependencyProjectD.ServiceD>(), ServiceLifetime.Singleton));",
+                _ => ""
+            }}
+                    break;
+            }}
+
+            return services;
+        }}
+    }}
+}}
+";
+
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator
+                .AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .AddCompilationReference(dependencies)
+                .AssertGeneratedAsExpected<StaticScrutorGenerator>(
+                    source,
+                    expected,
+                    "Scrutor.Static.Populate.cs"
+                );
+
+            foreach (var tree in generator.GeneratorSyntaxTrees)
+            {
+                _testOutputHelper.WriteLine(tree.GetText().ToString());
+            }
+
+            generator.AssertGenerationWasSuccessful();
+
+            var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
+            Assert.Equal(expectedCount, services.Count(z => z.ImplementationFactory is not null));
+            Assert.Equal(expectedCount, services.Count(z => z.ImplementationType is not null));
+            Assert.Equal(expectedCount * 2, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
+        }
+
 
         [Fact]
         public void Should_Report_Diagnostic_When_Not_Using_Expressions()

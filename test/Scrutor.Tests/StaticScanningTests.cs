@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using Scrutor.Analyzers;
+using Scrutor.Analyzers.Internals;
 using Xunit;
 using Xunit.Abstractions;
 using static Scrutor.Tests.GenerationHelpers;
@@ -235,8 +236,7 @@ public static class Program {
         z => z
 			.FromAssemblies()
 			.AddClasses(x => x.AssignableTo(typeof(IService<>)))
-            .AsSelf()
-            .AsImplementedInterfaces()
+            .AsSelfWithInterfaces()
             .WithScopedLifetime()
         );
         return services;
@@ -582,6 +582,157 @@ namespace Scrutor.Static
             Assert.Equal(1, services.Count());
             Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
             Assert.Equal(1, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
+        }
+
+
+        [Fact]
+        public void Should_Ignore_Abstract_Classes()
+        {
+            var source = @"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+
+public interface IService { }
+public class Service : IService { }
+public abstract class ServiceB : IService { }
+
+public static class Program {
+    static void Main() { }
+    static IServiceCollection LoadServices()
+    {
+        var services = new ServiceCollection();
+	    services.ScanStatic(
+        z => z
+			.FromAssemblies()
+			.AddClasses(x => x.AssignableTo(typeof(IService)))
+            .AsSelf()
+            .AsImplementedInterfaces()
+            .WithScopedLifetime()
+        );
+        return services;
+    }
+}
+";
+
+            var expected = @"
+using System;
+using System.Reflection;
+using System.Runtime.Loader;
+using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
+
+namespace Scrutor.Static
+{
+    internal static class PopulateExtensions
+    {
+        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, AssemblyLoadContext context, string filePath, string memberName, int lineNumber)
+        {
+            switch (lineNumber)
+            {
+                case 15:
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(Service), typeof(Service), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IService), _ => _.GetRequiredService<Service>(), ServiceLifetime.Scoped));
+                    break;
+            }
+
+            return services;
+        }
+    }
+}
+";
+            using var context = new CollectibleTestAssemblyLoadContext();
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .AssertGeneratedAsExpected<StaticScrutorGenerator>(
+                    source,
+                    expected,
+                    "Scrutor.Static.Populate.cs"
+                );
+
+            generator.AssertCompilationWasSuccessful();
+            generator.AssertGenerationWasSuccessful();
+
+            var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
+            Assert.Equal(2, services.Count());
+            Assert.Equal(1, services.Count(z => z.ImplementationFactory is not null));
+            Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
+            Assert.Equal(2, services.Count(z => z.Lifetime == ServiceLifetime.Scoped));
+        }
+
+
+        [Fact]
+        public void Should_Using_Support_As_Type()
+        {
+            var source = @"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+
+public interface IService { }
+public class Service : IService { }
+public abstract class ServiceB : IService { }
+
+public static class Program {
+    static void Main() { }
+    static IServiceCollection LoadServices()
+    {
+        var services = new ServiceCollection();
+	    services.ScanStatic(
+        z => z
+			.FromAssemblies()
+			.AddClasses(x => x.AssignableTo(typeof(IService)))
+            .As<IService>()
+            .WithScopedLifetime()
+        );
+        return services;
+    }
+}
+";
+
+            var expected = @"
+using System;
+using System.Reflection;
+using System.Runtime.Loader;
+using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
+
+namespace Scrutor.Static
+{
+    internal static class PopulateExtensions
+    {
+        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, AssemblyLoadContext context, string filePath, string memberName, int lineNumber)
+        {
+            switch (lineNumber)
+            {
+                case 15:
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IService), typeof(Service), ServiceLifetime.Scoped));
+                    break;
+            }
+
+            return services;
+        }
+    }
+}
+";
+            using var context = new CollectibleTestAssemblyLoadContext();
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .AssertGeneratedAsExpected<StaticScrutorGenerator>(
+                    source,
+                    expected,
+                    "Scrutor.Static.Populate.cs"
+                );
+
+            generator.AssertCompilationWasSuccessful();
+            generator.AssertGenerationWasSuccessful();
+
+            var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
+            Assert.Single(services);
+            Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
+            Assert.Equal(1, services.Count(z => z.Lifetime == ServiceLifetime.Scoped));
         }
 
 
@@ -1109,6 +1260,370 @@ namespace Scrutor.Static
             Assert.Equal(1, services2.Count(z => z.ImplementationFactory is not null));
             Assert.Equal(1, services2.Count(z => z.ImplementationType is not null));
             Assert.Equal(2, services2.Count(z => z.Lifetime == ServiceLifetime.Scoped));
+        }
+
+        [Fact]
+        public void Should_Filter_AssignableTo()
+        {
+            var source = @"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+
+public interface IService { }
+public interface IServiceB { }
+public class Service : IService, IServiceB { }
+public class ServiceA : IService { }
+
+public static class Program {
+    static void Main() { }
+    static IServiceCollection LoadServices()
+    {
+        var services = new ServiceCollection();
+	    services.ScanStatic(
+        z => z
+			.FromAssemblies()
+			.AddClasses(x => x.AssignableTo(typeof(IService)).AssignableTo<IServiceB>())
+            .AsSelf()
+            .AsImplementedInterfaces()
+            .WithScopedLifetime()
+        );
+        return services;
+    }
+}
+";
+
+            var expected = @"
+using System;
+using System.Reflection;
+using System.Runtime.Loader;
+using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
+
+namespace Scrutor.Static
+{
+    internal static class PopulateExtensions
+    {
+        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, AssemblyLoadContext context, string filePath, string memberName, int lineNumber)
+        {
+            switch (lineNumber)
+            {
+                case 16:
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(Service), typeof(Service), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IService), _ => _.GetRequiredService<Service>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IServiceB), _ => _.GetRequiredService<Service>(), ServiceLifetime.Scoped));
+                    break;
+            }
+
+            return services;
+        }
+    }
+}
+";
+            using var context = new CollectibleTestAssemblyLoadContext();
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .AssertGeneratedAsExpected<StaticScrutorGenerator>(
+                    source,
+                    expected,
+                    "Scrutor.Static.Populate.cs"
+                );
+
+            generator.AssertCompilationWasSuccessful();
+            generator.AssertGenerationWasSuccessful();
+
+            var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
+            Assert.Equal(3, services.Count());
+            Assert.Equal(2, services.Count(z => z.ImplementationFactory is not null));
+            Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
+            Assert.Equal(3, services.Count(z => z.Lifetime == ServiceLifetime.Scoped));
+        }
+
+        [Fact]
+        public void Should_Filter_AssignableToAny()
+        {
+            var source = @"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+
+public interface IService { }
+public interface IServiceB { }
+public class Service : IService, IServiceB { }
+public class ServiceA : IService { }
+public class ServiceB : IService { }
+
+public static class Program {
+    static void Main() { }
+    static IServiceCollection LoadServices()
+    {
+        var services = new ServiceCollection();
+	    services.ScanStatic(
+        z => z
+			.FromAssemblies()
+			.AddClasses(x => x.AssignableToAny(typeof(IService), typeof(IServiceB)))
+            .AsSelf()
+            .AsImplementedInterfaces()
+            .WithScopedLifetime()
+        );
+        return services;
+    }
+}
+";
+
+            var expected = @"
+using System;
+using System.Reflection;
+using System.Runtime.Loader;
+using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
+
+namespace Scrutor.Static
+{
+    internal static class PopulateExtensions
+    {
+        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, AssemblyLoadContext context, string filePath, string memberName, int lineNumber)
+        {
+            switch (lineNumber)
+            {
+                case 17:
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(Service), typeof(Service), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IService), _ => _.GetRequiredService<Service>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IServiceB), _ => _.GetRequiredService<Service>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(ServiceA), typeof(ServiceA), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IService), _ => _.GetRequiredService<ServiceA>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(ServiceB), typeof(ServiceB), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(IService), _ => _.GetRequiredService<ServiceB>(), ServiceLifetime.Scoped));
+                    break;
+            }
+
+            return services;
+        }
+    }
+}
+";
+            using var context = new CollectibleTestAssemblyLoadContext();
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .AssertGeneratedAsExpected<StaticScrutorGenerator>(
+                    source,
+                    expected,
+                    "Scrutor.Static.Populate.cs"
+                );
+
+            generator.AssertCompilationWasSuccessful();
+            generator.AssertGenerationWasSuccessful();
+
+            var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
+            Assert.Equal(7, services.Count());
+            Assert.Equal(4, services.Count(z => z.ImplementationFactory is not null));
+            Assert.Equal(3, services.Count(z => z.ImplementationType is not null));
+            Assert.Equal(7, services.Count(z => z.Lifetime == ServiceLifetime.Scoped));
+        }
+
+        [Theory]
+        [InlineData(NamespaceFilter.Exact, "TestProject.A", 5, false, false)]
+        [InlineData(NamespaceFilter.Exact, "TestProject.A.IService", 5, true, false)]
+        [InlineData(NamespaceFilter.Exact, "TestProject.A.IService", 5, true, true)]
+        [InlineData(NamespaceFilter.In, "TestProject.A", 7, false, false)]
+        [InlineData(NamespaceFilter.In, "TestProject.A.IService", 7, true, false)]
+        [InlineData(NamespaceFilter.In, "TestProject.A.IService", 7, true, true)]
+        [InlineData(NamespaceFilter.NotIn, "TestProject.A.C", 7, false, false)]
+        [InlineData(NamespaceFilter.NotIn, "TestProject.A.C.ServiceC", 7, true, false)]
+        [InlineData(NamespaceFilter.NotIn, "TestProject.A.C.ServiceC", 7, true, true)]
+        public void Should_Filter_Namespaces(NamespaceFilter filter, string namespaceFilterValue, int count, bool usingClass, bool usingTypeof)
+        {
+            var source = $@"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace TestProject.A
+{{
+    public interface IService {{ }}
+    public class Service : IService, TestProject.B.IServiceB {{ }}
+    public class ServiceA : IService {{ }}
+}}
+
+namespace TestProject.A.C
+{{
+    public class ServiceC : IService {{ }}
+}}
+
+namespace TestProject.B
+{{
+    public interface IServiceB {{ }}
+    public class ServiceB : TestProject.A.IService {{ }}
+}}
+
+public static class Program {{
+    static void Main() {{ }}
+    static IServiceCollection LoadServices()
+    {{
+        var services = new ServiceCollection();
+	    services.ScanStatic(
+        z => z
+			.FromAssemblies()
+			.AddClasses(x => x.{
+                (usingClass, usingTypeof, filter) switch {
+                    (false, false, NamespaceFilter.Exact) => $"InExactNamespaces(\"{namespaceFilterValue}\")",
+                    (false, false, NamespaceFilter.In) => $"InNamespaces(\"{namespaceFilterValue}\")",
+                    (false, false, NamespaceFilter.NotIn) => $"InNamespaces(\"TestProject\").NotInNamespaces(\"{namespaceFilterValue}\")",
+                    (true, false, NamespaceFilter.Exact) => $"InExactNamespaceOf(typeof({namespaceFilterValue}))",
+                    (true, false, NamespaceFilter.In) => $"InNamespaceOf(typeof({namespaceFilterValue}))",
+                    (true, false, NamespaceFilter.NotIn) => $"InNamespaces(\"TestProject\").NotInNamespaceOf(typeof({namespaceFilterValue}))",
+                    (true, true, NamespaceFilter.Exact) => $"InExactNamespaceOf<{namespaceFilterValue}>()",
+                    (true, true, NamespaceFilter.In) => $"InNamespaceOf<{namespaceFilterValue}>()",
+                    (true, true, NamespaceFilter.NotIn) => $"InNamespaces(\"TestProject\").NotInNamespaceOf<{namespaceFilterValue}>()",
+                    _ => "ERROR"}})
+            .AsSelf()
+            .AsImplementedInterfaces()
+            .WithScopedLifetime()
+        );
+        return services;
+    }}
+}}
+";
+
+            var expected = $@"
+using System;
+using System.Reflection;
+using System.Runtime.Loader;
+using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
+
+namespace Scrutor.Static
+{{
+    internal static class PopulateExtensions
+    {{
+        public static IServiceCollection Populate(IServiceCollection services, RegistrationStrategy strategy, AssemblyLoadContext context, string filePath, string memberName, int lineNumber)
+        {{
+            switch (lineNumber)
+            {{
+                case 29:
+                    {
+                filter switch {
+                    NamespaceFilter.Exact => @"strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.Service), typeof(TestProject.A.Service), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.IService), _ => _.GetRequiredService<TestProject.A.Service>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.B.IServiceB), _ => _.GetRequiredService<TestProject.A.Service>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.ServiceA), typeof(TestProject.A.ServiceA), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.IService), _ => _.GetRequiredService<TestProject.A.ServiceA>(), ServiceLifetime.Scoped));",
+                    NamespaceFilter.In => @"strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.Service), typeof(TestProject.A.Service), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.IService), _ => _.GetRequiredService<TestProject.A.Service>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.B.IServiceB), _ => _.GetRequiredService<TestProject.A.Service>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.ServiceA), typeof(TestProject.A.ServiceA), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.IService), _ => _.GetRequiredService<TestProject.A.ServiceA>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.C.ServiceC), typeof(TestProject.A.C.ServiceC), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.IService), _ => _.GetRequiredService<TestProject.A.C.ServiceC>(), ServiceLifetime.Scoped));",
+                    NamespaceFilter.NotIn => @"strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.Service), typeof(TestProject.A.Service), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.IService), _ => _.GetRequiredService<TestProject.A.Service>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.B.IServiceB), _ => _.GetRequiredService<TestProject.A.Service>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.ServiceA), typeof(TestProject.A.ServiceA), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.IService), _ => _.GetRequiredService<TestProject.A.ServiceA>(), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.B.ServiceB), typeof(TestProject.B.ServiceB), ServiceLifetime.Scoped));
+                    strategy.Apply(services, ServiceDescriptor.Describe(typeof(TestProject.A.IService), _ => _.GetRequiredService<TestProject.B.ServiceB>(), ServiceLifetime.Scoped));"
+                    }}
+                    break;
+            }}
+
+            return services;
+        }}
+    }}
+}}
+";
+            using var context = new CollectibleTestAssemblyLoadContext();
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .Generate<StaticScrutorGenerator>(source);
+                // .AssertGeneratedAsExpected<StaticScrutorGenerator>(
+                //     source,
+                //     expected,
+                //     "Scrutor.Static.Populate.cs"
+                // );
+
+            generator.AssertGenerationWasSuccessful();
+
+            var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
+            Assert.Equal(count, services.Count());
+        }
+
+        [Fact]
+        public void Should_Report_Diagnostic_When_Not_Using_Expressions()
+        {
+            var source = @"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+
+public interface IService { }
+public class Service : IService { }
+
+public static class Program {
+    static void Main() { }
+    static IServiceCollection LoadServices()
+    {
+        var services = new ServiceCollection();
+	    services.ScanStatic(
+        z => { 
+               z.FromAssemblies()
+			    .AddClasses(x => x.AssignableTo(typeof(IService)))
+                .AsSelf()
+                .AsImplementedInterfaces()
+                .WithScopedLifetime();
+        });
+        return services;
+    }
+}
+";
+
+            using var context = new CollectibleTestAssemblyLoadContext();
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .Generate<StaticScrutorGenerator>(source);
+
+            Assert.NotEmpty(generator.GeneratorDiagnostics);
+            Assert.Contains(generator.GeneratorDiagnostics, z => z.Id == "SCTR0001");
+        }
+
+        [Fact]
+        public void Should_Report_Diagnostic_Not_Give_A_Compiled_Type()
+        {
+            var source = @"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+
+public interface IService { }
+public class Service : IService { }
+
+public static class Program {
+    static void Main() { }
+    static IServiceCollection LoadServices()
+    {
+        var type = typeof(IService);
+        var services = new ServiceCollection();
+	    services.ScanStatic(z => z.FromAssemblies()
+			  .AddClasses(x => x.AssignableTo(type))
+              .AsSelf()
+              .AsImplementedInterfaces()
+              .WithScopedLifetime());
+        return services;
+    }
+}
+";
+
+            using var context = new CollectibleTestAssemblyLoadContext();
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .Generate<StaticScrutorGenerator>(source);
+
+            Assert.NotEmpty(generator.GeneratorDiagnostics);
+            Assert.Contains(generator.GeneratorDiagnostics, z => z.Id == "SCTR0002");
         }
 
         static class StaticHelper

@@ -55,6 +55,7 @@ namespace Scrutor.Analyzers
         {
             if (symbol.TypeKind == TypeKind.Class || symbol.TypeKind == TypeKind.Delegate || symbol.TypeKind == TypeKind.Struct)
             {
+                if (symbol.IsAbstract) return;
                 _types.Add(symbol);
             }
         }

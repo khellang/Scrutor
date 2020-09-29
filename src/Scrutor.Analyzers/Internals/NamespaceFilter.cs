@@ -1,6 +1,6 @@
 namespace Scrutor.Analyzers.Internals
 {
-    enum NamespaceFilter
+    public enum NamespaceFilter
     {
         Exact = 1,
         In = 2,

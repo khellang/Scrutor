@@ -138,7 +138,6 @@ namespace Scrutor.Static
             {
                 var semanticModel = compilationWithMethod.GetSemanticModel(rootExpression.SyntaxTree);
 
-                var diagnostics = compilationWithMethod.GetDiagnostics();
                 var assemblies = new List<IAssemblyDescriptor>();
                 var typeFilters = new List<ITypeFilterDescriptor>();
                 var serviceTypes = new List<IServiceTypeDescriptor>();
@@ -300,7 +299,6 @@ namespace Scrutor.Static
             }
 
 
-
             {
                 var root = CSharpSyntaxTree.ParseText(populateSourceText).GetCompilationUnitRoot();
                 var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().Single();
@@ -335,20 +333,21 @@ namespace Scrutor.Static
             HashSet<IAssemblySymbol> privateAssemblies
         )
         {
-            var asSelf = serviceTypes.OfType<SelfServiceTypeDescriptor>().Any();
+            var asSelf = serviceTypes.OfType<SelfServiceTypeDescriptor>().Any() || !serviceTypes.Any();
             var asImplementedInterfaces = serviceTypes.OfType<ImplementedInterfacesServiceTypeDescriptor>().Any();
             var asMatchingInterface = serviceTypes.OfType<MatchingInterfaceServiceTypeDescriptor>().Any();
-            if (!asSelf && !asImplementedInterfaces && !asMatchingInterface)
-                asSelf = true;
+            var asSpecificTypes = serviceTypes.OfType<CompiledServiceTypeDescriptor>().Select(z => z.Type).ToArray();
+
             foreach (var type in types)
             {
+                var emittedTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
                 var typeIsOpenGeneric = type.IsOpenGenericType();
                 if (!compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
                 {
                     privateAssemblies.Add(type.ContainingAssembly);
                 }
 
-                if (asSelf)
+                if (asSelf && !emittedTypes.Contains(type))
                 {
                     innerBlock = innerBlock.AddStatements(
                         ExpressionStatement(
@@ -362,47 +361,54 @@ namespace Scrutor.Static
                             )
                         )
                     );
+                    emittedTypes.Add(type);
+                }
 
-                    if (asMatchingInterface)
+                if (asMatchingInterface)
+                {
+                    var name = $"I{type.Name}";
+                    var @interface = type.AllInterfaces.FirstOrDefault(z => z.Name == name);
+                    if (@interface is not null && !emittedTypes.Contains(@interface))
                     {
-                        var name = $"I{type.Name}";
-                        var @interface = type.AllInterfaces.FirstOrDefault(z => z.Name == name);
-                        if (@interface is not null)
+                        innerBlock = innerBlock.AddStatements(
+                            ExpressionStatement(
+                                typeIsOpenGeneric || !asSelf
+                                    ? StatementGeneration.GenerateServiceType(
+                                        compilation,
+                                        strategyName,
+                                        serviceCollectionName,
+                                        @interface,
+                                        type,
+                                        lifetime
+                                    )
+                                    : StatementGeneration.GenerateServiceFactory(
+                                        compilation,
+                                        strategyName,
+                                        serviceCollectionName,
+                                        @interface,
+                                        type,
+                                        lifetime
+                                    )
+                            )
+                        );
+                        if (!compilation.IsSymbolAccessibleWithin(@interface, compilation.Assembly))
                         {
-                            innerBlock = innerBlock.AddStatements(
-                                ExpressionStatement(
-                                    typeIsOpenGeneric
-                                        ? StatementGeneration.GenerateServiceType(
-                                            compilation,
-                                            strategyName,
-                                            serviceCollectionName,
-                                            @interface,
-                                            type,
-                                            lifetime
-                                        )
-                                        : StatementGeneration.GenerateServiceFactory(
-                                            compilation,
-                                            strategyName,
-                                            serviceCollectionName,
-                                            @interface,
-                                            type,
-                                            lifetime
-                                        )
-                                )
-                            );
-                            if (!compilation.IsSymbolAccessibleWithin(@interface, compilation.Assembly))
-                            {
-                                privateAssemblies.Add(type.ContainingAssembly);
-                            }
+                            privateAssemblies.Add(type.ContainingAssembly);
                         }
+
+                        emittedTypes.Add(@interface);
                     }
-                    else if (asImplementedInterfaces)
+                }
+
+                if (asImplementedInterfaces)
+                {
+                    foreach (var @interface in type.AllInterfaces)
                     {
-                        foreach (var @interface in type.AllInterfaces)
+                        if (!emittedTypes.Contains(@interface))
                         {
                             innerBlock = innerBlock.AddStatements(
                                 ExpressionStatement(
-                                    typeIsOpenGeneric
+                                    typeIsOpenGeneric || !asSelf
                                         ? StatementGeneration.GenerateServiceType(
                                             compilation,
                                             strategyName,
@@ -425,79 +431,38 @@ namespace Scrutor.Static
                             {
                                 privateAssemblies.Add(type.ContainingAssembly);
                             }
+
+                            emittedTypes.Add(@interface);
                         }
                     }
                 }
-                else
-                {
-                    if (asMatchingInterface)
-                    {
-                        var name = $"I{type.Name}";
-                        var @interface = type.AllInterfaces.FirstOrDefault(z => z.Name == name);
-                        if (@interface is not null)
-                        {
-                            innerBlock = innerBlock.AddStatements(
-                                ExpressionStatement(
-                                    StatementGeneration.GenerateServiceType(
-                                        compilation,
-                                        strategyName,
-                                        serviceCollectionName,
-                                        @interface,
-                                        type,
-                                        lifetime
-                                    )
-                                )
-                            );
-                            if (!compilation.IsSymbolAccessibleWithin(@interface, compilation.Assembly))
-                            {
-                                privateAssemblies.Add(type.ContainingAssembly);
-                            }
 
-                            if (asImplementedInterfaces)
-                            {
-                                foreach (var asImplementedInterface in type.AllInterfaces)
-                                {
-                                    innerBlock = innerBlock.AddStatements(
-                                        ExpressionStatement(
-                                            StatementGeneration.GenerateServiceType(
-                                                compilation,
-                                                strategyName,
-                                                serviceCollectionName,
-                                                asImplementedInterface,
-                                                @interface,
-                                                lifetime
-                                            )
-                                        )
-                                    );
-                                    if (!compilation.IsSymbolAccessibleWithin(asImplementedInterface, compilation.Assembly))
-                                    {
-                                        privateAssemblies.Add(type.ContainingAssembly);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else if (asImplementedInterfaces)
+                foreach (var asType in asSpecificTypes)
+                {
+                    if (!emittedTypes.Contains(asType))
                     {
-                        foreach (var @interface in type.AllInterfaces)
-                        {
-                            innerBlock = innerBlock.AddStatements(
-                                ExpressionStatement(
-                                    StatementGeneration.GenerateServiceType(
+                        innerBlock = innerBlock.AddStatements(
+                            ExpressionStatement(
+                                !asSelf
+                                    ? StatementGeneration.GenerateServiceType(
                                         compilation,
                                         strategyName,
                                         serviceCollectionName,
-                                        @interface,
+                                        asType,
                                         type,
                                         lifetime
                                     )
-                                )
-                            );
-                            if (!compilation.IsSymbolAccessibleWithin(@interface, compilation.Assembly))
-                            {
-                                privateAssemblies.Add(type.ContainingAssembly);
-                            }
-                        }
+                                    : StatementGeneration.GenerateServiceFactory(
+                                        compilation,
+                                        strategyName,
+                                        serviceCollectionName,
+                                        asType,
+                                        type,
+                                        lifetime
+                                    )
+                            )
+                        );
+                        emittedTypes.Add(asType);
                     }
                 }
             }
@@ -536,21 +501,18 @@ namespace Scrutor.Static
             var anyFilters = typeFilters.OfType<CompiledAssignableToAnyTypeFilterDescriptor>().ToArray();
             if (anyFilters.Length > 0)
             {
-                types = types.RemoveAll(toSymbol => anyFilters.Any(filter => StatementGeneration.RemoveImplicitGenericConversion(compilation, filter.Type, toSymbol)));
+                types = types.RemoveAll(toSymbol => anyFilters.All(filter => StatementGeneration.RemoveImplicitGenericConversion(compilation, filter.Type, toSymbol)));
             }
 
             foreach (var filter in typeFilters.OfType<NamespaceFilterDescriptor>())
             {
-                types = types.RemoveAll(
-                    toSymbol =>
-                        filter.Filter switch
-                        {
-                            NamespaceFilter.Exact => toSymbol.ContainingNamespace.ToDisplayString() != filter.Namespace,
-                            NamespaceFilter.In => !toSymbol.ContainingNamespace.ToDisplayString().StartsWith(filter.Namespace, StringComparison.Ordinal),
-                            NamespaceFilter.NotIn => toSymbol.ContainingNamespace.ToDisplayString().StartsWith(filter.Namespace, StringComparison.Ordinal),
-                            _ => true
-                        }
-                );
+                types = filter.Filter switch
+                {
+                    NamespaceFilter.Exact => types.RemoveAll(toSymbol => toSymbol.ContainingNamespace.ToDisplayString() != filter.Namespace),
+                    NamespaceFilter.In => types.RemoveAll(toSymbol => !toSymbol.ContainingNamespace.ToDisplayString().StartsWith(filter.Namespace, StringComparison.Ordinal)),
+                    NamespaceFilter.NotIn => types.RemoveAll(toSymbol => toSymbol.ContainingNamespace.ToDisplayString().StartsWith(filter.Namespace, StringComparison.Ordinal)),
+                    _ => types
+                };
             }
 
             // foreach (var filter in typeFilters.OfType<CompiledAttributeFilterDescriptor>())

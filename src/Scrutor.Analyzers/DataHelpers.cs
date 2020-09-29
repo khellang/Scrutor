@@ -304,6 +304,7 @@ namespace Scrutor.Analyzers
                     }
 
                     context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MustBeTypeOf, argument.Expression.GetLocation()));
+                    yield break;
                 }
 
                 yield break;
@@ -329,12 +330,11 @@ namespace Scrutor.Analyzers
                         }
                     }
 
-                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MustBeTypeOf, genericNameSyntax.Identifier.GetLocation()));
                     yield break;
                 }
 
                 NamespaceFilter? filter = null;
-                if (genericNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaces))
+                if (genericNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaceOf))
                 {
                     filter = NamespaceFilter.Exact;
                 }
@@ -351,7 +351,7 @@ namespace Scrutor.Analyzers
 
                 if (filter.HasValue)
                 {
-                    var symbol = semanticModel.GetDeclaredSymbol(genericNameSyntax.TypeArgumentList.Arguments![0]);
+                    var symbol = semanticModel.GetTypeInfo(genericNameSyntax.TypeArgumentList.Arguments![0]).Type!;
                     yield return new NamespaceFilterDescriptor(filter.Value, symbol.ContainingNamespace.ToDisplayString());
                 }
 
@@ -365,7 +365,7 @@ namespace Scrutor.Analyzers
                     var type = ExtractSyntaxFromMethod(expression, name);
                     if (type != null)
                     {
-                        var typeInfo = semanticModel.GetTypeInfo(type).Type;
+                        var typeInfo = type == null ? null : semanticModel.GetTypeInfo(type).Type;
                         switch (typeInfo)
                         {
                             case INamedTypeSymbol nts:
@@ -377,21 +377,22 @@ namespace Scrutor.Analyzers
                         }
                     }
 
+                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MustBeTypeOf, simpleNameSyntax.Identifier.GetLocation()));
                     yield break;
                 }
 
                 NamespaceFilter? filter = null;
-                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaces))
+                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaces) || simpleNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaceOf))
                 {
                     filter = NamespaceFilter.Exact;
                 }
 
-                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.InNamespaces))
+                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.InNamespaces) || simpleNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.InNamespaceOf))
                 {
                     filter = NamespaceFilter.In;
                 }
 
-                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.NotInNamespaces))
+                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.NotInNamespaces) || simpleNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.NotInNamespaceOf))
                 {
                     filter = NamespaceFilter.NotIn;
                 }
@@ -401,9 +402,14 @@ namespace Scrutor.Analyzers
                     foreach (var argument in expression.ArgumentList.Arguments!)
                     {
                         if (argument.Expression is LiteralExpressionSyntax literalExpressionSyntax
-                            && literalExpressionSyntax.Token.IsKind(SyntaxKind.StringLiteralExpression))
+                            && literalExpressionSyntax.Token.IsKind(SyntaxKind.StringLiteralToken))
                         {
                             yield return new NamespaceFilterDescriptor(filter.Value, literalExpressionSyntax.Token.ValueText);
+                        }
+                        else if (argument.Expression is TypeOfExpressionSyntax typeOfExpressionSyntax)
+                        {
+                            var symbol = semanticModel.GetTypeInfo(typeOfExpressionSyntax.Type).Type!;
+                            yield return new NamespaceFilterDescriptor(filter.Value, symbol.ContainingNamespace.ToDisplayString());
                         }
                         else
                         {
@@ -439,46 +445,5 @@ namespace Scrutor.Analyzers
 
             return null;
         }
-    }
-
-    internal static class Diagnostics
-    {
-        private const string Category = "Scrutor";
-
-        public static DiagnosticDescriptor MustBeAnExpression { get; } = new DiagnosticDescriptor(
-            "SCTR0001",
-            "Must be a expression",
-            "Methods that will be analyzed statically must be an expression, blocks and variables are not allowed",
-            Category,
-            DiagnosticSeverity.Error,
-            true
-        );
-
-        public static DiagnosticDescriptor MustBeTypeOf { get; } = new DiagnosticDescriptor(
-            "SCTR0002",
-            "Must use typeof",
-            "Method must be called with typeof, variables are not allowed",
-            Category,
-            DiagnosticSeverity.Error,
-            true
-        );
-
-        public static DiagnosticDescriptor TypeNotResolved { get; } = new DiagnosticDescriptor(
-            "SCTR0003",
-            "Type could not be resolved",
-            "The indicated type could not be resolved",
-            Category,
-            DiagnosticSeverity.Warning,
-            true
-        );
-
-        public static DiagnosticDescriptor NamespaceMustBeAString { get; } = new DiagnosticDescriptor(
-            "SCTR0003",
-            "Namespace must be a string",
-            "The given namespace must be a constant string",
-            Category,
-            DiagnosticSeverity.Warning,
-            true
-        );
     }
 }

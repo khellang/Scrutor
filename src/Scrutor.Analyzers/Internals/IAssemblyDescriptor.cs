@@ -22,17 +22,13 @@ namespace Scrutor.Analyzers.Internals
     {
         public override string ToString() => "All";
     }
-    interface ICompiledAssemblyDescriptor : IAssemblyDescriptor
-    {
-        INamedTypeSymbol TypeFromAssembly { get; }
-    }
-    struct CompiledAssemblyDescriptor : ICompiledAssemblyDescriptor
+    struct CompiledAssemblyDescriptor : IAssemblyDescriptor
     {
         public INamedTypeSymbol TypeFromAssembly { get; }
         public CompiledAssemblyDescriptor(INamedTypeSymbol typeFromAssembly) => TypeFromAssembly = typeFromAssembly;
         public override string ToString() => Helpers.GetFullMetadataName(TypeFromAssembly);
     }
-    struct CompiledAssemblyDependenciesDescriptor : ICompiledAssemblyDescriptor
+    struct CompiledAssemblyDependenciesDescriptor : IAssemblyDescriptor
     {
         public INamedTypeSymbol TypeFromAssembly { get; }
         public CompiledAssemblyDependenciesDescriptor(INamedTypeSymbol typeFromAssembly) => TypeFromAssembly = typeFromAssembly;

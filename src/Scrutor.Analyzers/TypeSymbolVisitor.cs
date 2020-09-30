@@ -17,14 +17,6 @@ namespace Scrutor.Analyzers
             return visitor.GetTypes();
         }
 
-        public static ImmutableArray<INamedTypeSymbol> GetTypes(CSharpCompilation compilation, IEnumerable<MetadataReference> references)
-        {
-            var visitor = new TypeSymbolVisitor();
-            foreach (var symbol in references.Select(compilation.GetAssemblyOrModuleSymbol).Where(z => z != null))
-                symbol?.Accept(visitor);
-            return visitor.GetTypes();
-        }
-
         public static ImmutableArray<INamedTypeSymbol> GetTypes(CSharpCompilation compilation, IEnumerable<ISymbol?> symbols)
         {
             var visitor = new TypeSymbolVisitor();

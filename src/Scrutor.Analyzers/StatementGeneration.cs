@@ -10,8 +10,6 @@ namespace Scrutor.Analyzers
 {
     static class StatementGeneration
     {
-        private static Regex SpecialCharacterRemover = new Regex("[^\\w\\d]", RegexOptions.Compiled);
-
         private static MemberAccessExpressionSyntax Describe = MemberAccessExpression(
             SyntaxKind.SimpleMemberAccessExpression,
             IdentifierName("ServiceDescriptor"),
@@ -117,11 +115,9 @@ namespace Scrutor.Analyzers
                 )
             );
 
-        public static string AssemblyVariableName(IAssemblySymbol symbol) => SpecialCharacterRemover.Replace(symbol.Identity.GetDisplayName(true), "");
-
         public static IEnumerable<MemberDeclarationSyntax> AssemblyDeclaration(IAssemblySymbol symbol)
         {
-            var name = AssemblyVariableName(symbol);
+            var name = Helpers.AssemblyVariableName(symbol);
             var assemblyName = LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(symbol.Identity.GetDisplayName(true)));
 
             yield return FieldDeclaration(VariableDeclaration(IdentifierName("AssemblyName"))
@@ -146,17 +142,6 @@ namespace Scrutor.Analyzers
                 .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
 
-
-        public static bool FilterImplicitGenericConversion(
-            CSharpCompilation compilation,
-            INamedTypeSymbol assignableToType,
-            INamedTypeSymbol type
-        )
-        {
-            return !RemoveImplicitGenericConversion(compilation, type, assignableToType);
-        }
-
-
         public static bool RemoveImplicitGenericConversion(
             CSharpCompilation compilation,
             INamedTypeSymbol assignableToType,
@@ -166,7 +151,7 @@ namespace Scrutor.Analyzers
             if (SymbolEqualityComparer.Default.Equals(assignableToType, type)) return true;
             if (assignableToType.Arity > 0 && assignableToType.IsUnboundGenericType)
             {
-                var matchingBaseTypes = GetBaseTypes(type)
+                var matchingBaseTypes = Helpers.GetBaseTypes(type)
                     .Select(z => z.IsGenericType ? z.IsUnboundGenericType ? z : z.ConstructUnboundGenericType() : null!)
                     .Where(z => z is not null)
                     .Where(symbol => compilation.HasImplicitConversion(symbol, assignableToType));
@@ -190,15 +175,6 @@ namespace Scrutor.Analyzers
             return !compilation.HasImplicitConversion(type, assignableToType);
         }
 
-        private static IEnumerable<INamedTypeSymbol> GetBaseTypes(INamedTypeSymbol namedTypeSymbol)
-        {
-            while (namedTypeSymbol.BaseType != null)
-            {
-                yield return namedTypeSymbol.BaseType;
-                namedTypeSymbol = namedTypeSymbol.BaseType;
-            }
-        }
-
         private static ExpressionSyntax GetTypeOfExpression(CSharpCompilation compilation, INamedTypeSymbol type, INamedTypeSymbol? relatedType)
         {
             if (type.IsUnboundGenericType && relatedType != null)
@@ -209,7 +185,7 @@ namespace Scrutor.Analyzers
                 }
                 else
                 {
-                    var baseType = GetBaseTypes(type).FirstOrDefault(z => z.IsGenericType && compilation.HasImplicitConversion(z, type));
+                    var baseType = Helpers.GetBaseTypes(type).FirstOrDefault(z => z.IsGenericType && compilation.HasImplicitConversion(z, type));
                     if (baseType == null)
                     {
                         baseType = type.AllInterfaces.FirstOrDefault(z => z.IsGenericType && compilation.HasImplicitConversion(z, type));
@@ -264,7 +240,7 @@ namespace Scrutor.Analyzers
                                     IdentifierName("LoadFromAssemblyName"))
                             )
                             .WithArgumentList(ArgumentList(SingletonSeparatedList(
-                                Argument(IdentifierName(AssemblyVariableName(type.ContainingAssembly)))
+                                Argument(IdentifierName(Helpers.AssemblyVariableName(type.ContainingAssembly)))
                             ))),
                         IdentifierName("GetType")
                     )

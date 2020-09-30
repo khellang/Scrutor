@@ -211,7 +211,7 @@ namespace Scrutor.Analyzers
 
             if (name is GenericNameSyntax genericNameSyntax && genericNameSyntax.TypeArgumentList.Arguments.Count == 1)
             {
-                var typeSyntax = ExtractSyntaxFromMethod(expression, name);
+                var typeSyntax = Helpers.ExtractSyntaxFromMethod(expression, name);
                 if (typeSyntax == null)
                 {
                     yield break;
@@ -241,7 +241,7 @@ namespace Scrutor.Analyzers
             if (name.ToFullString() == nameof(ICompiledAssemblySelector.FromAssemblies))
                 return new AllAssemblyDescriptor();
 
-            var typeSyntax = ExtractSyntaxFromMethod(expression, name);
+            var typeSyntax = Helpers.ExtractSyntaxFromMethod(expression, name);
             if (typeSyntax == null)
                 return null;
 
@@ -314,7 +314,7 @@ namespace Scrutor.Analyzers
             {
                 if (genericNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.AssignableTo))
                 {
-                    var type = ExtractSyntaxFromMethod(expression, name);
+                    var type = Helpers.ExtractSyntaxFromMethod(expression, name);
                     if (type != null)
                     {
                         var typeInfo = semanticModel.GetTypeInfo(type).Type;
@@ -362,10 +362,10 @@ namespace Scrutor.Analyzers
             {
                 if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.AssignableTo))
                 {
-                    var type = ExtractSyntaxFromMethod(expression, name);
+                    var type = Helpers.ExtractSyntaxFromMethod(expression, name);
                     if (type != null)
                     {
-                        var typeInfo = type == null ? null : semanticModel.GetTypeInfo(type).Type;
+                        var typeInfo = semanticModel.GetTypeInfo(type).Type;
                         switch (typeInfo)
                         {
                             case INamedTypeSymbol nts:
@@ -423,30 +423,6 @@ namespace Scrutor.Analyzers
                     yield break;
                 }
             }
-        }
-
-        static TypeSyntax? ExtractSyntaxFromMethod(
-            InvocationExpressionSyntax expression,
-            NameSyntax name
-        )
-        {
-            if (name is GenericNameSyntax genericNameSyntax)
-            {
-                if (genericNameSyntax.TypeArgumentList.Arguments.Count == 1)
-                {
-                    return genericNameSyntax.TypeArgumentList.Arguments[0];
-                }
-            }
-
-            if (name is SimpleNameSyntax)
-            {
-                if (expression.ArgumentList.Arguments.Count == 1 && expression.ArgumentList.Arguments[0].Expression is TypeOfExpressionSyntax typeOfExpression)
-                {
-                    return typeOfExpression.Type;
-                }
-            }
-
-            return null;
         }
     }
 }

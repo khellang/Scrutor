@@ -42,7 +42,7 @@ namespace Microsoft.Extensions.DependencyInjection
 	        [CallerLineNumberAttribute] int lineNumber = 0
         )
         {
-            return PopulateExtensions.Populate(services, RegistrationStrategy.Append, AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.GetLoadContext(typeof(StaticScrutorExtensions).Assembly) ?? AssemblyLoadContext.Default, filePath, memberName, lineNumber);
+            return PopulateExtensions.Populate(services, RegistrationStrategy.Append, AssemblyLoadContext.GetLoadContext(typeof(StaticScrutorExtensions).Assembly) ?? AssemblyLoadContext.Default, filePath, memberName, lineNumber);
         }
 
         public static IServiceCollection ScanStatic(
@@ -54,7 +54,7 @@ namespace Microsoft.Extensions.DependencyInjection
 	        [CallerLineNumberAttribute] int lineNumber = 0
         )
         {
-            return PopulateExtensions.Populate(services, strategy, AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.GetLoadContext(typeof(StaticScrutorExtensions).Assembly) ?? AssemblyLoadContext.Default, filePath, memberName, lineNumber);
+            return PopulateExtensions.Populate(services, strategy, AssemblyLoadContext.GetLoadContext(typeof(StaticScrutorExtensions).Assembly) ?? AssemblyLoadContext.Default, filePath, memberName, lineNumber);
         }
 
         public static IServiceCollection ScanStatic(

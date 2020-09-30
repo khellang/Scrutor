@@ -1,6 +1,9 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Scrutor.Analyzers
 {
@@ -104,6 +107,42 @@ namespace Scrutor.Analyzers
                 INamespaceSymbol? s = null;
                 return (s = symbol as INamespaceSymbol) != null && s.IsGlobalNamespace;
             }
+        }
+
+        private static Regex SpecialCharacterRemover = new Regex("[^\\w\\d]", RegexOptions.Compiled);
+        public static string AssemblyVariableName(IAssemblySymbol symbol) => SpecialCharacterRemover.Replace(symbol.Identity.GetDisplayName(true), "");
+
+        public static IEnumerable<INamedTypeSymbol> GetBaseTypes(INamedTypeSymbol namedTypeSymbol)
+        {
+            while (namedTypeSymbol.BaseType != null)
+            {
+                yield return namedTypeSymbol.BaseType;
+                namedTypeSymbol = namedTypeSymbol.BaseType;
+            }
+        }
+
+        public static TypeSyntax? ExtractSyntaxFromMethod(
+            InvocationExpressionSyntax expression,
+            NameSyntax name
+        )
+        {
+            if (name is GenericNameSyntax genericNameSyntax)
+            {
+                if (genericNameSyntax.TypeArgumentList.Arguments.Count == 1)
+                {
+                    return genericNameSyntax.TypeArgumentList.Arguments[0];
+                }
+            }
+
+            if (name is SimpleNameSyntax)
+            {
+                if (expression.ArgumentList.Arguments.Count == 1 && expression.ArgumentList.Arguments[0].Expression is TypeOfExpressionSyntax typeOfExpression)
+                {
+                    return typeOfExpression.Type;
+                }
+            }
+
+            return null;
         }
     }
 }

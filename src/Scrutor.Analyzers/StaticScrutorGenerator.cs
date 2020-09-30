@@ -369,7 +369,8 @@ namespace Scrutor.Static
                     {
                         // If there is no syntax it is probably not our code
                         if (duplicate.ApplicationSyntaxReference == null) continue;
-                        context.ReportDiagnostic(Diagnostic.Create(Diagnostics.DuplicateServiceDescriptorAttribute, Location.Create(duplicate.ApplicationSyntaxReference.SyntaxTree, duplicate.ApplicationSyntaxReference.Span)));
+                        context.ReportDiagnostic(Diagnostic.Create(Diagnostics.DuplicateServiceDescriptorAttribute,
+                            Location.Create(duplicate.ApplicationSyntaxReference.SyntaxTree, duplicate.ApplicationSyntaxReference.Span)));
                     }
 
                     foreach (var attribute in attributeDataElements)
@@ -689,6 +690,13 @@ namespace Scrutor.Static
             if (classFilter == ClassFilter.PublicOnly)
             {
                 types = types.RemoveAll(symbol => symbol.DeclaredAccessibility != Accessibility.Public);
+            }
+
+            // Ran into a filter we couldn't handle, so we bail out and let the diagnostics handle things.
+            if (typeFilters.OfType<CompiledAbortTypeFilterDescriptor>().Any())
+            {
+                types = types.Clear();
+                return types;
             }
 
             foreach (var filter in typeFilters.OfType<CompiledAssignableToTypeFilterDescriptor>())

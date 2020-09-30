@@ -230,7 +230,7 @@ namespace Scrutor.Analyzers
                         yield return new CompiledServiceTypeDescriptor(nts);
                         yield break;
                     default:
-                        context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                        context.ReportDiagnostic(Diagnostic.Create(Diagnostics.UnhandledSymbol, name.GetLocation()));
                         yield break;
                 }
             }
@@ -304,12 +304,13 @@ namespace Scrutor.Analyzers
                                 continue;
 
                             default:
-                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.UnhandledSymbol, name.GetLocation()));
                                 yield break;
                         }
                     }
 
                     context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MustBeTypeOf, argument.Expression.GetLocation()));
+                    yield return new CompiledAbortTypeFilterDescriptor(context.Compilation.ObjectType);
                     yield break;
                 }
 
@@ -331,7 +332,7 @@ namespace Scrutor.Analyzers
                                 yield break;
 
                             default:
-                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.UnhandledSymbol, name.GetLocation()));
                                 yield break;
                         }
                     }
@@ -352,7 +353,7 @@ namespace Scrutor.Analyzers
                                 yield break;
 
                             default:
-                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.UnhandledSymbol, name.GetLocation()));
                                 yield break;
                         }
                     }
@@ -373,7 +374,7 @@ namespace Scrutor.Analyzers
                                 yield break;
 
                             default:
-                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.UnhandledSymbol, name.GetLocation()));
                                 yield break;
                         }
                     }
@@ -420,12 +421,13 @@ namespace Scrutor.Analyzers
                                 yield return new CompiledAssignableToTypeFilterDescriptor(nts);
                                 yield break;
                             default:
-                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.UnhandledSymbol, name.GetLocation()));
                                 yield break;
                         }
                     }
 
                     context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MustBeTypeOf, simpleNameSyntax.Identifier.GetLocation()));
+                    yield return new CompiledAbortTypeFilterDescriptor(context.Compilation.ObjectType);
                     yield break;
                 }
 
@@ -442,7 +444,7 @@ namespace Scrutor.Analyzers
                                 yield break;
 
                             default:
-                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.UnhandledSymbol, name.GetLocation()));
                                 yield break;
                         }
                     }
@@ -463,7 +465,7 @@ namespace Scrutor.Analyzers
                                 yield break;
 
                             default:
-                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.UnhandledSymbol, name.GetLocation()));
                                 yield break;
                         }
                     }

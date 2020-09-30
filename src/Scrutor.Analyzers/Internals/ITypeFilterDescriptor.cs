@@ -47,4 +47,11 @@ namespace Scrutor.Analyzers.Internals
 
         public CompiledAssignableToAnyTypeFilterDescriptor(INamedTypeSymbol type) => Type = type;
     }
+
+    struct CompiledAbortTypeFilterDescriptor : ITypeFilterDescriptor
+    {
+        public INamedTypeSymbol Type { get; }
+
+        public CompiledAbortTypeFilterDescriptor(INamedTypeSymbol type) => Type = type;
+    }
 }

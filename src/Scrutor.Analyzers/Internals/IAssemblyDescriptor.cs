@@ -15,7 +15,7 @@ namespace Scrutor.Analyzers.Internals
         {
             AssemblySymbol = assemblySymbol;
         }
-        public override string ToString() => "All";
+        public override string ToString() => Helpers.GetFullMetadataName(AssemblySymbol);
     }
 
     struct AllAssemblyDescriptor : IAssemblyDescriptor

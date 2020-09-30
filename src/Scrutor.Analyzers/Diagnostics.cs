@@ -1,8 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Runtime.CompilerServices;
+using Microsoft.CodeAnalysis;
 
 namespace Scrutor.Analyzers
 {
-    internal static class Diagnostics
+    public static class Diagnostics
     {
         private const string Category = "Scrutor";
 
@@ -24,10 +25,10 @@ namespace Scrutor.Analyzers
             true
         );
 
-        public static DiagnosticDescriptor TypeNotResolved { get; } = new DiagnosticDescriptor(
+        public static DiagnosticDescriptor UnhandledSymbol { get; } = new DiagnosticDescriptor(
             "SCTR0003",
-            "Type could not be resolved",
-            "The indicated type could not be resolved",
+            "Symbol could not be handled",
+            "The indicated symbol could not be handled correctly",
             Category,
             DiagnosticSeverity.Warning,
             true

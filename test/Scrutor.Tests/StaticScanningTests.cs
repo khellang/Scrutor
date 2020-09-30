@@ -291,7 +291,6 @@ namespace Scrutor.Static
             Assert.Equal(2, services.Count(z => z.Lifetime == ServiceLifetime.Scoped));
         }
 
-
         [Fact]
         public void Should_Handle_Private_Open_Generic_Types()
         {
@@ -479,11 +478,10 @@ namespace Scrutor.Static
             generator.AssertGenerationWasSuccessful();
 
             var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
-            Assert.Equal(1, services.Count());
+            Assert.Single(services);
             Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
             Assert.Equal(1, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
         }
-
 
         [Fact]
         public void Should_Handle_Private_Closed_Generic_Types()
@@ -579,11 +577,10 @@ namespace Scrutor.Static
             generator.AssertGenerationWasSuccessful();
 
             var services = StaticHelper.ExecuteStaticServiceCollectionMethod(generator.Emit(), "Program", "LoadServices");
-            Assert.Equal(1, services.Count());
+            Assert.Single(services);
             Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
             Assert.Equal(1, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
         }
-
 
         [Fact]
         public void Should_Ignore_Abstract_Classes()
@@ -661,7 +658,6 @@ namespace Scrutor.Static
             Assert.Equal(2, services.Count(z => z.Lifetime == ServiceLifetime.Scoped));
         }
 
-
         [Fact]
         public void Should_Using_Support_As_Type()
         {
@@ -734,7 +730,6 @@ namespace Scrutor.Static
             Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
             Assert.Equal(1, services.Count(z => z.Lifetime == ServiceLifetime.Scoped));
         }
-
 
         [Theory]
         [InlineData(0)]
@@ -831,7 +826,6 @@ namespace TestProject
             Assert.Equal(dependencyCount, services.Count(z => z.ImplementationType is not null));
             Assert.Equal(dependencyCount, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
         }
-
 
         [Fact]
         public void Should_Handle_Private_Classes_Within_Self()
@@ -1014,7 +1008,6 @@ namespace TestProject
             Assert.Equal(dependencyCount, services.Count(z => z.ImplementationType is not null));
             Assert.Equal(dependencyCount, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
         }
-
 
         [Theory]
         [InlineData(ServiceLifetime.Scoped)]
@@ -1423,7 +1416,6 @@ namespace Scrutor.Static
             Assert.Equal(7, services.Count(z => z.Lifetime == ServiceLifetime.Scoped));
         }
 
-
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -1506,7 +1498,6 @@ namespace Scrutor.Static
             Assert.Equal(1, services.Count(z => z.ImplementationType is not null));
             Assert.Equal(2, services.Count(z => z.Lifetime == ServiceLifetime.Scoped));
         }
-
 
         [Theory]
         [InlineData(true)]
@@ -1593,7 +1584,6 @@ namespace Scrutor.Static
             Assert.Equal(2, services.Count(z => z.ImplementationType is not null));
             Assert.Equal(5, services.Count(z => z.Lifetime == ServiceLifetime.Scoped));
         }
-
 
         [Fact]
         public void Should_Support_ServiceDescriptorAttributes()
@@ -2048,7 +2038,6 @@ namespace Scrutor.Static
             Assert.Equal(2, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
         }
 
-
         [Theory]
         [InlineData("ServiceA", false, 2)]
         [InlineData("ServiceB", false, 0)]
@@ -2205,7 +2194,6 @@ namespace Scrutor.Static
             Assert.Equal(expectedCount * 2, services.Count(z => z.Lifetime == ServiceLifetime.Singleton));
         }
 
-
         [Fact]
         public void Should_Report_Diagnostic_When_Not_Using_Expressions()
         {
@@ -2241,12 +2229,14 @@ public static class Program {
             generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
                 .Generate<StaticScrutorGenerator>(source);
 
+            generator.AssertCompilationWasSuccessful();
+
             Assert.NotEmpty(generator.GeneratorDiagnostics);
-            Assert.Contains(generator.GeneratorDiagnostics, z => z.Id == "SCTR0001");
+            Assert.Contains(generator.GeneratorDiagnostics, z => z.Id == Diagnostics.MustBeAnExpression.Id);
         }
 
         [Fact]
-        public void Should_Report_Diagnostic_Not_Give_A_Compiled_Type()
+        public void Should_Report_Diagnostic_Not_Given_A_Compiled_Type()
         {
             var source = @"
 using Scrutor;
@@ -2278,8 +2268,49 @@ public static class Program {
             generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
                 .Generate<StaticScrutorGenerator>(source);
 
+            generator.AssertCompilationWasSuccessful();
+
             Assert.NotEmpty(generator.GeneratorDiagnostics);
-            Assert.Contains(generator.GeneratorDiagnostics, z => z.Id == "SCTR0002");
+            Assert.Contains(generator.GeneratorDiagnostics, z => z.Id == Diagnostics.MustBeTypeOf.Id);
+        }
+
+        [Fact]
+        public void Should_Report_Diagnostic_Not_Given_A_Static_Namespace()
+        {
+            var source = @"
+using Scrutor;
+using Scrutor.Static;
+using Microsoft.Extensions.DependencyInjection;
+
+public interface IService { }
+public class Service : IService { }
+
+public static class Program {
+    static void Main() { }
+    static IServiceCollection LoadServices()
+    {
+        var ns = ""MyNamespace""; 
+        var services = new ServiceCollection();
+	    services.ScanStatic(z => z.FromAssemblies()
+			  .AddClasses(x => x.InNamespaces(ns))
+              .AsSelf()
+              .AsImplementedInterfaces()
+              .WithScopedLifetime());
+        return services;
+    }
+}
+";
+
+            using var context = new CollectibleTestAssemblyLoadContext();
+            using var generator = new GeneratorTester(context)
+                .Output(_testOutputHelper);
+            generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
+                .Generate<StaticScrutorGenerator>(source);
+
+            generator.AssertCompilationWasSuccessful();
+
+            Assert.NotEmpty(generator.GeneratorDiagnostics);
+            Assert.Contains(generator.GeneratorDiagnostics, z => z.Id == Diagnostics.NamespaceMustBeAString.Id);
         }
 
         [Fact]
@@ -2292,8 +2323,8 @@ using Scrutor.Static;
 using Microsoft.Extensions.DependencyInjection;
 
 public interface IService {{ }}
-[ServiceDescriptor(typeof(IServiceB), ServiceLifetime.Scoped)]
-[ServiceDescriptor(typeof(IServiceB), ServiceLifetime.Singleton)]
+[ServiceDescriptor(typeof(IService), ServiceLifetime.Scoped)]
+[ServiceDescriptor(typeof(IService), ServiceLifetime.Singleton)]
 public class Service : IService {{ }}
 
 public static class Program {{
@@ -2304,7 +2335,7 @@ public static class Program {{
 	    services.ScanStatic(
         z => z
 			.FromAssemblies()
-			.AddClasses(x => x.AssignableToAny(typeof(IService), typeof(IServiceB)))
+			.AddClasses(x => x.AssignableTo(typeof(IService)))
             .UsingAttributes()
             .WithSingletonLifetime()
         );
@@ -2319,10 +2350,11 @@ public static class Program {{
             generator.AddReferences(typeof(Scrutor.IFluentInterface).Assembly, typeof(ServiceCollection).Assembly, typeof(IServiceCollection).Assembly)
                 .Generate<StaticScrutorGenerator>(source);
 
-            Assert.Single(generator.GeneratorDiagnostics);
-            Assert.Contains(generator.GeneratorDiagnostics, z => z.Id == "SCTR0005" && z.Location.GetLineSpan().StartLinePosition.Line == 8);
-        }
+            generator.AssertCompilationWasSuccessful();
 
+            Assert.Single(generator.GeneratorDiagnostics);
+            Assert.Contains(generator.GeneratorDiagnostics, z => z.Id == Diagnostics.DuplicateServiceDescriptorAttribute.Id && z.Location.GetLineSpan().StartLinePosition.Line == 8);
+        }
 
         static class StaticHelper
         {

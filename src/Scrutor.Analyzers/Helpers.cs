@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Scrutor.Analyzers
@@ -112,10 +113,11 @@ namespace Scrutor.Analyzers
         private static Regex SpecialCharacterRemover = new Regex("[^\\w\\d]", RegexOptions.Compiled);
         public static string AssemblyVariableName(IAssemblySymbol symbol) => SpecialCharacterRemover.Replace(symbol.Identity.GetDisplayName(true), "");
 
-        public static IEnumerable<INamedTypeSymbol> GetBaseTypes(INamedTypeSymbol namedTypeSymbol)
+        public static IEnumerable<INamedTypeSymbol> GetBaseTypes(CSharpCompilation compilation, INamedTypeSymbol namedTypeSymbol)
         {
             while (namedTypeSymbol.BaseType != null)
             {
+                if (SymbolEqualityComparer.Default.Equals(namedTypeSymbol.BaseType, compilation.ObjectType)) yield break;
                 yield return namedTypeSymbol.BaseType;
                 namedTypeSymbol = namedTypeSymbol.BaseType;
             }

@@ -34,9 +34,18 @@ namespace Scrutor.Analyzers
         );
 
         public static DiagnosticDescriptor NamespaceMustBeAString { get; } = new DiagnosticDescriptor(
-            "SCTR0003",
+            "SCTR0004",
             "Namespace must be a string",
             "The given namespace must be a constant string",
+            Category,
+            DiagnosticSeverity.Warning,
+            true
+        );
+
+        public static DiagnosticDescriptor DuplicateServiceDescriptorAttribute { get; } = new DiagnosticDescriptor(
+            "SCTR0005",
+            "Duplicate service descriptor attribute",
+            "Cannot have more than one service descriptor attribute for a given type",
             Category,
             DiagnosticSeverity.Warning,
             true

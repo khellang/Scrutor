@@ -202,6 +202,12 @@ namespace Scrutor.Analyzers
                 yield break;
             }
 
+            if (name.ToFullString() == nameof(ICompiledServiceTypeSelector.UsingAttributes))
+            {
+                yield return new UsingAttributeServiceTypeDescriptor();
+                yield break;
+            }
+
             if (name.ToFullString() == nameof(ICompiledServiceTypeSelector.AsSelfWithInterfaces))
             {
                 yield return new SelfServiceTypeDescriptor();
@@ -333,6 +339,48 @@ namespace Scrutor.Analyzers
                     yield break;
                 }
 
+                if (genericNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.WithAttribute))
+                {
+                    var type = Helpers.ExtractSyntaxFromMethod(expression, name);
+                    if (type != null)
+                    {
+                        var typeInfo = semanticModel.GetTypeInfo(type).Type;
+                        switch (typeInfo)
+                        {
+                            case INamedTypeSymbol nts:
+                                yield return new CompiledWithAttributeFilterDescriptor(nts);
+                                yield break;
+
+                            default:
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                yield break;
+                        }
+                    }
+
+                    yield break;
+                }
+
+                if (genericNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.WithoutAttribute))
+                {
+                    var type = Helpers.ExtractSyntaxFromMethod(expression, name);
+                    if (type != null)
+                    {
+                        var typeInfo = semanticModel.GetTypeInfo(type).Type;
+                        switch (typeInfo)
+                        {
+                            case INamedTypeSymbol nts:
+                                yield return new CompiledWithoutAttributeFilterDescriptor(nts);
+                                yield break;
+
+                            default:
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                yield break;
+                        }
+                    }
+
+                    yield break;
+                }
+
                 NamespaceFilter? filter = null;
                 if (genericNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaceOf))
                 {
@@ -352,7 +400,7 @@ namespace Scrutor.Analyzers
                 if (filter.HasValue)
                 {
                     var symbol = semanticModel.GetTypeInfo(genericNameSyntax.TypeArgumentList.Arguments![0]).Type!;
-                    yield return new NamespaceFilterDescriptor(filter.Value, symbol.ContainingNamespace.ToDisplayString());
+                    yield return new NamespaceFilterDescriptor(filter.Value, new [] { symbol.ContainingNamespace.ToDisplayString() });
                 }
 
                 yield break;
@@ -381,6 +429,48 @@ namespace Scrutor.Analyzers
                     yield break;
                 }
 
+                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.WithAttribute))
+                {
+                    var type = Helpers.ExtractSyntaxFromMethod(expression, name);
+                    if (type != null)
+                    {
+                        var typeInfo = semanticModel.GetTypeInfo(type).Type;
+                        switch (typeInfo)
+                        {
+                            case INamedTypeSymbol nts:
+                                yield return new CompiledWithAttributeFilterDescriptor(nts);
+                                yield break;
+
+                            default:
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                yield break;
+                        }
+                    }
+
+                    yield break;
+                }
+
+                if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.WithoutAttribute))
+                {
+                    var type = Helpers.ExtractSyntaxFromMethod(expression, name);
+                    if (type != null)
+                    {
+                        var typeInfo = semanticModel.GetTypeInfo(type).Type;
+                        switch (typeInfo)
+                        {
+                            case INamedTypeSymbol nts:
+                                yield return new CompiledWithoutAttributeFilterDescriptor(nts);
+                                yield break;
+
+                            default:
+                                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.TypeNotResolved, name.GetLocation()));
+                                yield break;
+                        }
+                    }
+
+                    yield break;
+                }
+
                 NamespaceFilter? filter = null;
                 if (simpleNameSyntax.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaces) ||
                     simpleNameSyntax.Identifier.ToFullString() == nameof(ICompiledImplementationTypeFilter.InExactNamespaceOf))
@@ -402,25 +492,27 @@ namespace Scrutor.Analyzers
 
                 if (filter.HasValue)
                 {
-                    foreach (var argument in expression.ArgumentList.Arguments!)
-                    {
-                        if (argument.Expression is LiteralExpressionSyntax literalExpressionSyntax
-                            && literalExpressionSyntax.Token.IsKind(SyntaxKind.StringLiteralToken))
+                    var namespaces = expression.ArgumentList.Arguments
+                        .Select(argument =>
                         {
-                            yield return new NamespaceFilterDescriptor(filter.Value, literalExpressionSyntax.Token.ValueText);
-                        }
-                        else if (argument.Expression is TypeOfExpressionSyntax typeOfExpressionSyntax)
-                        {
-                            var symbol = semanticModel.GetTypeInfo(typeOfExpressionSyntax.Type).Type!;
-                            yield return new NamespaceFilterDescriptor(filter.Value, symbol.ContainingNamespace.ToDisplayString());
-                        }
-                        else
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(Diagnostics.NamespaceMustBeAString, argument.GetLocation()));
-                        }
-                    }
+                            switch (argument.Expression)
+                            {
+                                case LiteralExpressionSyntax literalExpressionSyntax when literalExpressionSyntax.Token.IsKind(SyntaxKind.StringLiteralToken):
+                                    return literalExpressionSyntax.Token.ValueText!;
+                                case TypeOfExpressionSyntax typeOfExpressionSyntax:
+                                {
+                                    var symbol = semanticModel.GetTypeInfo(typeOfExpressionSyntax.Type).Type!;
+                                    return symbol.ContainingNamespace.ToDisplayString()!;
+                                }
+                                default:
+                                    context.ReportDiagnostic(Diagnostic.Create(Diagnostics.NamespaceMustBeAString, argument.GetLocation()));
+                                    return null!;
+                            }
+                        })
+                        .Where(z => !string.IsNullOrWhiteSpace(z))
+                        .ToArray();
 
-                    yield break;
+                    yield return new NamespaceFilterDescriptor(filter.Value, namespaces);
                 }
             }
         }

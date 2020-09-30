@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
 namespace Scrutor.Analyzers.Internals
@@ -9,39 +10,38 @@ namespace Scrutor.Analyzers.Internals
 
     struct NamespaceFilterDescriptor : ITypeFilterDescriptor
     {
-        public string Namespace { get; }
+        public IEnumerable<string> Namespaces { get; }
         public NamespaceFilter Filter { get; }
 
-        public NamespaceFilterDescriptor(NamespaceFilter filter, string @namespace)
+        public NamespaceFilterDescriptor(NamespaceFilter filter, IEnumerable<string> namespaces)
         {
             Filter = filter;
-            Namespace = @namespace;
+            Namespaces = namespaces;
         }
     }
 
-    struct AttributeFilterDescriptor : ITypeFilterDescriptor
-    {
-        public Type Attribute { get; }
-
-        public AttributeFilterDescriptor(Type attribute) => Attribute = attribute;
-    }
-    interface ICompiledTypeFilterDescriptor : ITypeFilterDescriptor
-    {
-        INamedTypeSymbol Type { get; }
-    }
-    struct CompiledAttributeFilterDescriptor : ITypeFilterDescriptor
+    struct CompiledWithAttributeFilterDescriptor : ITypeFilterDescriptor
     {
         public INamedTypeSymbol Attribute { get; }
 
-        public CompiledAttributeFilterDescriptor(INamedTypeSymbol attribute) => Attribute = attribute;
+        public CompiledWithAttributeFilterDescriptor(INamedTypeSymbol attribute) => Attribute = attribute;
     }
-    struct CompiledAssignableToTypeFilterDescriptor : ICompiledTypeFilterDescriptor
+
+    struct CompiledWithoutAttributeFilterDescriptor : ITypeFilterDescriptor
+    {
+        public INamedTypeSymbol Attribute { get; }
+
+        public CompiledWithoutAttributeFilterDescriptor(INamedTypeSymbol attribute) => Attribute = attribute;
+    }
+
+    struct CompiledAssignableToTypeFilterDescriptor : ITypeFilterDescriptor
     {
         public INamedTypeSymbol Type { get; }
 
         public CompiledAssignableToTypeFilterDescriptor(INamedTypeSymbol type) => Type = type;
     }
-    struct CompiledAssignableToAnyTypeFilterDescriptor : ICompiledTypeFilterDescriptor
+
+    struct CompiledAssignableToAnyTypeFilterDescriptor : ITypeFilterDescriptor
     {
         public INamedTypeSymbol Type { get; }
 

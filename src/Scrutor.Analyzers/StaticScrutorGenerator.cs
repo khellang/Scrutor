@@ -210,6 +210,7 @@ namespace Scrutor.Static
                     var types = NarrowListOfTypes(assemblies, allNamedTypes, compilationWithMethod, classFilter, typeFilters);
 
                     var localBlock = GenerateDescriptors(
+                        context,
                         compilationWithMethod,
                         types,
                         serviceTypes,
@@ -323,6 +324,7 @@ namespace Scrutor.Static
         }
 
         private static BlockSyntax GenerateDescriptors(
+            SourceGeneratorContext context,
             CSharpCompilation compilation,
             ImmutableArray<INamedTypeSymbol> types,
             List<IServiceTypeDescriptor> serviceTypes,
@@ -337,14 +339,188 @@ namespace Scrutor.Static
             var asImplementedInterfaces = serviceTypes.OfType<ImplementedInterfacesServiceTypeDescriptor>().Any();
             var asMatchingInterface = serviceTypes.OfType<MatchingInterfaceServiceTypeDescriptor>().Any();
             var asSpecificTypes = serviceTypes.OfType<CompiledServiceTypeDescriptor>().Select(z => z.Type).ToArray();
+            var usingAttributes = serviceTypes.OfType<UsingAttributeServiceTypeDescriptor>().Any();
+            var serviceDescriptorAttribute = compilation.GetTypeByMetadataName("Scrutor.ServiceDescriptorAttribute")!;
 
             foreach (var type in types)
             {
+                var descriptors = new List<( INamedTypeSymbol serviceType,
+                    INamedTypeSymbol implementationType,
+                    ExpressionSyntax lifetimeValue )>();
                 var emittedTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
                 var typeIsOpenGeneric = type.IsOpenGenericType();
                 if (!compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
                 {
                     privateAssemblies.Add(type.ContainingAssembly);
+                }
+
+                if (usingAttributes)
+                {
+                    var attributeDataElements = type.GetAttributes()
+                        .Where(attribute => attribute.AttributeClass != null && SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, serviceDescriptorAttribute))
+                        .ToArray();
+
+                    var duplicates = attributeDataElements
+                        .Where(attribute => attribute.ConstructorArguments.Length > 0 && attribute.ConstructorArguments[0].Kind == TypedConstantKind.Type)
+                        .GroupBy(attribute => attribute.ConstructorArguments[0].Value as INamedTypeSymbol!, SymbolEqualityComparer.Default)
+                        .SelectMany(grp => grp.Skip(1))
+                        .ToArray();
+                    foreach (var duplicate in duplicates)
+                    {
+                        // If there is no syntax it is probably not our code
+                        if (duplicate.ApplicationSyntaxReference == null) continue;
+                        context.ReportDiagnostic(Diagnostic.Create(Diagnostics.DuplicateServiceDescriptorAttribute, Location.Create(duplicate.ApplicationSyntaxReference.SyntaxTree, duplicate.ApplicationSyntaxReference.Span)));
+                    }
+
+                    foreach (var attribute in attributeDataElements)
+                    {
+                        if (attribute.AttributeClass == null) continue;
+                        if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, serviceDescriptorAttribute)) continue;
+
+                        INamedTypeSymbol? attributeServiceType = null;
+                        var lifetimeValue = lifetime;
+
+                        if (attribute.ConstructorArguments.Length == 1 && attribute.ConstructorArguments[0].Kind == TypedConstantKind.Enum)
+                        {
+                            var members = attribute.ConstructorArguments[0].Type!
+                                .GetMembers()
+                                .OfType<IFieldSymbol>();
+                            if (attribute.ConstructorArguments[0].Value is int v)
+                            {
+                                var value = members
+                                    .First(z => z.ConstantValue is int i && i == v);
+                                lifetimeValue = MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    IdentifierName("ServiceLifetime"),
+                                    IdentifierName(value.Name)
+                                );
+                            }
+                        }
+                        else if (attribute.ConstructorArguments.Length == 2 && attribute.ConstructorArguments[1].Kind == TypedConstantKind.Enum)
+                        {
+                            var members = attribute.ConstructorArguments[1].Type!
+                                .GetMembers()
+                                .OfType<IFieldSymbol>();
+                            if (attribute.ConstructorArguments[1].Value is int v)
+                            {
+                                var value = members
+                                    .First(z => z.ConstantValue is int i && i == v);
+                                lifetimeValue = MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    IdentifierName("ServiceLifetime"),
+                                    IdentifierName(value.Name)
+                                );
+                            }
+                        }
+
+                        if (attribute.ConstructorArguments.Length == 0 ||
+                            (attribute.ConstructorArguments.Length == 1 && attribute.ConstructorArguments[0].Kind == TypedConstantKind.Enum))
+                        {
+                            if (!emittedTypes.Contains(type))
+                            {
+                                innerBlock = innerBlock.AddStatements(
+                                    ExpressionStatement(
+                                        StatementGeneration.GenerateServiceType(
+                                            compilation,
+                                            strategyName,
+                                            serviceCollectionName,
+                                            type,
+                                            type,
+                                            lifetimeValue
+                                        )
+                                    )
+                                );
+
+                                if (!compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
+                                {
+                                    privateAssemblies.Add(type.ContainingAssembly);
+                                }
+
+                                emittedTypes.Add(type);
+                            }
+
+                            foreach (var @interface in type.AllInterfaces)
+                            {
+                                if (!emittedTypes.Contains(@interface))
+                                {
+                                    innerBlock = innerBlock.AddStatements(
+                                        ExpressionStatement(
+                                            StatementGeneration.GenerateServiceFactory(
+                                                compilation,
+                                                strategyName,
+                                                serviceCollectionName,
+                                                @interface,
+                                                type,
+                                                lifetimeValue
+                                            )
+                                        )
+                                    );
+                                    emittedTypes.Add(@interface);
+                                }
+                            }
+
+                            foreach (var baseType in Helpers.GetBaseTypes(compilation, type))
+                            {
+                                if (!emittedTypes.Contains(baseType))
+                                {
+                                    innerBlock = innerBlock.AddStatements(
+                                        ExpressionStatement(
+                                            StatementGeneration.GenerateServiceFactory(
+                                                compilation,
+                                                strategyName,
+                                                serviceCollectionName,
+                                                baseType,
+                                                type,
+                                                lifetimeValue
+                                            )
+                                        )
+                                    );
+                                    emittedTypes.Add(baseType);
+                                }
+                            }
+                        }
+
+                        if (attribute.ConstructorArguments.Length == 1 && attribute.ConstructorArguments[0].Kind == TypedConstantKind.Type)
+                        {
+                            attributeServiceType = attribute.ConstructorArguments[0].Value as INamedTypeSymbol;
+                        }
+
+                        if (attribute.ConstructorArguments.Length == 2)
+                        {
+                            attributeServiceType = attribute.ConstructorArguments[0].Value as INamedTypeSymbol;
+                        }
+
+                        if (attributeServiceType != null)
+                        {
+                            innerBlock = innerBlock.AddStatements(
+                                ExpressionStatement(
+                                    asSelf
+                                        ? StatementGeneration.GenerateServiceFactory(
+                                            compilation,
+                                            strategyName,
+                                            serviceCollectionName,
+                                            attributeServiceType,
+                                            type,
+                                            lifetimeValue
+                                        )
+                                        : StatementGeneration.GenerateServiceType(
+                                            compilation,
+                                            strategyName,
+                                            serviceCollectionName,
+                                            attributeServiceType,
+                                            type,
+                                            lifetimeValue
+                                        )
+                                )
+                            );
+                            if (!compilation.IsSymbolAccessibleWithin(attributeServiceType, compilation.Assembly))
+                            {
+                                privateAssemblies.Add(type.ContainingAssembly);
+                            }
+
+                            emittedTypes.Add(attributeServiceType);
+                        }
+                    }
                 }
 
                 if (asSelf && !emittedTypes.Contains(type))
@@ -361,6 +537,11 @@ namespace Scrutor.Static
                             )
                         )
                     );
+                    if (!compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
+                    {
+                        privateAssemblies.Add(type.ContainingAssembly);
+                    }
+
                     emittedTypes.Add(type);
                 }
 
@@ -489,8 +670,10 @@ namespace Scrutor.Static
                     .OfType<CompiledAssemblyDependenciesDescriptor>()
                     .SelectMany(descriptor => compilation.References
                         .Select(compilation.GetAssemblyOrModuleSymbol)
-                        .SelectMany(z => z is IAssemblySymbol assemblySymbol ? assemblySymbol.Modules : z is IModuleSymbol moduleSymbol ? new [] { moduleSymbol } : Array.Empty<IModuleSymbol>())
-                        .Where(module => module.ReferencedAssemblySymbols.Any(reference => SymbolEqualityComparer.Default.Equals(descriptor.TypeFromAssembly.ContainingAssembly, reference)))
+                        .SelectMany(z => z is IAssemblySymbol assemblySymbol ? assemblySymbol.Modules :
+                            z is IModuleSymbol moduleSymbol ? new[] {moduleSymbol} : Array.Empty<IModuleSymbol>())
+                        .Where(module => module.ReferencedAssemblySymbols.Any(reference =>
+                            SymbolEqualityComparer.Default.Equals(descriptor.TypeFromAssembly.ContainingAssembly, reference)))
                         .Select(z => z.ContainingAssembly)
                         .Distinct(SymbolEqualityComparer.Default)
                     )
@@ -519,13 +702,25 @@ namespace Scrutor.Static
                 types = types.RemoveAll(toSymbol => anyFilters.All(filter => StatementGeneration.RemoveImplicitGenericConversion(compilation, filter.Type, toSymbol)));
             }
 
+            foreach (var filter in typeFilters.OfType<CompiledWithAttributeFilterDescriptor>())
+            {
+                types = types.RemoveAll(toSymbol => !toSymbol.GetAttributes().Any(z => SymbolEqualityComparer.Default.Equals(z.AttributeClass, filter.Attribute)));
+            }
+
+            foreach (var filter in typeFilters.OfType<CompiledWithoutAttributeFilterDescriptor>())
+            {
+                types = types.RemoveAll(toSymbol => toSymbol.GetAttributes().Any(z => SymbolEqualityComparer.Default.Equals(z.AttributeClass, filter.Attribute)));
+            }
+
             foreach (var filter in typeFilters.OfType<NamespaceFilterDescriptor>())
             {
                 types = filter.Filter switch
                 {
-                    NamespaceFilter.Exact => types.RemoveAll(toSymbol => toSymbol.ContainingNamespace.ToDisplayString() != filter.Namespace),
-                    NamespaceFilter.In => types.RemoveAll(toSymbol => !toSymbol.ContainingNamespace.ToDisplayString().StartsWith(filter.Namespace, StringComparison.Ordinal)),
-                    NamespaceFilter.NotIn => types.RemoveAll(toSymbol => toSymbol.ContainingNamespace.ToDisplayString().StartsWith(filter.Namespace, StringComparison.Ordinal)),
+                    NamespaceFilter.Exact => types.RemoveAll(toSymbol => !filter.Namespaces.Any(@namespace => toSymbol.ContainingNamespace.ToDisplayString() == @namespace)),
+                    NamespaceFilter.In => types.RemoveAll(toSymbol =>
+                        !filter.Namespaces.Any(@namespace => toSymbol.ContainingNamespace.ToDisplayString().StartsWith(@namespace, StringComparison.Ordinal))),
+                    NamespaceFilter.NotIn => types.RemoveAll(toSymbol =>
+                        filter.Namespaces.Any(@namespace => toSymbol.ContainingNamespace.ToDisplayString().StartsWith(@namespace, StringComparison.Ordinal))),
                     _ => types
                 };
             }

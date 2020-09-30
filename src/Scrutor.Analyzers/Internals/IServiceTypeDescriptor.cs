@@ -10,13 +10,7 @@ namespace Scrutor.Analyzers.Internals
     struct ImplementedInterfacesServiceTypeDescriptor : IServiceTypeDescriptor { }
 
     struct MatchingInterfaceServiceTypeDescriptor : IServiceTypeDescriptor { }
-
-    struct ServiceTypeDescriptor : IServiceTypeDescriptor
-    {
-        public Type Type { get; }
-
-        public ServiceTypeDescriptor(Type type) => Type = type;
-    }
+    struct UsingAttributeServiceTypeDescriptor : IServiceTypeDescriptor { }
     struct CompiledServiceTypeDescriptor : IServiceTypeDescriptor
     {
         public INamedTypeSymbol Type { get; }

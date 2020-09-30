@@ -9,6 +9,8 @@ namespace Scrutor
     {
         public ServiceDescriptorAttribute() : this(null) { }
 
+        public ServiceDescriptorAttribute(ServiceLifetime lifetime) : this(null, lifetime) { }
+
         public ServiceDescriptorAttribute(Type? serviceType) : this(serviceType, ServiceLifetime.Transient) { }
 
         public ServiceDescriptorAttribute(Type? serviceType, ServiceLifetime lifetime)

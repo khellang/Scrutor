@@ -151,7 +151,7 @@ namespace Scrutor.Analyzers
             if (SymbolEqualityComparer.Default.Equals(assignableToType, type)) return true;
             if (assignableToType.Arity > 0 && assignableToType.IsUnboundGenericType)
             {
-                var matchingBaseTypes = Helpers.GetBaseTypes(type)
+                var matchingBaseTypes = Helpers.GetBaseTypes(compilation, type)
                     .Select(z => z.IsGenericType ? z.IsUnboundGenericType ? z : z.ConstructUnboundGenericType() : null!)
                     .Where(z => z is not null)
                     .Where(symbol => compilation.HasImplicitConversion(symbol, assignableToType));
@@ -185,7 +185,7 @@ namespace Scrutor.Analyzers
                 }
                 else
                 {
-                    var baseType = Helpers.GetBaseTypes(type).FirstOrDefault(z => z.IsGenericType && compilation.HasImplicitConversion(z, type));
+                    var baseType = Helpers.GetBaseTypes(compilation, type).FirstOrDefault(z => z.IsGenericType && compilation.HasImplicitConversion(z, type));
                     if (baseType == null)
                     {
                         baseType = type.AllInterfaces.FirstOrDefault(z => z.IsGenericType && compilation.HasImplicitConversion(z, type));

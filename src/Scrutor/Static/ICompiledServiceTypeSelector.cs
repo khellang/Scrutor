@@ -1,4 +1,4 @@
-
+using Scrutor;
 
 namespace Scrutor.Static
 {
@@ -29,5 +29,10 @@ namespace Scrutor.Static
         /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName)
         /// </summary>
         ICompiledLifetimeSelector AsMatchingInterface();
+
+        /// <summary>
+        /// Registers each matching concrete type according to their ServiceDescriptorAttribute.
+        /// </summary>
+        ICompiledLifetimeSelector UsingAttributes();
     }
 }

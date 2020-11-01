@@ -93,19 +93,19 @@ namespace Microsoft.Extensions.Internal
         private static void ProcessArrayType(StringBuilder builder, Type type, DisplayNameOptions options)
         {
             var innerType = type;
-            while (innerType.IsArray)
+            while (innerType!.IsArray)
             {
                 innerType = innerType.GetElementType();
             }
 
             ProcessType(builder, innerType, options);
 
-            while (type.IsArray)
+            while (type!.IsArray)
             {
                 builder.Append('[');
                 builder.Append(',', type.GetArrayRank() - 1);
                 builder.Append(']');
-                type = type.GetElementType();
+                type = type.GetElementType()!;
             }
         }
 
@@ -114,14 +114,14 @@ namespace Microsoft.Extensions.Internal
             var offset = 0;
             if (type.IsNested)
             {
-                offset = type.DeclaringType.GetTypeInfo().GenericTypeArguments.Length;
+                offset = type.DeclaringType!.GetTypeInfo().GenericTypeArguments.Length;
             }
 
             if (options.FullName)
             {
                 if (type.IsNested)
                 {
-                    ProcessGenericType(builder, type.DeclaringType, genericArguments, offset, options);
+                    ProcessGenericType(builder, type.DeclaringType!, genericArguments, offset, options);
                     builder.Append('+');
                 }
                 else if (!string.IsNullOrEmpty(type.Namespace))

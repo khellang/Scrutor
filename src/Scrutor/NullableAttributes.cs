@@ -4,6 +4,8 @@
 
 // Copied from https://github.com/dotnet/coreclr/blob/16697076c0a6af47fbcce75e11c45d35a12b7d4e/src/System.Private.CoreLib/shared/System/Diagnostics/CodeAnalysis/NullableAttributes.cs
 
+#if NET461 || NETSTANDARD
+
 // ReSharper disable once CheckNamespace
 namespace System.Diagnostics.CodeAnalysis
 {
@@ -84,3 +86,5 @@ namespace System.Diagnostics.CodeAnalysis
         public bool ParameterValue { get; }
     }
 }
+
+#endif

@@ -29,7 +29,7 @@ namespace Scrutor
 
         public IImplementationTypeSelector FromEntryAssembly()
         {
-            return FromAssemblies(Assembly.GetEntryAssembly());
+            return FromAssemblies(Assembly.GetEntryAssembly()!);
         }
 
         public IImplementationTypeSelector FromApplicationDependencies()
@@ -47,7 +47,7 @@ namespace Scrutor
             {
                 // Something went wrong when loading the DependencyContext, fall
                 // back to loading all referenced assemblies of the entry assembly...
-                return FromAssemblyDependencies(Assembly.GetEntryAssembly());
+                return FromAssemblyDependencies(Assembly.GetEntryAssembly()!);
             }
         }
 

@@ -9,6 +9,9 @@ namespace Scrutor
 {
     public class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
+        private static Assembly EntryAssembly => Assembly.GetEntryAssembly()
+            ?? throw new InvalidOperationException("Could not get entry assembly.");
+
         private List<ISelector> Selectors { get; } = new List<ISelector>();
 
         /// <inheritdoc />
@@ -29,7 +32,7 @@ namespace Scrutor
 
         public IImplementationTypeSelector FromEntryAssembly()
         {
-            return FromAssemblies(Assembly.GetEntryAssembly()!);
+            return FromAssemblies(EntryAssembly);
         }
 
         public IImplementationTypeSelector FromApplicationDependencies()
@@ -47,7 +50,7 @@ namespace Scrutor
             {
                 // Something went wrong when loading the DependencyContext, fall
                 // back to loading all referenced assemblies of the entry assembly...
-                return FromAssemblyDependencies(Assembly.GetEntryAssembly()!);
+                return FromAssemblyDependencies(EntryAssembly);
             }
         }
 

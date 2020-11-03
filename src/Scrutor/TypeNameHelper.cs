@@ -13,19 +13,20 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 //
-// From https://github.com/aspnet/Common/blob/62018e351c9bed107075d0139b551fb086f9693d/shared/Microsoft.Extensions.TypeNameHelper.Sources/TypeNameHelper.cs
+// From https://github.com/dotnet/aspnetcore/blob/b1dcacabec1aeacef72c9aa2909f1cb49993fa73/src/Shared/TypeNameHelper/TypeNameHelper.cs
 
 // ReSharper disable All
 
 using System;
 using System.Text;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace Microsoft.Extensions.Internal
 {
-    internal class TypeNameHelper
+    internal static class TypeNameHelper
     {
+        private const char DefaultNestedTypeDelimiter = '+';
+
         private static readonly Dictionary<Type, string> _builtInTypeNames = new Dictionary<Type, string>
         {
             { typeof(void), "void" },
@@ -46,27 +47,32 @@ namespace Microsoft.Extensions.Internal
             { typeof(ushort), "ushort" }
         };
 
+        public static string? GetTypeDisplayName(object item, bool fullName = true)
+        {
+            return item == null ? null : GetTypeDisplayName(item.GetType(), fullName);
+        }
+
         /// <summary>
         /// Pretty print a type name.
         /// </summary>
         /// <param name="type">The <see cref="Type"/>.</param>
         /// <param name="fullName"><c>true</c> to print a fully qualified name.</param>
         /// <param name="includeGenericParameterNames"><c>true</c> to include generic parameter names.</param>
+        /// <param name="includeGenericParameters"><c>true</c> to include generic parameters.</param>
+        /// <param name="nestedTypeDelimiter">Character to use as a delimiter in nested type names</param>
         /// <returns>The pretty printed type name.</returns>
-        public static string GetTypeDisplayName(Type type, bool fullName = true, bool includeGenericParameterNames = false)
+        public static string GetTypeDisplayName(Type type, bool fullName = true, bool includeGenericParameterNames = false, bool includeGenericParameters = true, char nestedTypeDelimiter = DefaultNestedTypeDelimiter)
         {
             var builder = new StringBuilder();
-            ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames));
+            ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames, includeGenericParameters, nestedTypeDelimiter));
             return builder.ToString();
         }
 
-        private static void ProcessType(StringBuilder builder, Type type, DisplayNameOptions options)
+        private static void ProcessType(StringBuilder builder, Type type, in DisplayNameOptions options)
         {
-            var typeInfo = type.GetTypeInfo();
-
-            if (typeInfo.IsGenericType)
+            if (type.IsGenericType)
             {
-                var genericArguments = typeInfo.GenericTypeArguments;
+                var genericArguments = type.GetGenericArguments();
                 ProcessGenericType(builder, type, genericArguments, genericArguments.Length, options);
             }
             else if (type.IsArray)
@@ -86,21 +92,27 @@ namespace Microsoft.Extensions.Internal
             }
             else
             {
-                builder.Append(options.FullName ? type.FullName : type.Name);
+                var name = options.FullName ? type.FullName! : type.Name;
+                builder.Append(name);
+
+                if (options.NestedTypeDelimiter != DefaultNestedTypeDelimiter)
+                {
+                    builder.Replace(DefaultNestedTypeDelimiter, options.NestedTypeDelimiter, builder.Length - name.Length, name.Length);
+                }
             }
         }
 
-        private static void ProcessArrayType(StringBuilder builder, Type type, DisplayNameOptions options)
+        private static void ProcessArrayType(StringBuilder builder, Type type, in DisplayNameOptions options)
         {
             var innerType = type;
-            while (innerType!.IsArray)
+            while (innerType.IsArray)
             {
-                innerType = innerType.GetElementType();
+                innerType = innerType.GetElementType()!;
             }
 
             ProcessType(builder, innerType, options);
 
-            while (type!.IsArray)
+            while (type.IsArray)
             {
                 builder.Append('[');
                 builder.Append(',', type.GetArrayRank() - 1);
@@ -109,12 +121,12 @@ namespace Microsoft.Extensions.Internal
             }
         }
 
-        private static void ProcessGenericType(StringBuilder builder, Type type, Type[] genericArguments, int length, DisplayNameOptions options)
+        private static void ProcessGenericType(StringBuilder builder, Type type, Type[] genericArguments, int length, in DisplayNameOptions options)
         {
             var offset = 0;
             if (type.IsNested)
             {
-                offset = type.DeclaringType!.GetTypeInfo().GenericTypeArguments.Length;
+                offset = type.DeclaringType!.GetGenericArguments().Length;
             }
 
             if (options.FullName)
@@ -122,7 +134,7 @@ namespace Microsoft.Extensions.Internal
                 if (type.IsNested)
                 {
                     ProcessGenericType(builder, type.DeclaringType!, genericArguments, offset, options);
-                    builder.Append('+');
+                    builder.Append(options.NestedTypeDelimiter);
                 }
                 else if (!string.IsNullOrEmpty(type.Namespace))
                 {
@@ -140,35 +152,44 @@ namespace Microsoft.Extensions.Internal
 
             builder.Append(type.Name, 0, genericPartIndex);
 
-            builder.Append('<');
-            for (var i = offset; i < length; i++)
+            if (options.IncludeGenericParameters)
             {
-                ProcessType(builder, genericArguments[i], options);
-                if (i + 1 == length)
+                builder.Append('<');
+                for (var i = offset; i < length; i++)
                 {
-                    continue;
-                }
+                    ProcessType(builder, genericArguments[i], options);
+                    if (i + 1 == length)
+                    {
+                        continue;
+                    }
 
-                builder.Append(',');
-                if (options.IncludeGenericParameterNames || !genericArguments[i + 1].IsGenericParameter)
-                {
-                    builder.Append(' ');
+                    builder.Append(',');
+                    if (options.IncludeGenericParameterNames || !genericArguments[i + 1].IsGenericParameter)
+                    {
+                        builder.Append(' ');
+                    }
                 }
+                builder.Append('>');
             }
-            builder.Append('>');
         }
 
-        private struct DisplayNameOptions
+        private readonly struct DisplayNameOptions
         {
-            public DisplayNameOptions(bool fullName, bool includeGenericParameterNames)
+            public DisplayNameOptions(bool fullName, bool includeGenericParameterNames, bool includeGenericParameters, char nestedTypeDelimiter)
             {
                 FullName = fullName;
+                IncludeGenericParameters = includeGenericParameters;
                 IncludeGenericParameterNames = includeGenericParameterNames;
+                NestedTypeDelimiter = nestedTypeDelimiter;
             }
 
             public bool FullName { get; }
 
+            public bool IncludeGenericParameters { get; }
+
             public bool IncludeGenericParameterNames { get; }
+
+            public char NestedTypeDelimiter { get; }
         }
     }
 }

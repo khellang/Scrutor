@@ -86,7 +86,7 @@ namespace Scrutor
         {
             Preconditions.NotNull(types, nameof(types));
 
-            return InNamespaces(types.Select(t => t.Namespace!));
+            return InNamespaces(types.Select(t => t.Namespace ?? string.Empty));
         }
 
         public IImplementationTypeFilter InNamespaces(params string[] namespaces)
@@ -104,7 +104,7 @@ namespace Scrutor
         public IImplementationTypeFilter InExactNamespaceOf(params Type[] types)
         {
             Preconditions.NotNull(types, nameof(types));
-            return Where(t => types.Any(x => t.IsInExactNamespace(x.Namespace!)));
+            return Where(t => types.Any(x => t.IsInExactNamespace(x.Namespace ?? string.Empty)));
         }
 
         public IImplementationTypeFilter InExactNamespaces(params string[] namespaces)
@@ -130,7 +130,7 @@ namespace Scrutor
         {
             Preconditions.NotNull(types, nameof(types));
 
-            return NotInNamespaces(types.Select(t => t.Namespace!));
+            return NotInNamespaces(types.Select(t => t.Namespace ?? string.Empty));
         }
 
         public IImplementationTypeFilter NotInNamespaces(params string[] namespaces)

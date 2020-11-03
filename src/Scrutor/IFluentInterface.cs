@@ -16,6 +16,6 @@ namespace Scrutor
         string? ToString();
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        bool Equals(object obj);
+        bool Equals(object? obj);
     }
 }

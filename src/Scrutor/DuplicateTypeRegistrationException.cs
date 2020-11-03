@@ -1,12 +1,11 @@
 using System;
-using Microsoft.Extensions.Internal;
 
 namespace Scrutor
 {
     public class DuplicateTypeRegistrationException : InvalidOperationException
     {
         public DuplicateTypeRegistrationException(Type serviceType)
-            : base($"A service of type '{TypeNameHelper.GetTypeDisplayName(serviceType)}' has already been registered.")
+            : base($"A service of type '{serviceType.ToFriendlyName()}' has already been registered.")
         {
             ServiceType = serviceType;
         }

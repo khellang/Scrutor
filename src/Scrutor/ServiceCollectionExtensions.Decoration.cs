@@ -313,12 +313,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider)!);
+            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider));
         }
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator)
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor))!);
+            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor)));
         }
 
         private static ServiceDescriptor Decorate(this ServiceDescriptor descriptor, Type decoratorType)
@@ -326,7 +326,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return descriptor.WithFactory(provider => provider.CreateInstance(decoratorType, provider.GetInstance(descriptor)));
         }
 
-        private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object> factory)
+        private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object?> factory)
         {
             return ServiceDescriptor.Describe(descriptor.ServiceType, factory, descriptor.Lifetime);
         }

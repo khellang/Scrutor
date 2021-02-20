@@ -264,12 +264,15 @@ namespace Microsoft.Extensions.DependencyInjection
                 var arguments = closedGenericServiceType.GenericTypeArguments;
 
                 var closedServiceType = serviceType.MakeGenericType(arguments);
-                var closedDecoratorType = decoratorType.MakeGenericType(arguments);
-
-                if (!services.TryDecorateDescriptors(closedServiceType, out error, x => x.Decorate(closedDecoratorType)))
+                try
                 {
-                    return false;
+                    var closedDecoratorType = decoratorType.MakeGenericType(arguments);
+                    if (!services.TryDecorateDescriptors(closedServiceType, out error, x => x.Decorate(closedDecoratorType)))
+                    {
+                        return false;
+                    }
                 }
+                catch (ArgumentException) { }
             }
 
             error = default;

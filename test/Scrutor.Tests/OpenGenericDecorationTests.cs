@@ -98,6 +98,24 @@ namespace Scrutor.Tests
 
             Assert.IsType<MessageProcessor>(decorator.Decoratee);
         }
+
+        [Fact]
+        public void OpenGenericDecoratorsCanBeConstrained()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+                services.AddSingleton<IQueryHandler<MyConstrainedQuery, MyResult>, MyConstrainedQueryHandler>();
+                services.Decorate(typeof(IQueryHandler<,>), typeof(ConstrainedDecoratorQueryHandler<,>));
+            });
+
+
+            var instance = provider.GetRequiredService<IQueryHandler<MyQuery, MyResult>>();
+            var constrainedInstance = provider.GetRequiredService<IQueryHandler<MyConstrainedQuery, MyResult>>();
+
+            Assert.IsType<MyQueryHandler>(instance);
+            Assert.IsType<ConstrainedDecoratorQueryHandler<MyConstrainedQuery,MyResult>>(constrainedInstance);
+        }
     }
 
     // ReSharper disable UnusedTypeParameter
@@ -109,6 +127,18 @@ namespace Scrutor.Tests
     public class MyQueryHandler : QueryHandler<MyQuery, MyResult> { }
 
     public class QueryHandler<TQuery, TResult> : IQueryHandler<TQuery, TResult> { }
+
+    public interface MyConstraint<out TResult> { }
+
+    public class MyConstrainedQuery : MyConstraint<MyResult> { }
+
+    public class MyConstrainedQueryHandler : QueryHandler<MyConstrainedQuery, MyResult> { }
+
+    public class ConstrainedDecoratorQueryHandler<TQuery, TResult> : DecoratorQueryHandler<TQuery, TResult> 
+        where TQuery : MyConstraint<TResult>
+    {
+        public ConstrainedDecoratorQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner) { }
+    }
 
     public class LoggingQueryHandler<TQuery, TResult> : DecoratorQueryHandler<TQuery, TResult>
     {

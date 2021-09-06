@@ -299,19 +299,29 @@ namespace Microsoft.Extensions.DependencyInjection
 
             foreach (var descriptor in descriptors)
             {
-                var index = services.IndexOf(descriptor);
-
                 // To avoid reordering descriptors, in case a specific order is expected.
-                services[index] = decorator(descriptor);
+                services[descriptor.Position] = decorator(descriptor.Value);
             }
 
             error = default;
             return true;
         }
 
-        private static bool TryGetDescriptors(this IServiceCollection services, Type serviceType, out ICollection<ServiceDescriptor> descriptors)
+        private static bool TryGetDescriptors(this IServiceCollection services, Type serviceType, out IReadOnlyList<(int Position, ServiceDescriptor Value)> descriptors)
         {
-            return (descriptors = services.Where(service => service.ServiceType == serviceType).ToArray()).Any();
+            IEnumerable<(int Position, ServiceDescriptor Value)> __GetDescriptors()
+            {
+                for (int i = 0; i < services.Count; ++i)
+                {
+                    ServiceDescriptor serviceDescriptor = services[i];
+                    if (serviceDescriptor.ServiceType == serviceType)
+                        yield return (i, serviceDescriptor);
+                }
+            }
+
+            descriptors = __GetDescriptors().ToArray();
+
+            return descriptors.Count != 0;
         }
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator) where TService : notnull

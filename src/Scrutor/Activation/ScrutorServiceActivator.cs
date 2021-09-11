@@ -1,9 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Runtime.CompilerServices;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 
 namespace Scrutor.Activation
 {
@@ -91,146 +92,255 @@ namespace Scrutor.Activation
             }
         }
 
-        private struct ConstructorMatcher
+        private static class ConstructorAnalyzer
         {
-            private readonly ConstructorInfo _constructor;
-            private readonly ParameterInfo[] _parameters;
-            private readonly object?[] _parameterValues;
+            #region Inner
 
-            public ConstructorMatcher(ConstructorInfo constructor)
+            public struct ConstructorMatch
             {
-                _constructor = constructor;
-                _parameters = _constructor.GetParameters();
-                _parameterValues = new object?[_parameters.Length];
-            }
+                public ConstructorInfo ConstructorInfo;
+                public ParameterInfo[] Parameters;
+                public object?[] ParameterValues;
 
-            public int Match(object[] givenParameters)
-            {
-                int applyIndexStart = 0;
-                int applyExactLength = 0;
-                for (int givenIndex = 0; givenIndex != givenParameters.Length; givenIndex++)
+                public ConstructorMatch(ConstructorInfo ci)
                 {
-                    Type? givenType = givenParameters[givenIndex]?.GetType();
-                    bool givenMatched = false;
+                    ConstructorInfo = ci;
 
-                    for (int applyIndex = applyIndexStart; givenMatched == false && applyIndex != _parameters.Length; ++applyIndex)
+                    Parameters = ci.GetParameters();
+                    ParameterValues = new object?[Parameters.Length];
+                }
+
+                public bool IsPrefered => ConstructorInfo.IsDefined(typeof(ActivatorUtilitiesConstructorAttribute), false);
+
+                public int MatchWeightAccordingToGiven(object[] givenParameters)
+                {
+                    int applyIndexStart = 0;
+                    int applyExactLength = 0;
+                    for (int givenIndex = 0; givenIndex != givenParameters.Length; givenIndex++)
                     {
-                        if (_parameterValues[applyIndex] == null &&
-                            _parameters[applyIndex].ParameterType.IsAssignableFrom(givenType))
+                        Type? givenType = givenParameters[givenIndex]?.GetType();
+                        bool givenMatched = false;
+
+                        for (int applyIndex = applyIndexStart; givenMatched == false && applyIndex != Parameters.Length; ++applyIndex)
                         {
-                            givenMatched = true;
-                            _parameterValues[applyIndex] = givenParameters[givenIndex];
-                            if (applyIndexStart == applyIndex)
+                            if (ParameterValues[applyIndex] == null &&
+                                Parameters[applyIndex].ParameterType.IsAssignableFrom(givenType))
                             {
-                                applyIndexStart++;
-                                if (applyIndex == givenIndex)
+                                givenMatched = true;
+                                ParameterValues[applyIndex] = givenParameters[givenIndex];
+                                if (applyIndexStart == applyIndex)
                                 {
-                                    applyExactLength = applyIndex;
+                                    applyIndexStart++;
+                                    if (applyIndex == givenIndex)
+                                    {
+                                        applyExactLength = applyIndex;
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (givenMatched == false)
-                    {
-                        return -1;
-                    }
-                }
-                return applyExactLength;
-            }
-
-            public object CreateInstance(IServiceProvider provider)
-            {
-                for (int index = 0; index != _parameters.Length; index++)
-                {
-                    if (_parameterValues[index] == null)
-                    {
-                        object? value = provider.GetService(_parameters[index].ParameterType);
-                        if (value == null)
+                        if (givenMatched == false)
                         {
-                            if (!ParameterDefaultValue.TryGetDefaultValue(_parameters[index], out object? defaultValue))
+                            return -1;
+                        }
+                    }
+
+                    return applyExactLength;
+                }
+
+                public object CreateInstance(IServiceProvider provider)
+                {
+                    for (int index = 0; index != Parameters.Length; index++)
+                    {
+                        if (ParameterValues[index] == null)
+                        {
+                            object? value = provider.GetService(Parameters[index].ParameterType);
+                            if (value == null)
                             {
-                                throw new InvalidOperationException($"Unable to resolve service for type '{_parameters[index].ParameterType}' while attempting to activate '{_constructor.DeclaringType}'.");
+                                if (!ParameterDefaultValue.TryGetDefaultValue(Parameters[index], out object? defaultValue))
+                                {
+                                    throw new InvalidOperationException($"Unable to resolve service for type '{Parameters[index].ParameterType}' while attempting to activate '{ConstructorInfo.DeclaringType}'.");
+                                }
+                                else
+                                {
+                                    ParameterValues[index] = defaultValue;
+                                }
                             }
                             else
                             {
-                                _parameterValues[index] = defaultValue;
+                                ParameterValues[index] = value;
                             }
                         }
-                        else
+                    }
+
+#if NETFRAMEWORK || NETSTANDARD2_0
+                    try
+                    {
+                        return ConstructorInfo.Invoke(ParameterValues);
+                    }
+                    catch (TargetInvocationException ex) when (ex.InnerException != null)
+                    {
+                        ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                        // The above line will always throw, but the compiler requires we throw explicitly.
+                        throw;
+                    }
+#else
+                return ConstructorInfo.Invoke(BindingFlags.DoNotWrapExceptions, binder: null, parameters: ParameterValues, culture: null);
+#endif
+                }
+            }
+
+
+            #endregion
+
+            public static (ConstructorMatch? constructorMatch, Stack<ConstructorMatch>? fallbackQueue) MatchBest(Type typeToAnalyze, object[] passedParameters, bool useFallbacks)
+            {
+                ConstructorMatch? result = null;
+                Stack<ConstructorMatch>? fallbackQueue = useFallbacks ? new Stack<ConstructorMatch>() : null;
+
+                if (!typeToAnalyze.IsAbstract)
+                {
+                    ConstructorInfo[] constructors = typeToAnalyze.GetConstructors();
+
+                    bool seenPreferred = false;
+                    bool seenExactlyMatched = false;
+
+                    int maxGivenWeight = -1;
+                    int maxArgumentsWeight = -1;
+                    for (int i = 0; i < constructors.Length; ++i)
+                    {
+                        var constructorMatch = new ConstructorMatch(constructors[i]);
+
+                        if (constructorMatch.IsPrefered)
                         {
-                            _parameterValues[index] = value;
+                            if (seenPreferred)
+                            {
+                                throw new InvalidOperationException($"Multiple constructors were marked with {nameof(ActivatorUtilitiesConstructorAttribute)}.");
+                            }
+
+                            seenPreferred = true;
+
+                            int givenWeight = constructorMatch.MatchWeightAccordingToGiven(passedParameters);
+                            if (givenWeight == -1)
+                            {
+                                throw new InvalidOperationException($"Constructor marked with {nameof(ActivatorUtilitiesConstructorAttribute)} does not accept all given argument types.");
+                            }
+
+                            result = constructorMatch;
+                        }
+
+                        // We considering other constructors only if prefered or exactly matched accroding to a given arguments was not found.
+                        if (!seenPreferred && !seenExactlyMatched)
+                        {
+                            int givenWeight = constructorMatch.MatchWeightAccordingToGiven(passedParameters);
+                            if (givenWeight == -1)
+                                continue;
+
+                            int argumentsWeight = constructorMatch.Parameters.Length;
+
+                            // This situation means exactly match, so we will use this constructor if preferred was not defined.
+                            if (passedParameters.Length == argumentsWeight && ((passedParameters.Length - 1) == givenWeight))
+                            {
+                                seenExactlyMatched = true;
+
+                                result = constructorMatch;
+
+                                continue;
+                            }
+
+                            // No sense to consider because we already have a better match according to the passed argumetns.
+                            if (givenWeight < maxGivenWeight)
+                                continue;
+
+                            if (givenWeight == maxGivenWeight)
+                            {
+                                if (argumentsWeight > maxArgumentsWeight)
+                                {
+                                    maxArgumentsWeight = argumentsWeight;
+
+                                    if (result.HasValue)
+                                        fallbackQueue?.Push(result.Value);
+                                    result = constructorMatch;
+                                }
+                            }
+                            // Means that givenWeight more than maxGivenWeigth.
+                            else
+                            {
+                                maxGivenWeight = givenWeight;
+                                maxArgumentsWeight = argumentsWeight;
+
+                                if (result.HasValue)
+                                    fallbackQueue?.Push(result.Value);
+                                result = constructorMatch;
+                            }
                         }
                     }
                 }
 
-#if NETFRAMEWORK || NETSTANDARD2_0
-                try
-                {
-                    return _constructor.Invoke(_parameterValues);
-                }
-                catch (TargetInvocationException ex) when (ex.InnerException != null)
-                {
-                    ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-                    // The above line will always throw, but the compiler requires we throw explicitly.
-                    throw;
-                }
-#else
-                return _constructor.Invoke(BindingFlags.DoNotWrapExceptions, binder: null, parameters: _parameterValues, culture: null);
-#endif
+                return (result, fallbackQueue);
             }
         }
 
         #endregion
 
+        /// <summary>
+        /// JUST FOR <see cref="Activator.CreateInstance()"/>
+        /// </summary>
+        internal ScrutorServiceActivator()
+            : this(useFallbacks: false)
+        {
+        }
+
+
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="useFallbacks"><see cref="UseFallbacks"/></param>
+        public ScrutorServiceActivator(bool useFallbacks = false)
+        {
+            UseFallbacks = useFallbacks;
+        }
+
+        /// <summary>
+        /// Whether fallback constructors needs to be used if it's not possible to resolve the DI prefered one? 
+        /// </summary>
+        public bool UseFallbacks { get; internal set; }
+
         public object CreateInstance(IServiceProvider provider, Type type, params object[] arguments)
         {
-            int bestLength = -1;
-            bool seenPreferred = false;
+            var bestMatched = ConstructorAnalyzer.MatchBest(type, arguments, UseFallbacks);
+            ConstructorAnalyzer.ConstructorMatch? constructorMatch = bestMatched.constructorMatch;
+            Stack<ConstructorAnalyzer.ConstructorMatch>? fallbacks = bestMatched.fallbackQueue;
 
-            ConstructorMatcher bestMatcher = default;
-
-            if (!type.IsAbstract)
+            if (constructorMatch == null)
             {
-                foreach (ConstructorInfo? constructor in type.GetConstructors())
-                {
-                    var matcher = new ConstructorMatcher(constructor);
+                string message = $"A suitable constructor for type '{type}' could not be located. " +
+                    $"Ensure the type is concrete and all parameters of a public constructor are either registered as services or passed as arguments. " +
+                    $"Also ensure no extraneous arguments are provided.";
 
-                    bool isPreferred = constructor.IsDefined(typeof(ActivatorUtilitiesConstructorAttribute), false);
-
-                    int length = matcher.Match(arguments);
-
-                    if (isPreferred)
-                    {
-                        if (seenPreferred)
-                        {
-                            throw new InvalidOperationException($"Multiple constructors were marked with {nameof(ActivatorUtilitiesConstructorAttribute)}.");
-                        }
-
-                        if (length == -1)
-                        {
-                            throw new InvalidOperationException($"Constructor marked with {nameof(ActivatorUtilitiesConstructorAttribute)} does not accept all given argument types.");
-                        }
-                    }
-
-                    if (isPreferred || bestLength < length)
-                    {
-                        bestLength = length;
-                        bestMatcher = matcher;
-                    }
-
-                    seenPreferred |= isPreferred;
-                }
-            }
-
-            if (bestLength == -1)
-            {
-                string? message = $"A suitable constructor for type '{type}' could not be located. Ensure the type is concrete and all parameters of a public constructor are either registered as services or passed as arguments. Also ensure no extraneous arguments are provided.";
                 throw new InvalidOperationException(message);
             }
 
-            return bestMatcher.CreateInstance(provider);
+            while (constructorMatch != null)
+            {
+                try
+                {
+                    object result = constructorMatch.Value.CreateInstance(provider);
 
+                    return result;
+                }
+                catch
+                {
+                    if (UseFallbacks && fallbacks?.Count != 0)
+                        constructorMatch = fallbacks?.Pop();
+                    else constructorMatch = null;
+
+                    if (constructorMatch == null)
+                        throw;
+                }
+            }
+
+            throw new InvalidOperationException("SHOULD NEVER HAPPEN");
         }
     }
 }

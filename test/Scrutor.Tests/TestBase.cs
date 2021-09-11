@@ -11,10 +11,10 @@ namespace Scrutor.Tests
     public class TestBase
     {
         public static IEnumerable<object[]> _srKnownServiceActivators 
-            = typeof(TypeSourceSelector).Assembly
+            => typeof(TypeSourceSelector).Assembly
                 .GetTypes()
                 .Where(t => !t.IsAbstract && typeof(IServiceActivator).IsAssignableFrom(t))
-                .Select(t => new[] { Activator.CreateInstance(t) as IServiceActivator })
+                .Select(t => new[] { Activator.CreateInstance(t, true) as IServiceActivator })
                 .ToList();
 
 

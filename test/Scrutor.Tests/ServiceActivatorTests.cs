@@ -12,6 +12,200 @@ namespace Scrutor.Tests
 {
     public class ServiceActivatorTests : TestBase
     {
+        #region Fakes
+
+        public class ClassWithMultipleConstructors
+        {
+            public ClassWithMultipleConstructors()
+            {
+            }
+
+            public ClassWithMultipleConstructors(IFakeService fakeService)
+                : this(fakeService, null)
+            {
+            }
+
+            public ClassWithMultipleConstructors(IFakeService fakeService, AnotherClass anotherClass)
+            {
+                FakeService = fakeService;
+                AnotherClass = anotherClass;
+            }
+
+            public IFakeService FakeService { get; }
+
+            public AnotherClass AnotherClass { get; }
+        }
+
+        public class ClassWithMultipleConstructors2
+        {
+            public ClassWithMultipleConstructors2()
+            {
+            }
+
+            public ClassWithMultipleConstructors2(IFakeService fakeService, AnotherClass anotherClass)
+                : this(fakeService, anotherClass, null)
+            {
+            }
+
+            public ClassWithMultipleConstructors2(IFakeService fakeService, AnotherClass anotherClass, ClassWithMultipleConstructors other)
+            {
+                FakeService = fakeService;
+                AnotherClass = anotherClass;
+                Other = other;
+            }
+
+            public IFakeService FakeService { get; }
+
+            public AnotherClass AnotherClass { get; }
+
+            public ClassWithMultipleConstructors Other { get; }
+        }
+
+        public class ClassWithOptionalDependency
+        {
+            public ClassWithOptionalDependency()
+                : this(null)
+            {
+            }
+
+            public ClassWithOptionalDependency(IFakeService fakeService)
+            {
+                FakeService = fakeService;
+            }
+
+            public IFakeService FakeService { get; }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        // To lazy to make the assembly under tests internals visible friendly :)
+        private static void UseFallbacks(IServiceActivator serviceActivator)
+        {
+            if (serviceActivator is ScrutorServiceActivator ssa)
+                typeof(ScrutorServiceActivator)
+                    .GetProperty(nameof(ScrutorServiceActivator.UseFallbacks))
+                    .SetValue(ssa, true);
+        }
+
+        #endregion
+
+        [Theory]
+        [MemberData(nameof(_srKnownServiceActivators))]
+        public void GetInstance_ForClassWithUnresolvableConstructor_IfOneOfConstructorsIsPossibleToResolve_WhenFallbacksWasNotUsed_WillThrow(IServiceActivator activator)
+        {
+            if (activator is ScrutorServiceActivator ssa)
+                Assert.False(ssa.UseFallbacks);
+
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddTransient<ClassWithOptionalDependency>();
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
+            ClassWithOptionalDependency result;
+            if (activator is DefaultServiceActivator)
+            {
+                result = activator.CreateInstance<ClassWithOptionalDependency>(serviceProvider);
+
+                // Since minimum arguments was used there will not be problem with unable to resolve.
+                Assert.Null(result.FakeService);
+            }
+            else
+            {
+                Assert.Throws<InvalidOperationException>(() => activator.CreateInstance<ClassWithOptionalDependency>(serviceProvider));
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(_srKnownServiceActivators))]
+        public void GetInstance_ForClassWithUnresolvableConstructor_IfOneOfConstructorsIsPossibleToResolve_WhenFallbacksUsed_WillUseTheFallbackConstrcutor(IServiceActivator activator)
+        {
+            UseFallbacks(activator);
+
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddTransient<ClassWithOptionalDependency>();
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
+            var result = activator.CreateInstance<ClassWithOptionalDependency>(serviceProvider);
+
+            Assert.Null(result.FakeService);
+        }
+
+        [Theory]
+        [MemberData(nameof(_srKnownServiceActivators))]
+        public void GetInstance_ForClassWithMultipleConstructors_IfOneOfParametersWasPassedAndThereNoExactlyMatch_WillUseTheConstructorWithMaximalAmountOfArguments(IServiceActivator activator)
+        {
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddTransient<ClassWithMultipleConstructors>();
+            serviceCollection.AddTransient<IFakeService, FakeService>();
+            serviceCollection.AddTransient<AnotherClass>();
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
+            var result = activator.CreateInstance<ClassWithMultipleConstructors2>(serviceProvider, new FakeService());
+
+            if (activator is DefaultServiceActivator)
+            {
+                // For default flow, the constructor with minimal parameters will be used
+                Assert.NotNull(result.FakeService);
+                Assert.NotNull(result.AnotherClass);
+                Assert.Null(result.Other);
+            }
+            else
+            {
+                // For any custom with maximum parameters.
+                Assert.NotNull(result.FakeService);
+                Assert.NotNull(result.AnotherClass);
+                Assert.NotNull(result.Other);
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(_srKnownServiceActivators))]
+        public void GetInstance_ForClassWithMultipleConstructors_IfOneOfParametersWasPassedAndThereExactlyMatch_WillUseTheConstructorWithPassedArguments(IServiceActivator activator)
+        {
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddTransient<ClassWithMultipleConstructors>();
+            serviceCollection.AddTransient<IFakeService, FakeService>();
+            serviceCollection.AddTransient<AnotherClass>();
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
+            var result = activator.CreateInstance<ClassWithMultipleConstructors>(serviceProvider, new FakeService());
+
+            Assert.NotNull(result.FakeService);
+            Assert.Null(result.AnotherClass);
+        }
+
+        [Theory]
+        [MemberData(nameof(_srKnownServiceActivators))]
+        public void GetInstance_ForClassWithMultipleConstructors_IfNotPassingAnyAdditionalArguments_WillUseTheConstructorWithMaximalAmountOfArguments(IServiceActivator activator)
+        {
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddTransient<ClassWithMultipleConstructors>();
+            serviceCollection.AddTransient<IFakeService, FakeService>();
+            serviceCollection.AddTransient<AnotherClass>();
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
+            var result = activator.CreateInstance<ClassWithMultipleConstructors>(serviceProvider);
+
+            if (activator is DefaultServiceActivator)
+            {
+                // For default flow, the constructor with minimal parameters will be used
+                Assert.Null(result.FakeService);
+                Assert.Null(result.AnotherClass);
+            }
+            else
+            {
+                // For any custom with maximum parameters.
+                Assert.NotNull(result.FakeService);
+                Assert.NotNull(result.AnotherClass);
+            }
+        }
+
         #region Tests From Microsoft.Extensions.DependencyInjection.
 
         #region Fakes
@@ -443,6 +637,8 @@ namespace Scrutor.Tests
         [MemberData(nameof(_srKnownServiceActivators))]
         public void TypeActivatorRequiresAllArgumentsCanBeAccepted(IServiceActivator activator)
         {
+            UseFallbacks(activator);
+
             // Arrange
             var expectedMessage = $"A suitable constructor for type '{typeof(AnotherClassAcceptingData).FullName}' could not be located. " +
                 "Ensure the type is concrete and all parameters of a public constructor are either registered as services or passed as arguments. Also ensure no extraneous arguments are provided.";
@@ -480,6 +676,8 @@ namespace Scrutor.Tests
         {
             _sExecuteForAllKnownActivators(activator =>
             {
+                UseFallbacks(activator);
+
                 // Arrange
                 var serviceCollection = new TestServiceCollection();
                 serviceCollection.AddSingleton<IFakeService, FakeService>();

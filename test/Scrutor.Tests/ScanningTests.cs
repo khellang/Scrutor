@@ -338,6 +338,7 @@ namespace Scrutor.Tests
         [Fact]
         public void AutoRegisterAsMatchingInterface()
         {
+#if NETCOREAPP
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
                 .AddClasses()
                     .AsMatchingInterface()
@@ -353,11 +354,13 @@ namespace Scrutor.Tests
                 Assert.Equal(ServiceLifetime.Transient, s.Lifetime);
                 Assert.Equal(typeof(ITransientService), s.ServiceType);
             });
+#endif
         }
 
         [Fact]
         public void AutoRegisterAsMatchingInterfaceSameNamespaceOnly()
         {
+#if NETCOREAPP
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
                 .AddClasses()
                     .AsMatchingInterface((t, x) => x.InNamespaces(t.Namespace))
@@ -370,6 +373,7 @@ namespace Scrutor.Tests
             Assert.NotNull(service);
             Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
             Assert.Equal(typeof(TransientService), service.ImplementationType);
+#endif
         }
 
         [Fact]

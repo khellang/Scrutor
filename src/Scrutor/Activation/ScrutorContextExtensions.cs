@@ -9,17 +9,20 @@
         /// </summary>
         /// <param name="this">This</param>
         public static IServiceActivator? GetServiceActivator(this ScrutorContext @this)
-            => @this[SERVICE_ACTIVATOR] as IServiceActivator;
+            => @this?[SERVICE_ACTIVATOR] as IServiceActivator;
 
         public static IServiceActivator GetServiceActivatorOrDefault(this ScrutorContext? @this)
         {
-            IServiceActivator? result = @this?.GetServiceActivator();
+            if (@this == null)
+                return new DefaultServiceActivator();
+
+            IServiceActivator? result = @this.GetServiceActivator();
             if (result == null)
             {
                 result = new DefaultServiceActivator();
 
                 // Memorize in order to prevent additional allocations
-                @this?.UseServiceActivator(result);
+                @this.UseServiceActivator(result);
             }
 
             return result;

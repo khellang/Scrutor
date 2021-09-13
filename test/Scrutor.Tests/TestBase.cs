@@ -8,7 +8,7 @@ using Scrutor.Activation;
 
 namespace Scrutor.Tests
 {
-    public class TestBase
+    public class TestBase : IDisposable
     {
         public static IEnumerable<object[]> _srKnownServiceActivators 
             => typeof(TypeSourceSelector).Assembly
@@ -31,6 +31,11 @@ namespace Scrutor.Tests
         {
             foreach (IServiceActivator activator in _srKnownServiceActivators.Select(x => x[0] as IServiceActivator))
                 test(activator);
+        }
+
+        public void Dispose()
+        {
+            ScrutorContext.Invalidate();
         }
     }
 }

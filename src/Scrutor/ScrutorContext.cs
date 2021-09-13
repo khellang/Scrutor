@@ -86,7 +86,15 @@ namespace Scrutor
         public void Dispose()
         {
             if (ScrutorContext.Current == this)
-                ScrutorContext.Current = null;
+                Invalidate();
+        }
+
+        /// <summary>
+        /// Invalidates <see cref="ScrutorContext.Current"/> 
+        /// </summary>
+        public static void Invalidate()
+        {
+            ScrutorContext.Current = null;
         }
 
         #region IServiceCollection Wrapper Impl

@@ -351,9 +351,15 @@ namespace Microsoft.Extensions.DependencyInjection
                 return descriptor.ImplementationInstance;
             }
 
-            if (descriptor.ImplementationType != null)
+            // Not suppose to be abstract. 
+            Type implementationType = descriptor.ImplementationType;
+            if (implementationType != null)
             {
-                return provider.GetServiceOrCreateInstance(descriptor.ImplementationType);
+                if (implementationType != descriptor.ServiceType)
+                    return provider.GetServiceOrCreateInstance(descriptor.ImplementationType);
+
+                // Since implementationType is equal to ServiceType we need explicitly create an implementation type through reflections in order to avoid infinite recursion.
+                return provider.CreateInstance(implementationType);
             }
 
             return descriptor.ImplementationFactory(provider);

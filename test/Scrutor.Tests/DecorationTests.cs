@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using System.Linq;
+using static Scrutor.Tests.DecorationTests;
 
 namespace Scrutor.Tests
 {
@@ -217,7 +218,46 @@ namespace Scrutor.Tests
             Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
         }
 
+        [Fact]
+        public void Issue148_Decorate_IsAbleToDecorateConcreateTypes()
+        {
+            var sp = ConfigureProvider(sc =>
+            {
+                sc
+                    .AddTransient<IService, SomeRandomService>()
+                    .AddTransient<DecoratedService>()
+                    .Decorate<DecoratedService, Decorator2>();
+            });
+            
+            var result = sp.GetService<DecoratedService>() as Decorator2;
+            
+            Assert.NotNull(result);  
+            Assert.NotNull(result.Inner);
+            Assert.NotNull(result.Inner.Dependency);
+        }
+
         public interface IDecoratedService { }
+
+        public class DecoratedService
+        {
+            public DecoratedService(IService dependency)
+            {
+                Dependency = dependency;
+            }
+
+            public IService Dependency { get; }
+        }
+
+        public class Decorator2 : DecoratedService
+        {
+            public Decorator2(DecoratedService decoratedService)
+                : base(null)
+            {
+                Inner = decoratedService;
+            }
+
+            public DecoratedService Inner { get; }
+        }
 
         public interface IService { }
 

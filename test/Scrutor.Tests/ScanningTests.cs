@@ -344,7 +344,7 @@ namespace Scrutor.Tests
                     .AsMatchingInterface()
                     .WithTransientLifetime());
 
-            Assert.Equal(6, Collection.Count);
+            Assert.Equal(7, Collection.Count);
 
             var services = Collection.GetDescriptors<ITransientService>();
 
@@ -366,7 +366,7 @@ namespace Scrutor.Tests
                     .AsMatchingInterface((t, x) => x.InNamespaces(t.Namespace))
                     .WithTransientLifetime());
 
-            Assert.Equal(5, Collection.Count);
+            Assert.Equal(6, Collection.Count);
 
             var service = Collection.GetDescriptor<ITransientService>();
 

@@ -217,11 +217,58 @@ namespace Scrutor.Tests
             Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
         }
 
+        [Fact]
+        public void Issue116_DecorateWillUseRegularDIConstructorMatching_IfServiceActivatorIsCustom()
+        {
+            // More info see: https://github.com/khellang/Scrutor/issues/116
+
+            // Old approach will not use the constructors with maximum amount of arguments.
+            var sp1 = new ServiceCollection()
+                .AddSingleton<IDecoratedService, DecoratedWithOptions>()
+                .AddTransient<DecoratedOptions>(_ => new DecoratedOptions { Option = true })
+                .Decorate<IDecoratedService, Decorator>()
+                .BuildServiceProvider();
+
+            var result = sp1.GetService<IDecoratedService>() as Decorator;
+            Assert.False((result.Inner as DecoratedWithOptions).OptionalValue);
+
+            // New approach will use the constructors with maximum amount of arguments.
+            var sp2 = new ServiceCollection()
+                .Scrutor()
+                    .AddSingleton<IDecoratedService, DecoratedWithOptions>()
+                    .AddTransient<DecoratedOptions>(_ => new DecoratedOptions { Option = true })
+                    .Decorate<IDecoratedService, Decorator>()
+                    .BuildServiceProvider();
+
+            result = sp2.GetService<IDecoratedService>() as Decorator;
+            Assert.True((result.Inner as DecoratedWithOptions).OptionalValue);
+        }
+
         public interface IDecoratedService { }
 
         public interface IService { }
 
         private class SomeRandomService : IService { }
+
+        public class DecoratedOptions
+        {
+            public bool Option { get; set; }
+        }
+
+        public class DecoratedWithOptions : IDecoratedService
+        {
+            public DecoratedWithOptions() 
+                : this(new DecoratedOptions())
+            { 
+            }
+
+            public DecoratedWithOptions(DecoratedOptions options)
+            {
+                OptionalValue = options.Option;
+            }
+
+            public bool OptionalValue { get; }
+        }
 
         public class Decorated : IDecoratedService
         {

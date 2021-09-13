@@ -341,9 +341,16 @@ namespace Microsoft.Extensions.DependencyInjection
                 return descriptor.ImplementationInstance;
             }
 
-            if (descriptor.ImplementationType != null)
+            // Not suppose to be abstract. 
+            Type implementationType = descriptor.ImplementationType;
+            if (implementationType != null)
             {
-                return provider.GetServiceOrCreateInstance(descriptor.ImplementationType);
+                if (implementationType != descriptor.ServiceType)
+                    return provider.GetServiceOrCreateInstance(descriptor.ImplementationType);
+
+                // Since implementationType is equal to ServiceType we need explicitly create an implementation type through reflections in order to avoid infinite recursion.
+                // Should not cause issue with singletons, since singleton will be a decorator and after this fact we can don't care about lifecycle of decorable service (for sure, if IDisposable of decorator disposes underlying type:))
+                return provider.CreateInstance(implementationType);
             }
 
             if (descriptor.ImplementationFactory != null)

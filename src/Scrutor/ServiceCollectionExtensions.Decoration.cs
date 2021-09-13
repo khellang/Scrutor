@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Scrutor;
+using Scrutor.Activation;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
@@ -316,17 +317,24 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider));
+            IServiceActivator activator = ScrutorContext.Current.GetServiceActivatorOrDefault();
+            return descriptor.WithFactory(
+                provider => decorator((TService)provider.GetInstance(descriptor, activator), 
+                provider));
         }
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator)
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor)));
+            IServiceActivator activator = ScrutorContext.Current.GetServiceActivatorOrDefault();
+            return descriptor.WithFactory(
+                provider => decorator((TService) provider.GetInstance(descriptor, activator)));
         }
 
         private static ServiceDescriptor Decorate(this ServiceDescriptor descriptor, Type decoratorType)
         {
-            return descriptor.WithFactory(provider => provider.CreateInstance(decoratorType, provider.GetInstance(descriptor)));
+            IServiceActivator activator = ScrutorContext.Current.GetServiceActivatorOrDefault();
+            return descriptor.WithFactory(
+                provider => provider.CreateInstance(decoratorType, activator, provider.GetInstance(descriptor, activator)));
         }
 
         private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object?> factory)
@@ -334,7 +342,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return ServiceDescriptor.Describe(descriptor.ServiceType, factory, descriptor.Lifetime);
         }
 
-        private static object GetInstance(this IServiceProvider provider, ServiceDescriptor descriptor)
+        private static object GetInstance(this IServiceProvider provider, ServiceDescriptor descriptor, IServiceActivator serviceActivator)
         {
             if (descriptor.ImplementationInstance != null)
             {
@@ -343,20 +351,20 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (descriptor.ImplementationType != null)
             {
-                return provider.GetServiceOrCreateInstance(descriptor.ImplementationType);
+                return provider.GetServiceOrCreateInstance(serviceActivator, descriptor.ImplementationType);
             }
 
             return descriptor.ImplementationFactory(provider);
         }
 
-        private static object GetServiceOrCreateInstance(this IServiceProvider provider, Type type)
+        private static object GetServiceOrCreateInstance(this IServiceProvider provider, IServiceActivator serviceActivator, Type type)
         {
-            return ActivatorUtilities.GetServiceOrCreateInstance(provider, type);
+            return serviceActivator.GetServiceOrCreateInstance(provider, type);
         }
        
-        private static object CreateInstance(this IServiceProvider provider, Type type, params object[] arguments)
+        private static object CreateInstance(this IServiceProvider provider, Type type, IServiceActivator serviceActivator, params object[] arguments)
         {
-            return ActivatorUtilities.CreateInstance(provider, type, arguments);
+            return serviceActivator.CreateInstance(provider, type, arguments);
         }
     }
 }

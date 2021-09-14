@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using System.Linq;
-using static Scrutor.Tests.DecorationTests;
 
 namespace Scrutor.Tests
 {

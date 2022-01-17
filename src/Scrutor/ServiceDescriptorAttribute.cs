@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor
 {
@@ -42,7 +42,7 @@ namespace Scrutor
                 yield break;
             }
 
-            if (!fallbackType.IsAssignableTo(ServiceType))
+            if (!fallbackType.IsBasedOn(ServiceType))
             {
                 throw new InvalidOperationException($@"Type ""{fallbackType.ToFriendlyName()}"" is not assignable to ""{ServiceType.ToFriendlyName()}"".");
             }

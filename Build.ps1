@@ -6,11 +6,11 @@ function Install-Dotnet
   {
     Write-Host "Dotnet CLI not found - downloading latest version"
    
-
     # Download the dotnet CLI install script
     if (!(Test-Path .\dotnet\install.ps1))
     {
-      Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile ".\.dotnet\dotnet-install.ps1"
+      Write-Host "Downloading dotnet CLI install script"
+      Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "./.dotnet/dotnet-install.ps1"
     }
 
     # Skip all the extra work
@@ -18,9 +18,9 @@ function Install-Dotnet
     $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true"
 
     # Run the dotnet CLI install
-	& .\.dotnet\dotnet-install.ps1 --version "3.1.22"
-	& .\.dotnet\dotnet-install.ps1 --version "5.0.13"
-	& .\.dotnet\dotnet-install.ps1 --version "6.0.1"
+    ./.dotnet/dotnet-install.ps1 -Version "3.1.22"
+    ./.dotnet/dotnet-install.ps1 -Version "5.0.13"
+    ./.dotnet/dotnet-install.ps1 -Version "6.0.1"
   }
 }
 

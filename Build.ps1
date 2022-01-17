@@ -24,9 +24,9 @@ function Install-Dotnet
     $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true"
 
     # Run the dotnet CLI install
-    ./.dotnet/dotnet-install.ps1 -Version "3.1.22"
-    ./.dotnet/dotnet-install.ps1 -Version "5.0.13"
-    ./.dotnet/dotnet-install.ps1 -Version "6.0.1"
+    ./.dotnet/dotnet-install.ps1 -Version "3.1.416"
+    ./.dotnet/dotnet-install.ps1 -Version "5.0.404"
+    ./.dotnet/dotnet-install.ps1 -Version "6.0.101"
   }
 }
 

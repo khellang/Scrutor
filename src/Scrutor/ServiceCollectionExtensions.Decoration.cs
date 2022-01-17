@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Scrutor;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Scrutor;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
@@ -95,7 +95,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
+        public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
@@ -112,7 +112,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="decorator">The decorator function.</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static bool TryDecorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
+        public static bool TryDecorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
@@ -130,7 +130,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, TService> decorator)
+        public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, TService> decorator) where TService : notnull
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
@@ -147,7 +147,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="decorator">The decorator function.</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static bool TryDecorate<TService>(this IServiceCollection services, Func<TService, TService> decorator)
+        public static bool TryDecorate<TService>(this IServiceCollection services, Func<TService, TService> decorator) where TService : notnull
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
@@ -314,14 +314,14 @@ namespace Microsoft.Extensions.DependencyInjection
             return (descriptors = services.Where(service => service.ServiceType == serviceType).ToArray()).Any();
         }
 
-        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)
+        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor), provider));
+            return descriptor.WithFactory(provider => decorator((TService)provider.GetInstance(descriptor), provider));
         }
 
-        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator)
+        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator) where TService : notnull
         {
-            return descriptor.WithFactory(provider => decorator((TService) provider.GetInstance(descriptor)));
+            return descriptor.WithFactory(provider => decorator((TService)provider.GetInstance(descriptor)));
         }
 
         private static ServiceDescriptor Decorate(this ServiceDescriptor descriptor, Type decoratorType)
@@ -329,7 +329,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return descriptor.WithFactory(provider => provider.CreateInstance(decoratorType, provider.GetInstance(descriptor)));
         }
 
-        private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object?> factory)
+        private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object> factory)
         {
             return ServiceDescriptor.Describe(descriptor.ServiceType, factory, descriptor.Lifetime);
         }
@@ -346,7 +346,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 return provider.GetServiceOrCreateInstance(descriptor.ImplementationType);
             }
 
-            return descriptor.ImplementationFactory(provider);
+            if (descriptor.ImplementationFactory != null)
+                return descriptor.ImplementationFactory(provider);
+
+            throw new InvalidOperationException($"No implementation factory or instance or type found for {descriptor.ServiceType}.");
         }
 
         private static object GetServiceOrCreateInstance(this IServiceProvider provider, Type type)

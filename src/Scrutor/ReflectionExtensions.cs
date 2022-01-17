@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.Extensions.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Microsoft.Extensions.Internal;
 
 namespace Scrutor
 {
@@ -166,7 +166,7 @@ namespace Scrutor
                 .Where(x => string.Equals(x.Name, matchingInterfaceName, StringComparison.Ordinal))
                 .ToArray();
 
-            Type type;
+            Type? type;
             if (action is null)
             {
                 type = matchedInterfaces.FirstOrDefault();

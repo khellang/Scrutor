@@ -5,9 +5,15 @@ function Install-Dotnet
   if(($LASTEXITCODE -ne 0) -Or ((Test-Path Env:\APPVEYOR) -eq $true))
   {
     Write-Host "Dotnet CLI not found - downloading latest version"
-   
+
+    # Prepare the dotnet CLI folder
+    $dotnetInstallDir="$(Convert-Path "$PSScriptRoot")\.dotnet"
+    if (!(Test-Path $dotnetInstallDir))
+    {
+      mkdir $dotnetInstallDir | Out-Null
+    }
     # Download the dotnet CLI install script
-    if (!(Test-Path .\dotnet\install.ps1))
+    if (!(Test-Path ./dotnet/dotnet-install.ps1))
     {
       Write-Host "Downloading dotnet CLI install script"
       Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "./.dotnet/dotnet-install.ps1"

@@ -98,7 +98,7 @@ namespace Scrutor
             return type.GetTypeInfo().GetCustomAttributes<T>(inherit: true).Any(predicate);
         }
 
-        public static bool IsAssignableTo(this Type type, Type otherType)
+        public static bool IsBasedOn(this Type type, Type otherType)
         {
             var typeInfo = type.GetTypeInfo();
             var otherTypeInfo = otherType.GetTypeInfo();

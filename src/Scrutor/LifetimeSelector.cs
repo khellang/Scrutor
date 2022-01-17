@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyModel;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyModel;
 
 namespace Scrutor
 {
@@ -206,7 +206,7 @@ namespace Scrutor
                 {
                     var implementationType = typeMap.ImplementationType;
 
-                    if (!implementationType.IsAssignableTo(serviceType))
+                    if (!implementationType.IsBasedOn(serviceType))
                     {
                         throw new InvalidOperationException($@"Type ""{implementationType.ToFriendlyName()}"" is not assignable to ""${serviceType.ToFriendlyName()}"".");
                     }

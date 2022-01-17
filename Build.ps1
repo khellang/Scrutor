@@ -5,18 +5,12 @@ function Install-Dotnet
   if(($LASTEXITCODE -ne 0) -Or ((Test-Path Env:\APPVEYOR) -eq $true))
   {
     Write-Host "Dotnet CLI not found - downloading latest version"
-
-    # Prepare the dotnet CLI folder
-    $env:DOTNET_INSTALL_DIR="$(Convert-Path "$PSScriptRoot")\.dotnet\win7-x64"
-    if (!(Test-Path $env:DOTNET_INSTALL_DIR))
-    {
-      mkdir $env:DOTNET_INSTALL_DIR | Out-Null
-    }
+   
 
     # Download the dotnet CLI install script
     if (!(Test-Path .\dotnet\install.ps1))
     {
-      Invoke-WebRequest "https://raw.githubusercontent.com/dotnet/cli/v2.1.4/scripts/obtain/dotnet-install.ps1" -OutFile ".\.dotnet\dotnet-install.ps1"
+      Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile ".\.dotnet\dotnet-install.ps1"
     }
 
     # Skip all the extra work
@@ -24,24 +18,10 @@ function Install-Dotnet
     $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true"
 
     # Run the dotnet CLI install
-    & .\.dotnet\dotnet-install.ps1 -Version "2.1.4"
-
-    # Add the dotnet folder path to the process.
-    Remove-PathVariable $env:DOTNET_INSTALL_DIR
-    $env:PATH = "$env:DOTNET_INSTALL_DIR;$env:PATH"
+	& .\.dotnet\dotnet-install.ps1 --version "3.1.22"
+	& .\.dotnet\dotnet-install.ps1 --version "5.0.13"
+	& .\.dotnet\dotnet-install.ps1 --version "6.0.1"
   }
-}
-
-function Remove-PathVariable
-{
-  [cmdletbinding()]
-  param([string] $VariableToRemove)
-  $path = [Environment]::GetEnvironmentVariable("PATH", "User")
-  $newItems = $path.Split(';') | Where-Object { $_.ToString() -inotlike $VariableToRemove }
-  [Environment]::SetEnvironmentVariable("PATH", [System.String]::Join(';', $newItems), "User")
-  $path = [Environment]::GetEnvironmentVariable("PATH", "Process")
-  $newItems = $path.Split(';') | Where-Object { $_.ToString() -inotlike $VariableToRemove }
-  [Environment]::SetEnvironmentVariable("PATH", [System.String]::Join(';', $newItems), "Process")
 }
 
 function Restore-Packages

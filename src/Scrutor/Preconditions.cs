@@ -8,7 +8,7 @@ namespace Scrutor
     internal static class Preconditions
     {
         [ContractAnnotation("value:null => halt")]
-        public static T NotNull<T>([NoEnumeration] T value, [InvokerParameterName, NotNull] string parameterName)
+        public static T NotNull<T>([NoEnumeration] T value, [InvokerParameterName] string parameterName)
             where T : class
         {
             if (ReferenceEquals(value, null))
@@ -22,7 +22,7 @@ namespace Scrutor
         }
 
         [ContractAnnotation("value:null => halt")]
-        public static string NotEmpty(string value, [InvokerParameterName, NotNull] string parameterName)
+        public static string NotEmpty(string value, [InvokerParameterName] string parameterName)
         {
             if (ReferenceEquals(value, null))
             {
@@ -41,7 +41,7 @@ namespace Scrutor
             return value;
         }
 
-        public static TEnum IsDefined<TEnum>(TEnum value, [InvokerParameterName, NotNull] string parameterName) where TEnum : struct
+        public static TEnum IsDefined<TEnum>(TEnum value, [InvokerParameterName] string parameterName) where TEnum : struct, Enum
         {
             if (!Enum.IsDefined(typeof(TEnum), value))
             {

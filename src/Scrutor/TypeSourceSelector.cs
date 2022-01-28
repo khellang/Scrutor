@@ -12,7 +12,7 @@ namespace Scrutor
         private static Assembly EntryAssembly => Assembly.GetEntryAssembly()
             ?? throw new InvalidOperationException("Could not get entry assembly.");
 
-        private List<ISelector> Selectors { get; } = new List<ISelector>();
+        private List<ISelector> Selectors { get; } = new();
 
         /// <inheritdoc />
         public IImplementationTypeSelector FromAssemblyOf<T>()

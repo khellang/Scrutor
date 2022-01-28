@@ -19,7 +19,7 @@ namespace Scrutor
 
         private IEnumerable<Type> Types { get; }
 
-        private List<ISelector> Selectors { get; } = new List<ISelector>();
+        private List<ISelector> Selectors { get; } = new();
 
         private RegistrationStrategy? RegistrationStrategy { get; set; }
 

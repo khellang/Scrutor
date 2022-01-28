@@ -347,7 +347,9 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             if (descriptor.ImplementationFactory != null)
+            {
                 return descriptor.ImplementationFactory(provider);
+            }
 
             throw new InvalidOperationException($"No implementation factory or instance or type found for {descriptor.ServiceType}.");
         }

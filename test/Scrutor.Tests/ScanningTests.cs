@@ -360,7 +360,7 @@ namespace Scrutor.Tests
         {
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientService>()
                 .AddClasses()
-                    .AsMatchingInterface((t, x) => x.InNamespaces(t.Namespace))
+                    .AsMatchingInterface((t, x) => x.InNamespaceOf(t))
                     .WithTransientLifetime());
 
             Assert.Equal(5, Collection.Count);

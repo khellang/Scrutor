@@ -21,9 +21,7 @@ namespace Scrutor
 
             foreach (var type in Types)
             {
-                var typeInfo = type.GetTypeInfo();
-
-                var attributes = typeInfo.GetCustomAttributes<ServiceDescriptorAttribute>().ToArray();
+                var attributes = type.GetCustomAttributes<ServiceDescriptorAttribute>().ToArray();
 
                 // Check if the type has multiple attributes with same ServiceType.
                 var duplicates = GetDuplicates(attributes);

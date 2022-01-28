@@ -261,7 +261,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             foreach (var closedGenericServiceType in closedGenericServiceTypes)
             {
-                var arguments = closedGenericServiceType.GenericTypeArguments;
+                var arguments = closedGenericServiceType.GetGenericArguments();
 
                 var closedServiceType = serviceType.MakeGenericType(arguments);
                 try

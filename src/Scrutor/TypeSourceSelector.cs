@@ -17,7 +17,7 @@ namespace Scrutor
         /// <inheritdoc />
         public IImplementationTypeSelector FromAssemblyOf<T>()
         {
-            return InternalFromAssembliesOf(new[] { typeof(T).GetTypeInfo() });
+            return InternalFromAssembliesOf(new[] { typeof(T) });
         }
 
         public IImplementationTypeSelector FromCallingAssembly()
@@ -96,14 +96,14 @@ namespace Scrutor
         {
             Preconditions.NotNull(types, nameof(types));
 
-            return InternalFromAssembliesOf(types.Select(x => x.GetTypeInfo()));
+            return InternalFromAssembliesOf(types);
         }
 
         public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
         {
             Preconditions.NotNull(types, nameof(types));
 
-            return InternalFromAssembliesOf(types.Select(t => t.GetTypeInfo()));
+            return InternalFromAssembliesOf(types);
         }
 
         public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
@@ -150,9 +150,9 @@ namespace Scrutor
             }
         }
 
-        private IImplementationTypeSelector InternalFromAssembliesOf(IEnumerable<TypeInfo> typeInfos)
+        private IImplementationTypeSelector InternalFromAssembliesOf(IEnumerable<Type> types)
         {
-            return InternalFromAssemblies(typeInfos.Select(t => t.Assembly));
+            return InternalFromAssemblies(types.Select(t => t.Assembly));
         }
 
         private IImplementationTypeSelector InternalFromAssemblies(IEnumerable<Assembly> assemblies)

@@ -169,7 +169,7 @@ namespace Scrutor
             return Inner.AsMatchingInterface();
         }
 
-        public ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action)
+        public ILifetimeSelector AsMatchingInterface(Action<Type, IImplementationTypeFilter> action)
         {
             return Inner.AsMatchingInterface(action);
         }

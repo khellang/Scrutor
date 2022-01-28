@@ -49,30 +49,30 @@ namespace Scrutor
 
         public ILifetimeSelector AsImplementedInterfaces()
         {
-            return AsTypeInfo(t => t.ImplementedInterfaces
+            return As(t => t.GetInterfaces()
                 .Where(x => x.HasMatchingGenericArity(t))
                 .Select(x => x.GetRegistrationType(t)));
         }
 
         public ILifetimeSelector AsSelfWithInterfaces()
         {
-            IEnumerable<Type> Selector(TypeInfo info)
+            IEnumerable<Type> Selector(Type type)
             {
-                if (info.IsGenericTypeDefinition)
+                if (type.IsGenericTypeDefinition)
                 {
                     // This prevents trying to register open generic types
                     // with an ImplementationFactory, which is unsupported.
                     return Enumerable.Empty<Type>();
                 }
 
-                return info.ImplementedInterfaces
-                    .Where(x => x.HasMatchingGenericArity(info))
-                    .Select(x => x.GetRegistrationType(info));
+                return type.GetInterfaces()
+                    .Where(x => x.HasMatchingGenericArity(type))
+                    .Select(x => x.GetRegistrationType(type));
             }
 
             return AddSelector(
                 Types.Select(t => new TypeMap(t, new[] { t })),
-                Types.Select(t => new TypeFactoryMap(x => x.GetRequiredService(t), Selector(t.GetTypeInfo()))));
+                Types.Select(t => new TypeFactoryMap(x => x.GetRequiredService(t), Selector(t))));
         }
 
         public ILifetimeSelector AsMatchingInterface()
@@ -80,9 +80,9 @@ namespace Scrutor
             return AsMatchingInterface(null);
         }
 
-        public ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter>? action)
+        public ILifetimeSelector AsMatchingInterface(Action<Type, IImplementationTypeFilter>? action)
         {
-            return AsTypeInfo(t => t.FindMatchingInterface(action));
+            return As(t => t.FindMatchingInterface(action));
         }
 
         public ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector)
@@ -228,11 +228,6 @@ namespace Scrutor
             Selectors.Add(selector);
 
             return selector;
-        }
-
-        private ILifetimeSelector AsTypeInfo(Func<TypeInfo, IEnumerable<Type>> selector)
-        {
-            return As(t => selector(t.GetTypeInfo()));
         }
     }
 }

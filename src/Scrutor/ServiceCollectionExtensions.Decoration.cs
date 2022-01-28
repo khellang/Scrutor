@@ -297,10 +297,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 return false;
             }
 
-            foreach (var descriptor in descriptors)
+            foreach (var (position, value) in descriptors)
             {
                 // To avoid reordering descriptors, in case a specific order is expected.
-                services[descriptor.Position] = decorator(descriptor.Value);
+                services[position] = decorator(value);
             }
 
             error = default;
@@ -309,19 +309,20 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static bool TryGetDescriptors(this IServiceCollection services, Type serviceType, out IReadOnlyList<(int Position, ServiceDescriptor Value)> descriptors)
         {
-            IEnumerable<(int Position, ServiceDescriptor Value)> __GetDescriptors()
+            descriptors = EnumerateDescriptors().ToArray();
+            return descriptors.Count != 0;
+
+            IEnumerable<(int Position, ServiceDescriptor Value)> EnumerateDescriptors()
             {
-                for (int i = 0; i < services.Count; ++i)
+                for (var i = 0; i < services.Count; ++i)
                 {
-                    ServiceDescriptor serviceDescriptor = services[i];
-                    if (serviceDescriptor.ServiceType == serviceType)
-                        yield return (i, serviceDescriptor);
+                    var descriptor = services[i];
+                    if (descriptor.ServiceType == serviceType)
+                    {
+                        yield return (i, descriptor);
+                    }
                 }
             }
-
-            descriptors = __GetDescriptors().ToArray();
-
-            return descriptors.Count != 0;
         }
 
         private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
@@ -352,15 +353,17 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             // Not suppose to be abstract. 
-            Type implementationType = descriptor.ImplementationType;
+            var implementationType = descriptor.ImplementationType;
             if (implementationType != null)
             {
-                if (implementationType != descriptor.ServiceType)
-                    return provider.GetServiceOrCreateInstance(implementationType);
+                if (implementationType == descriptor.ServiceType)
+                {
+                    // Since implementationType is equal to ServiceType we need explicitly create an implementation type through reflections in order to avoid infinite recursion.
+                    // Should not cause issue with singletons, since singleton will be a decorator and after this fact we can don't care about lifecycle of decorable service (for sure, if IDisposable of decorator disposes underlying type:))
+                    return provider.CreateInstance(implementationType);
+                }
 
-                // Since implementationType is equal to ServiceType we need explicitly create an implementation type through reflections in order to avoid infinite recursion.
-                // Should not cause issue with singletons, since singleton will be a decorator and after this fact we can don't care about lifecycle of decorable service (for sure, if IDisposable of decorator disposes underlying type:))
-                return provider.CreateInstance(implementationType);
+                return provider.GetServiceOrCreateInstance(implementationType);
             }
 
             if (descriptor.ImplementationFactory != null)

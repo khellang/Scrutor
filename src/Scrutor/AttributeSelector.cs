@@ -15,7 +15,7 @@ namespace Scrutor
 
         private IEnumerable<Type> Types { get; }
 
-        void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
+        void ISelector.Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
         {
             var strategy = registrationStrategy ?? RegistrationStrategy.Append;
 

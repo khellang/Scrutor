@@ -206,7 +206,7 @@ namespace Scrutor
             }
         }
 
-        void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
+        void ISelector.Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
         {
             if (Selectors.Count == 0)
             {

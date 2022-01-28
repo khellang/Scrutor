@@ -142,7 +142,7 @@ namespace Scrutor
             return selector.AddClasses();
         }
 
-        public void Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
+        public void Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
         {
             foreach (var selector in Selectors)
             {

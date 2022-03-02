@@ -18,7 +18,7 @@ namespace Scrutor.Tests
         {
             Collection.Scan(scan => scan
                 .AddTypes<TransientService1, TransientService2>()
-                    .AsImplementedInterfaces()
+                    .AsImplementedInterfaces(x => x != typeof(IOtherInheritance))
                     .WithSingletonLifetime());
 
             Assert.Equal(2, Collection.Count);
@@ -116,7 +116,7 @@ namespace Scrutor.Tests
 
             var services = Collection.GetDescriptors<ITransientService>();
 
-            Assert.Equal(4, services.Count(x => x.ServiceType == typeof(ITransientService)));
+            Assert.Equal(3, services.Count(x => x.ServiceType == typeof(ITransientService)));
         }
 
         [Fact]
@@ -140,7 +140,7 @@ namespace Scrutor.Tests
             Collection.Scan(scan => scan
                 .FromAssemblyOf<ITransientService>()
                     .AddClasses(classes => classes.AssignableTo<ITransientService>())
-                        .AsImplementedInterfaces()
+                        .AsImplementedInterfaces(x => x != typeof(IOtherInheritance))
                         .WithTransientLifetime());
 
             var services = Collection.GetDescriptors<ITransientService>();
@@ -510,7 +510,7 @@ namespace Scrutor.Tests
     [ServiceDescriptor(typeof(ITransientService))]
     public class TransientService1 : ITransientService { }
 
-    public class TransientService2 : ITransientService { }
+    public class TransientService2 : ITransientService, IOtherInheritance { }
 
     public class TransientService : ITransientService { }
 

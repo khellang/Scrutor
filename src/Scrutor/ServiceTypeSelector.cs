@@ -49,9 +49,17 @@ namespace Scrutor
 
         public ILifetimeSelector AsImplementedInterfaces()
         {
+            return AsImplementedInterfaces(_ => true);
+        }
+
+        public ILifetimeSelector AsImplementedInterfaces(Func<Type, bool> predicate)
+        {
+            Preconditions.NotNull(predicate, nameof(predicate));
+
             return As(t => t.GetInterfaces()
                 .Where(x => x.HasMatchingGenericArity(t))
-                .Select(x => x.GetRegistrationType(t)));
+                .Select(x => x.GetRegistrationType(t))
+                .Where(predicate));
         }
 
         public ILifetimeSelector AsSelfWithInterfaces()

@@ -159,6 +159,11 @@ namespace Scrutor
             return Inner.AsImplementedInterfaces();
         }
 
+        public ILifetimeSelector AsImplementedInterfaces(Func<Type, bool> predicate)
+        {
+            return Inner.AsImplementedInterfaces(predicate);
+        }
+
         public ILifetimeSelector AsSelfWithInterfaces()
         {
             return Inner.AsSelfWithInterfaces();

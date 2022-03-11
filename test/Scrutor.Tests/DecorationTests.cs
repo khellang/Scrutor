@@ -38,10 +38,9 @@ namespace Scrutor.Tests
 
             var instance = provider.GetRequiredService<IDecoratedService>();
 
-            var decorator = Assert.IsType<Decorator>(instance);
-            var outerDecorator = Assert.IsType<Decorator>(decorator.Inner);
-
-            Assert.IsType<Decorated>(outerDecorator.Inner);
+            var outerDecorator = Assert.IsType<Decorator>(instance);
+            var innerDecorator = Assert.IsType<Decorator>(outerDecorator.Inner);
+            _ = Assert.IsType<Decorated>(innerDecorator.Inner);
         }
 
         [Fact]
@@ -482,12 +481,7 @@ namespace Scrutor.Tests
         {
             public Decorator(IDecoratedService inner, IService injectedService = null)
             {
-                if (inner == null)
-                {
-                    throw new ArgumentNullException(nameof(inner));
-                }
-
-                Inner = inner;
+                Inner = inner ?? throw new ArgumentNullException(nameof(inner));
                 InjectedService = injectedService;
             }
 
@@ -524,11 +518,7 @@ namespace Scrutor.Tests
 
             public bool WasDisposed { get; private set; }
 
-            public void Dispose()
-            {
-                Inner.Dispose();
-                WasDisposed = true;
-            }
+            public void Dispose() => WasDisposed = true;
         }
 
         public interface IEvent

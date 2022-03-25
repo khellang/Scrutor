@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 
 namespace Scrutor.Decoration
 {
@@ -7,6 +6,6 @@ namespace Scrutor.Decoration
     {
         public Type ServiceType { get; }
         public bool CanDecorate(Type serviceType);
-        public Func<IServiceProvider, object> CreateDecorator(ServiceDescriptor descriptor);
+        public Func<IServiceProvider, object> CreateDecorator(Type serviceType);
     }
 }

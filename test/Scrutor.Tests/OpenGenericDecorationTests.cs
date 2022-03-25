@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using Xunit;
 
 namespace Scrutor.Tests
@@ -28,7 +29,7 @@ namespace Scrutor.Tests
         {
             var provider = ConfigureProvider(services =>
             {
-                services.AddSingleton<IQueryHandler<MyQuery,MyResult>, MyQueryHandler>();
+                services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MyQueryHandler>();
                 services.Decorate(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
                 services.Decorate(typeof(IQueryHandler<,>), typeof(TelemetryQueryHandler<,>));
             });
@@ -114,8 +115,67 @@ namespace Scrutor.Tests
             var constrainedInstance = provider.GetRequiredService<IQueryHandler<MyConstrainedQuery, MyResult>>();
 
             Assert.IsType<MyQueryHandler>(instance);
-            Assert.IsType<ConstrainedDecoratorQueryHandler<MyConstrainedQuery,MyResult>>(constrainedInstance);
+            Assert.IsType<ConstrainedDecoratorQueryHandler<MyConstrainedQuery, MyResult>>(constrainedInstance);
         }
+
+
+        #region Individual functions tests
+
+        [Fact]
+        public void DecorationFunctionsDoSupportOpenGenericType()
+        {
+            var allDecorationFunctions = new Action<IServiceCollection>[]
+            {
+                sc => sc.Decorate(typeof(QueryHandler<,>), typeof(LoggingQueryHandler<,>)),
+                sc => sc.TryDecorate(typeof(QueryHandler<,>), typeof(LoggingQueryHandler<,>)),
+            };
+
+            foreach (var decorationFunction in allDecorationFunctions)
+            {
+                var provider = ConfigureProvider(services =>
+                {
+                    services.AddSingleton<QueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+                    decorationFunction(services);
+                });
+
+                var instance = provider.GetRequiredService<QueryHandler<MyQuery, MyResult>>();
+                var decorator = Assert.IsType<LoggingQueryHandler<MyQuery, MyResult>>(instance);
+                Assert.IsType<MyQueryHandler>(decorator.Inner);
+            }
+        }
+
+        [Fact]
+        public void DecorationFunctionsDoNotSupportOpenGenericType()
+        {
+            var allDecorationFunctions = new Action<IServiceCollection>[]
+            {
+                sc => sc.Decorate(typeof(QueryHandler<,>), (object obj, IServiceProvider sp) => new LoggingQueryHandler<MyQuery, MyResult>((IQueryHandler<MyQuery, MyResult>)obj)),
+                sc => sc.TryDecorate(typeof(QueryHandler<,>), (object obj, IServiceProvider sp) => new LoggingQueryHandler<MyQuery, MyResult>((IQueryHandler<MyQuery, MyResult>)obj)),
+                sc => sc.Decorate(typeof(QueryHandler<,>), (object obj) => new LoggingQueryHandler<MyQuery, MyResult>((IQueryHandler<MyQuery, MyResult>)obj)),
+                sc => sc.TryDecorate(typeof(QueryHandler<,>), (object obj) => new LoggingQueryHandler<MyQuery, MyResult>((IQueryHandler<MyQuery, MyResult>)obj)),
+            };
+
+            foreach (var decorationFunction in allDecorationFunctions)
+            {
+                var provider = ConfigureProvider(services =>
+                {
+                    services.AddSingleton<QueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+
+                    try
+                    {
+                        decorationFunction(services);
+                    }
+                    catch (MissingTypeRegistrationException)
+                    {
+                    }
+                });
+
+                var instance = provider.GetRequiredService<QueryHandler<MyQuery, MyResult>>();
+                _ = Assert.IsType<MyQueryHandler>(instance);
+            }
+        }
+
+        #endregion
     }
 
     // ReSharper disable UnusedTypeParameter
@@ -134,7 +194,7 @@ namespace Scrutor.Tests
 
     public class MyConstrainedQueryHandler : QueryHandler<MyConstrainedQuery, MyResult> { }
 
-    public class ConstrainedDecoratorQueryHandler<TQuery, TResult> : DecoratorQueryHandler<TQuery, TResult> 
+    public class ConstrainedDecoratorQueryHandler<TQuery, TResult> : DecoratorQueryHandler<TQuery, TResult>
         where TQuery : MyConstraint<TResult>
     {
         public ConstrainedDecoratorQueryHandler(IQueryHandler<TQuery, TResult> inner) : base(inner) { }

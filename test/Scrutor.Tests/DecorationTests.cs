@@ -213,12 +213,6 @@ namespace Scrutor.Tests
         }
 
         [Fact]
-        public void DecoratingNonRegisteredServiceThrows()
-        {
-            Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
-        }
-
-        [Fact]
         public void Issue148_Decorate_IsAbleToDecorateConcreateTypes()
         {
             var sp = ConfigureProvider(sc =>
@@ -235,6 +229,128 @@ namespace Scrutor.Tests
             var inner = Assert.IsType<DecoratedService>(result.Inner);
             Assert.NotNull(inner.Dependency);
         }
+
+        #region Individual functions tests
+
+        [Fact]
+        public void DecorationFunctionsDoDecorateRegisteredService()
+        {
+            var allDecorationFunctions = new Action<IServiceCollection>[]
+            {
+                sc => sc.Decorate<IDecoratedService, Decorator>(),
+                sc => sc.TryDecorate<IDecoratedService, Decorator>(),
+                sc => sc.Decorate(typeof(IDecoratedService), typeof(Decorator)),
+                sc => sc.TryDecorate(typeof(IDecoratedService), typeof(Decorator)),
+                sc => sc.Decorate((IDecoratedService obj, IServiceProvider sp) => new Decorator(obj)),
+                sc => sc.TryDecorate((IDecoratedService obj, IServiceProvider sp) => new Decorator(obj)),
+                sc => sc.Decorate((IDecoratedService obj) => new Decorator(obj)),
+                sc => sc.TryDecorate((IDecoratedService obj) => new Decorator(obj)),
+                sc => sc.Decorate(typeof(IDecoratedService), (object obj, IServiceProvider sp) => new Decorator((IDecoratedService)obj)),
+                sc => sc.TryDecorate(typeof(IDecoratedService), (object obj, IServiceProvider sp) => new Decorator((IDecoratedService)obj)),
+                sc => sc.Decorate(typeof(IDecoratedService), (object obj) => new Decorator((IDecoratedService)obj)),
+                sc => sc.TryDecorate(typeof(IDecoratedService), (object obj) => new Decorator((IDecoratedService)obj))
+            };
+
+            foreach (var decorationFunction in allDecorationFunctions)
+            {
+                var provider = ConfigureProvider(services =>
+                {
+                    services.AddSingleton<IDecoratedService, Decorated>();
+                    decorationFunction(services);
+                });
+
+                var instance = provider.GetRequiredService<IDecoratedService>();
+                var decorator = Assert.IsType<Decorator>(instance);
+                Assert.IsType<Decorated>(decorator.Inner);
+            }
+        }
+
+        [Fact]
+        public void DecorationFunctionsProvideScopedServiceProvider()
+        {
+            IServiceProvider actual = default;
+
+            var decorationFunctions = new Action<IServiceCollection>[]
+            {
+                sc => sc.Decorate((IDecoratedService obj, IServiceProvider sp) =>
+                {
+                    actual = sp;
+                    return null;
+                }),
+                sc => sc.TryDecorate((IDecoratedService obj, IServiceProvider sp) =>
+                {
+                    actual = sp;
+                    return null;
+                }),
+                sc => sc.Decorate(typeof(IDecoratedService), (object obj, IServiceProvider sp) =>
+                {
+                    actual = sp;
+                    return null;
+                }),
+                sc => sc.TryDecorate(typeof(IDecoratedService), (object obj, IServiceProvider sp) =>
+                {
+                    actual = sp;
+                    return null;
+                }),
+            };
+
+            foreach (var decorationMethod in decorationFunctions)
+            {
+                var provider = ConfigureProvider(services =>
+                {
+                    services.AddScoped<IDecoratedService, Decorated>();
+                    decorationMethod(services);
+                });
+
+                using var scope = provider.CreateScope();
+                var expected = scope.ServiceProvider;
+                _ = scope.ServiceProvider.GetService<IDecoratedService>();
+                Assert.Same(expected, actual);
+            }
+        }
+
+        [Fact]
+        public void DecorateThrowsMissingTypeRegistrationWhenNoTypeRegistered()
+        {
+            Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
+            Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IDecoratedService), typeof(Decorator))));
+            Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate((IDecoratedService obj, IServiceProvider sp) => new Decorated())));
+            Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate((IDecoratedService sp) => new Decorated())));
+            Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IDecoratedService), (object obj, IServiceProvider sp) => new Decorated())));
+            Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IDecoratedService), (object obj) => new Decorated())));
+        }
+
+        [Fact]
+        public void TryDecorateReturnsBoolResult()
+        {
+            var allDecorationMethods = new Func<IServiceCollection, bool>[]
+            {
+                sc => sc.TryDecorate<IDecoratedService, Decorator>(),
+                sc => sc.TryDecorate(typeof(IDecoratedService), typeof(Decorator)),
+                sc => sc.TryDecorate((IDecoratedService obj, IServiceProvider sp) => new Decorator(obj)),
+                sc => sc.TryDecorate((IDecoratedService obj) => new Decorator(obj)),
+                sc => sc.TryDecorate(typeof(IDecoratedService), (object obj, IServiceProvider sp) => new Decorator((IDecoratedService)obj)),
+                sc => sc.TryDecorate(typeof(IDecoratedService), (object obj) => new Decorator((IDecoratedService)obj))
+            };
+
+            foreach (var decorationMethod in allDecorationMethods)
+            {
+                var provider = ConfigureProvider(services =>
+                {
+                    var isDecorated = decorationMethod(services);
+                    Assert.False(isDecorated);
+
+                    services.AddSingleton<IDecoratedService, Decorated>();
+
+                    isDecorated = decorationMethod(services);
+                    Assert.True(isDecorated);
+                });
+            }
+        }
+
+        #endregion
+
+        #region DI Scope test
 
         [Fact]
         public void DecoratedTransientServiceRetainsScope()
@@ -321,6 +437,8 @@ namespace Scrutor.Tests
             Assert.Equal(decorator1.Inner.Dependency, decorator2.Inner.Dependency);
         }
 
+        #endregion
+
         #region Mocks
 
         public interface IDecoratedService { }
@@ -364,6 +482,11 @@ namespace Scrutor.Tests
         {
             public Decorator(IDecoratedService inner, IService injectedService = null)
             {
+                if (inner == null)
+                {
+                    throw new ArgumentNullException(nameof(inner));
+                }
+
                 Inner = inner;
                 InjectedService = injectedService;
             }

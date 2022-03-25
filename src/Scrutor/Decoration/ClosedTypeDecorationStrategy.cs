@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 
 namespace Scrutor.Decoration
 {
@@ -20,16 +19,16 @@ namespace Scrutor.Decoration
 
         public bool CanDecorate(Type serviceType) => _serviceType == serviceType;
 
-        public Func<IServiceProvider, object> CreateDecorator(ServiceDescriptor descriptor)
+        public Func<IServiceProvider, object> CreateDecorator(Type serviceType)
         {
             if (_decoratorType is not null)
             {
-                return DecoratorInstanceFactory.Default(descriptor, _decoratorType);
+                return DecoratorInstanceFactory.Default(serviceType, _decoratorType);
             }
 
             if (_decoratorFactory is not null)
             {
-                return DecoratorInstanceFactory.Custom(descriptor, _decoratorFactory);
+                return DecoratorInstanceFactory.Custom(serviceType, _decoratorFactory);
             }
 
             throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");

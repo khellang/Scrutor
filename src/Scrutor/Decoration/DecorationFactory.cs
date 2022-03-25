@@ -8,9 +8,9 @@ namespace Scrutor.Decoration
         {
             IDecorationStrategy strategy;
 
-            if (serviceType.IsOpenGeneric() && decoratorType is not null &&  decoratorType.IsOpenGeneric())
+            if (serviceType.IsOpenGeneric())
             {
-                strategy = new OpenGenericDecorationStrategy(serviceType, decoratorType);
+                strategy = new OpenGenericDecorationStrategy(serviceType, decoratorType, decoratorFactory);
             }
             else
             {

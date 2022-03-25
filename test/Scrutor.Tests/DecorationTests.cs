@@ -144,15 +144,16 @@ namespace Scrutor.Tests
         {
             var provider = ConfigureProvider(services =>
             {
-                services.AddTransient<IDisposableService, DisposableService>();
+                services.AddScoped<IDisposableService, DisposableService>();
                 services.Decorate<IDisposableService, DisposableServiceDecorator>();
             });
 
-            var disposable = provider.GetRequiredService<IDisposableService>();
-
-            var decorator = Assert.IsType<DisposableServiceDecorator>(disposable);
-
-            provider.Dispose();
+            DisposableServiceDecorator decorator;
+            using (var scope = provider.CreateScope())
+            {
+                var disposable = scope.ServiceProvider.GetRequiredService<IDisposableService>();
+                decorator = Assert.IsType<DisposableServiceDecorator>(disposable);
+            }
 
             Assert.True(decorator.WasDisposed);
             Assert.True(decorator.Inner.WasDisposed);
@@ -163,7 +164,7 @@ namespace Scrutor.Tests
         {
             // See issue: https://github.com/khellang/Scrutor/issues/125
 
-            bool IsHandlerButNotDecorator(Type type)
+            static bool IsHandlerButNotDecorator(Type type)
             {
                 var isHandlerDecorator = false;
 
@@ -227,13 +228,100 @@ namespace Scrutor.Tests
                     .AddTransient<DecoratedService>()
                     .Decorate<DecoratedService, Decorator2>();
             });
-            
+
             var result = sp.GetService<DecoratedService>() as Decorator2;
-            
-            Assert.NotNull(result);  
-            Assert.NotNull(result.Inner);
-            Assert.NotNull(result.Inner.Dependency);
+
+            Assert.NotNull(result);
+            var inner = Assert.IsType<DecoratedService>(result.Inner);
+            Assert.NotNull(inner.Dependency);
         }
+
+        [Fact]
+        public void DecoratedTransientServiceRetainsScope()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddTransient<IDecoratedService, Decorated>();
+                services.Decorate<IDecoratedService, Decorator>();
+            });
+
+            using var scope = provider.CreateScope();
+            var service1 = scope.ServiceProvider.GetRequiredService<IDecoratedService>();
+            var service2 = scope.ServiceProvider.GetRequiredService<IDecoratedService>();
+
+            Assert.NotEqual(service1, service2);
+        }
+
+        [Fact]
+        public void DecoratedScopedServiceRetainsScope()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddScoped<IDecoratedService, Decorated>();
+                services.Decorate<IDecoratedService, Decorator>();
+            });
+
+            object service1;
+
+            using (var scope = provider.CreateScope())
+            {
+                service1 = scope.ServiceProvider.GetRequiredService<IDecoratedService>();
+                var service2 = scope.ServiceProvider.GetRequiredService<IDecoratedService>();
+                Assert.Same(service1, service2);
+            }
+
+            using (var scope = provider.CreateScope())
+            {
+                var service2 = scope.ServiceProvider.GetRequiredService<IDecoratedService>();
+                Assert.NotSame(service1, service2);
+            }
+        }
+
+        [Fact]
+        public void DecoratedSingletonServiceRetainsScope()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddSingleton<IDecoratedService, Decorated>();
+                services.Decorate<IDecoratedService, Decorator>();
+            });
+
+            object service1;
+
+            using (var scope = provider.CreateScope())
+            {
+                service1 = scope.ServiceProvider.GetRequiredService<IDecoratedService>();
+                var service2 = scope.ServiceProvider.GetRequiredService<IDecoratedService>();
+                Assert.Same(service1, service2);
+            }
+
+            using (var scope = provider.CreateScope())
+            {
+                var service2 = scope.ServiceProvider.GetRequiredService<IDecoratedService>();
+                Assert.Same(service1, service2);
+            }
+        }
+
+        [Fact]
+        public void DependentServicesRetainTheirOwnScope()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.AddScoped<IService, SomeRandomService>();
+                services.AddTransient<DecoratedService>();
+                services.Decorate<DecoratedService, Decorator2>();
+            });
+
+            using var scope = provider.CreateScope();
+            var decorator1 = scope.ServiceProvider.GetRequiredService<DecoratedService>() as Decorator2;
+            var decorator2 = scope.ServiceProvider.GetRequiredService<DecoratedService>() as Decorator2;
+
+            Assert.NotEqual(decorator1, decorator2);
+            Assert.NotEqual(decorator1.Inner, decorator2.Inner);
+            Assert.Equal(decorator1.Inner.Dependency, decorator2.Inner.Dependency);
+        }
+
+        #region Mocks
 
         public interface IDecoratedService { }
 
@@ -334,7 +422,7 @@ namespace Scrutor.Tests
         }
 
         public sealed class MyEvent : IEvent
-        {}
+        { }
 
         internal sealed class MyEvent1Handler : IEventHandler<MyEvent>
         {
@@ -366,7 +454,7 @@ namespace Scrutor.Tests
             }
         }
 
-        internal sealed class MyEventHandlerDecorator<TEvent> : IEventHandler<TEvent>, IHandlerDecorator where TEvent: class, IEvent
+        internal sealed class MyEventHandlerDecorator<TEvent> : IEventHandler<TEvent>, IHandlerDecorator where TEvent : class, IEvent
         {
             public readonly IEventHandler<TEvent> Handler;
 
@@ -380,5 +468,7 @@ namespace Scrutor.Tests
                 return Handler.Handle(@event) + 1;
             }
         }
+
+        #endregion
     }
 }

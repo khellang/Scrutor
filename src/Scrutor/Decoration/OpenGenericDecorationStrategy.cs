@@ -3,15 +3,17 @@ using System;
 
 namespace Scrutor.Decoration
 {
-    internal class OpenGenericDecorationStrategy : IDecorationStrategy
+    internal sealed class OpenGenericDecorationStrategy : IDecorationStrategy
     {
         private readonly Type _serviceType;
-        private readonly Type _decoratorType;
+        private readonly Type? _decoratorType;
+        private readonly Func<object, IServiceProvider, object>? _decoratorFactory;
 
-        public OpenGenericDecorationStrategy(Type serviceType, Type decoratorType)
+        public OpenGenericDecorationStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
         {
             _serviceType = serviceType;
             _decoratorType = decoratorType;
+            _decoratorFactory = decoratorFactory;
         }
 
         public Type ServiceType => _serviceType;
@@ -28,10 +30,20 @@ namespace Scrutor.Decoration
 
         public Func<IServiceProvider, object> CreateDecorator(ServiceDescriptor descriptor)
         {
-            var genericArguments = descriptor.ServiceType.GetGenericArguments();
-            var closedDecorator = _decoratorType.MakeGenericType(genericArguments);
+            if (_decoratorType is not null)
+            {
+                var genericArguments = descriptor.ServiceType.GetGenericArguments();
+                var closedDecorator = _decoratorType.MakeGenericType(genericArguments);
 
-            return DecoratorInstanceFactory.Default(descriptor, closedDecorator);
+                return DecoratorInstanceFactory.Default(descriptor, closedDecorator);
+            }
+
+            if (_decoratorFactory is not null)
+            {
+                return DecoratorInstanceFactory.Custom(descriptor, _decoratorFactory);
+            }
+
+            throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");
         }
 
         private bool HasCompatibleGenericArguments(Type serviceType)

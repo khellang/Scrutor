@@ -159,6 +159,11 @@ namespace Scrutor
             return Inner.AsImplementedInterfaces();
         }
 
+        public ILifetimeSelector AsImplementedInterfaces(Func<Type, bool> predicate)
+        {
+            return Inner.AsImplementedInterfaces(predicate);
+        }
+
         public ILifetimeSelector AsSelfWithInterfaces()
         {
             return Inner.AsSelfWithInterfaces();
@@ -169,7 +174,7 @@ namespace Scrutor
             return Inner.AsMatchingInterface();
         }
 
-        public ILifetimeSelector AsMatchingInterface(Action<TypeInfo, IImplementationTypeFilter> action)
+        public ILifetimeSelector AsMatchingInterface(Action<Type, IImplementationTypeFilter> action)
         {
             return Inner.AsMatchingInterface(action);
         }
@@ -191,14 +196,11 @@ namespace Scrutor
 
         #endregion
 
-        void ISelector.Populate(IServiceCollection services, RegistrationStrategy strategy)
+        void ISelector.Populate(IServiceCollection services, RegistrationStrategy? strategy)
         {
-            if (!Lifetime.HasValue)
-            {
-                Lifetime = ServiceLifetime.Transient;
-            }
+            strategy ??= RegistrationStrategy.Append;
 
-            strategy = strategy ?? RegistrationStrategy.Append;
+            var lifetime = Lifetime ?? ServiceLifetime.Transient;
 
             foreach (var typeMap in TypeMaps)
             {
@@ -206,12 +208,12 @@ namespace Scrutor
                 {
                     var implementationType = typeMap.ImplementationType;
 
-                    if (!implementationType.IsAssignableTo(serviceType))
+                    if (!implementationType.IsBasedOn(serviceType))
                     {
                         throw new InvalidOperationException($@"Type ""{implementationType.ToFriendlyName()}"" is not assignable to ""${serviceType.ToFriendlyName()}"".");
                     }
 
-                    var descriptor = new ServiceDescriptor(serviceType, implementationType, Lifetime.Value);
+                    var descriptor = new ServiceDescriptor(serviceType, implementationType, lifetime);
 
                     strategy.Apply(services, descriptor);
                 }
@@ -221,7 +223,7 @@ namespace Scrutor
             {
                 foreach (var serviceType in typeFactoryMap.ServiceTypes)
                 {
-                    var descriptor = new ServiceDescriptor(serviceType, typeFactoryMap.ImplementationFactory, Lifetime.Value);
+                    var descriptor = new ServiceDescriptor(serviceType, typeFactoryMap.ImplementationFactory, lifetime);
 
                     strategy.Apply(services, descriptor);
                 }

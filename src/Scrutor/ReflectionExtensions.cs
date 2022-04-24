@@ -11,23 +11,21 @@ namespace Scrutor
     {
         public static bool IsNonAbstractClass(this Type type, bool publicOnly)
         {
-            var typeInfo = type.GetTypeInfo();
-
-            if (typeInfo.IsSpecialName)
+            if (type.IsSpecialName)
             {
                 return false;
             }
 
-            if (typeInfo.IsClass && !typeInfo.IsAbstract)
+            if (type.IsClass && !type.IsAbstract)
             {
-                if (typeInfo.IsDefined(typeof(CompilerGeneratedAttribute), inherit: true))
+                if (type.HasAttribute<CompilerGeneratedAttribute>())
                 {
                     return false;
                 }
 
                 if (publicOnly)
                 {
-                    return typeInfo.IsPublic || typeInfo.IsNestedPublic;
+                    return type.IsPublic || type.IsNestedPublic;
                 }
 
                 return true;
@@ -38,22 +36,16 @@ namespace Scrutor
 
         public static IEnumerable<Type> GetBaseTypes(this Type type)
         {
-            var typeInfo = type.GetTypeInfo();
-
-            foreach (var implementedInterface in typeInfo.ImplementedInterfaces)
+            foreach (var implementedInterface in type.GetInterfaces())
             {
                 yield return implementedInterface;
             }
 
-            var baseType = typeInfo.BaseType;
-
+            var baseType = type.BaseType;
             while (baseType != null)
             {
-                var baseTypeInfo = baseType.GetTypeInfo();
-
                 yield return baseType;
-
-                baseType = baseTypeInfo.BaseType;
+                baseType = baseType.BaseType;
             }
         }
 
@@ -90,131 +82,120 @@ namespace Scrutor
 
         public static bool HasAttribute(this Type type, Type attributeType)
         {
-            return type.GetTypeInfo().IsDefined(attributeType, inherit: true);
+            return type.IsDefined(attributeType, inherit: true);
+        }
+
+        public static bool HasAttribute<T>(this Type type) where T : Attribute
+        {
+            return type.HasAttribute(typeof(T));
         }
 
         public static bool HasAttribute<T>(this Type type, Func<T, bool> predicate) where T : Attribute
         {
-            return type.GetTypeInfo().GetCustomAttributes<T>(inherit: true).Any(predicate);
+            return type.GetCustomAttributes<T>(inherit: true).Any(predicate);
         }
 
-        public static bool IsAssignableTo(this Type type, Type otherType)
+        public static bool IsBasedOn(this Type type, Type otherType)
         {
-            var typeInfo = type.GetTypeInfo();
-            var otherTypeInfo = otherType.GetTypeInfo();
-
-            if (otherTypeInfo.IsGenericTypeDefinition)
+            if (otherType.IsGenericTypeDefinition)
             {
-                return typeInfo.IsAssignableToGenericTypeDefinition(otherTypeInfo);
+                return type.IsAssignableToGenericTypeDefinition(otherType);
             }
 
-            return otherTypeInfo.IsAssignableFrom(typeInfo);
+            return otherType.IsAssignableFrom(type);
         }
 
-        private static bool IsAssignableToGenericTypeDefinition(this TypeInfo typeInfo, TypeInfo genericTypeInfo)
+        private static bool IsAssignableToGenericTypeDefinition(this Type type, Type genericType)
         {
-            var interfaceTypes = typeInfo.ImplementedInterfaces.Select(t => t.GetTypeInfo());
-
-            foreach (var interfaceType in interfaceTypes)
+            foreach (var interfaceType in type.GetInterfaces())
             {
                 if (interfaceType.IsGenericType)
                 {
-                    var typeDefinitionTypeInfo = interfaceType
-                        .GetGenericTypeDefinition()
-                        .GetTypeInfo();
-
-                    if (typeDefinitionTypeInfo.Equals(genericTypeInfo))
+                    var genericTypeDefinition = interfaceType.GetGenericTypeDefinition();
+                    if (genericTypeDefinition == genericType)
                     {
                         return true;
                     }
                 }
             }
 
-            if (typeInfo.IsGenericType)
+            if (type.IsGenericType)
             {
-                var typeDefinitionTypeInfo = typeInfo
-                    .GetGenericTypeDefinition()
-                    .GetTypeInfo();
-
-                if (typeDefinitionTypeInfo.Equals(genericTypeInfo))
+                var genericTypeDefinition = type.GetGenericTypeDefinition();
+                if (genericTypeDefinition == genericType)
                 {
                     return true;
                 }
             }
 
-            var baseTypeInfo = typeInfo.BaseType?.GetTypeInfo();
-
-            if (baseTypeInfo is null)
+            var baseType = type.BaseType;
+            if (baseType is null)
             {
                 return false;
             }
 
-            return baseTypeInfo.IsAssignableToGenericTypeDefinition(genericTypeInfo);
+            return baseType.IsAssignableToGenericTypeDefinition(genericType);
         }
 
-        /// <summary>
-        /// Find matching interface by name C# interface name convention.  Optionally use a filter.
-        /// </summary>
-        /// <param name="typeInfo"></param>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public static IEnumerable<Type> FindMatchingInterface(this TypeInfo typeInfo, Action<TypeInfo, IImplementationTypeFilter>? action)
+        public static IEnumerable<Type> FindMatchingInterface(this Type type, Action<Type, IImplementationTypeFilter>? action)
         {
-            var matchingInterfaceName = $"I{typeInfo.Name}";
+            var matchingInterfaceName = $"I{type.Name}";
 
-            var matchedInterfaces = GetImplementedInterfacesToMap(typeInfo)
+            var matchedInterfaces = GetImplementedInterfacesToMap(type)
                 .Where(x => string.Equals(x.Name, matchingInterfaceName, StringComparison.Ordinal))
                 .ToArray();
 
-            Type type;
+            if (matchedInterfaces.Length == 0)
+            {
+                yield break;
+            }
+
+            Type? matchingType;
             if (action is null)
             {
-                type = matchedInterfaces.FirstOrDefault();
+                matchingType = matchedInterfaces.FirstOrDefault();
             }
             else
             {
                 var filter = new ImplementationTypeFilter(matchedInterfaces);
 
-                action(typeInfo, filter);
+                action(type, filter);
 
-                type = filter.Types.FirstOrDefault();
+                matchingType = filter.Types.FirstOrDefault();
             }
 
-            if (type is null)
+            if (matchingType is null)
             {
                 yield break;
             }
 
-            yield return type;
+            yield return matchingType;
         }
 
-        private static IEnumerable<Type> GetImplementedInterfacesToMap(TypeInfo typeInfo)
+        private static IEnumerable<Type> GetImplementedInterfacesToMap(Type type)
         {
-            if (!typeInfo.IsGenericType)
+            if (!type.IsGenericType)
             {
-                return typeInfo.ImplementedInterfaces;
+                return type.GetInterfaces();
             }
 
-            if (!typeInfo.IsGenericTypeDefinition)
+            if (!type.IsGenericTypeDefinition)
             {
-                return typeInfo.ImplementedInterfaces;
+                return type.GetInterfaces();
             }
 
-            return FilterMatchingGenericInterfaces(typeInfo);
+            return FilterMatchingGenericInterfaces(type);
         }
 
-        private static IEnumerable<Type> FilterMatchingGenericInterfaces(TypeInfo typeInfo)
+        private static IEnumerable<Type> FilterMatchingGenericInterfaces(Type type)
         {
-            var genericTypeParameters = typeInfo.GenericTypeParameters;
+            var genericArguments = type.GetGenericArguments();
 
-            foreach (var current in typeInfo.ImplementedInterfaces)
+            foreach (var current in type.GetInterfaces())
             {
-                var currentTypeInfo = current.GetTypeInfo();
-
-                if (currentTypeInfo.IsGenericType && currentTypeInfo.ContainsGenericParameters
-                    && GenericParametersMatch(genericTypeParameters, currentTypeInfo.GenericTypeArguments))
+                if (current.IsGenericType && current.ContainsGenericParameters && GenericParametersMatch(genericArguments, current.GetGenericArguments()))
                 {
-                    yield return currentTypeInfo.GetGenericTypeDefinition();
+                    yield return current.GetGenericTypeDefinition();
                 }
             }
         }
@@ -244,19 +225,17 @@ namespace Scrutor
 
         public static bool IsOpenGeneric(this Type type)
         {
-            return type.GetTypeInfo().IsGenericTypeDefinition;
+            return type.IsGenericTypeDefinition;
         }
 
-        public static bool HasMatchingGenericArity(this Type interfaceType, TypeInfo typeInfo)
+        public static bool HasMatchingGenericArity(this Type interfaceType, Type type)
         {
-            if (typeInfo.IsGenericType)
+            if (type.IsGenericType)
             {
-                var interfaceTypeInfo = interfaceType.GetTypeInfo();
-
-                if (interfaceTypeInfo.IsGenericType)
+                if (interfaceType.IsGenericType)
                 {
-                    var argumentCount = interfaceType.GenericTypeArguments.Length;
-                    var parameterCount = typeInfo.GenericTypeParameters.Length;
+                    var argumentCount = interfaceType.GetGenericArguments().Length;
+                    var parameterCount = type.GetGenericArguments().Length;
 
                     return argumentCount == parameterCount;
                 }
@@ -267,16 +246,11 @@ namespace Scrutor
             return true;
         }
 
-        public static Type GetRegistrationType(this Type interfaceType, TypeInfo typeInfo)
+        public static Type GetRegistrationType(this Type interfaceType, Type type)
         {
-            if (typeInfo.IsGenericTypeDefinition)
+            if (type.IsGenericTypeDefinition && interfaceType.IsGenericType)
             {
-                var interfaceTypeInfo = interfaceType.GetTypeInfo();
-
-                if (interfaceTypeInfo.IsGenericType)
-                {
-                    return interfaceType.GetGenericTypeDefinition();
-                }
+                return interfaceType.GetGenericTypeDefinition();
             }
 
             return interfaceType;

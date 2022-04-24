@@ -19,7 +19,7 @@ namespace Scrutor
 
         private IEnumerable<Type> Types { get; }
 
-        private List<ISelector> Selectors { get; } = new List<ISelector>();
+        private List<ISelector> Selectors { get; } = new();
 
         public IServiceTypeSelector AddClasses()
         {
@@ -120,7 +120,7 @@ namespace Scrutor
 
         #endregion
 
-        void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
+        void ISelector.Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
         {
             if (Selectors.Count == 0)
             {

@@ -42,7 +42,7 @@ namespace Scrutor
                 yield break;
             }
 
-            if (!fallbackType.IsAssignableTo(ServiceType))
+            if (!fallbackType.IsBasedOn(ServiceType))
             {
                 throw new InvalidOperationException($@"Type ""{fallbackType.ToFriendlyName()}"" is not assignable to ""{ServiceType.ToFriendlyName()}"".");
             }

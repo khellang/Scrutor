@@ -36,7 +36,7 @@ namespace Scrutor
         {
             Preconditions.NotNull(types, nameof(types));
 
-            return Where(t => types.Any(t.IsAssignableTo));
+            return Where(t => types.Any(t.IsBasedOn));
         }
 
         public IImplementationTypeFilter WithAttribute<T>() where T : Attribute

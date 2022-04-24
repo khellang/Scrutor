@@ -15,15 +15,13 @@ namespace Scrutor
 
         private IEnumerable<Type> Types { get; }
 
-        void ISelector.Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
+        void ISelector.Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
         {
             var strategy = registrationStrategy ?? RegistrationStrategy.Append;
 
             foreach (var type in Types)
             {
-                var typeInfo = type.GetTypeInfo();
-
-                var attributes = typeInfo.GetCustomAttributes<ServiceDescriptorAttribute>().ToArray();
+                var attributes = type.GetCustomAttributes<ServiceDescriptorAttribute>().ToArray();
 
                 // Check if the type has multiple attributes with same ServiceType.
                 var duplicates = GetDuplicates(attributes);

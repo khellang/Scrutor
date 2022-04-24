@@ -96,7 +96,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
+        public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
@@ -113,7 +113,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="decorator">The decorator function.</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static bool TryDecorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
+        public static bool TryDecorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
@@ -131,7 +131,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, TService> decorator)
+        public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, TService> decorator) where TService : notnull
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
@@ -148,7 +148,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="decorator">The decorator function.</param>
         /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
         /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-        public static bool TryDecorate<TService>(this IServiceCollection services, Func<TService, TService> decorator)
+        public static bool TryDecorate<TService>(this IServiceCollection services, Func<TService, TService> decorator) where TService : notnull
         {
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
@@ -262,7 +262,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             foreach (var closedGenericServiceType in closedGenericServiceTypes)
             {
-                var arguments = closedGenericServiceType.GenericTypeArguments;
+                var arguments = closedGenericServiceType.GetGenericArguments();
 
                 var closedServiceType = serviceType.MakeGenericType(arguments);
                 try
@@ -298,24 +298,35 @@ namespace Microsoft.Extensions.DependencyInjection
                 return false;
             }
 
-            foreach (var descriptor in descriptors)
+            foreach (var (position, value) in descriptors)
             {
-                var index = services.IndexOf(descriptor);
-
                 // To avoid reordering descriptors, in case a specific order is expected.
-                services[index] = decorator(descriptor);
+                services[position] = decorator(value);
             }
 
             error = default;
             return true;
         }
 
-        private static bool TryGetDescriptors(this IServiceCollection services, Type serviceType, out ICollection<ServiceDescriptor> descriptors)
+        private static bool TryGetDescriptors(this IServiceCollection services, Type serviceType, out IReadOnlyList<(int Position, ServiceDescriptor Value)> descriptors)
         {
-            return (descriptors = services.Where(service => service.ServiceType == serviceType).ToArray()).Any();
+            descriptors = EnumerateDescriptors().ToArray();
+            return descriptors.Count != 0;
+
+            IEnumerable<(int Position, ServiceDescriptor Value)> EnumerateDescriptors()
+            {
+                for (var i = 0; i < services.Count; ++i)
+                {
+                    var descriptor = services[i];
+                    if (descriptor.ServiceType == serviceType)
+                    {
+                        yield return (i, descriptor);
+                    }
+                }
+            }
         }
 
-        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)
+        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
         {
             IServiceActivator activator = ScrutorContext.Current.GetServiceActivatorOrDefault();
             return descriptor.WithFactory(
@@ -323,7 +334,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 provider));
         }
 
-        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator)
+        private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator) where TService : notnull
         {
             IServiceActivator activator = ScrutorContext.Current.GetServiceActivatorOrDefault();
             return descriptor.WithFactory(
@@ -337,7 +348,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 provider => provider.CreateInstance(decoratorType, activator, provider.GetInstance(descriptor, activator)));
         }
 
-        private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object?> factory)
+        private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object> factory)
         {
             return ServiceDescriptor.Describe(descriptor.ServiceType, factory, descriptor.Lifetime);
         }
@@ -349,12 +360,26 @@ namespace Microsoft.Extensions.DependencyInjection
                 return descriptor.ImplementationInstance;
             }
 
-            if (descriptor.ImplementationType != null)
+            // Not suppose to be abstract. 
+            var implementationType = descriptor.ImplementationType;
+            if (implementationType != null)
             {
-                return provider.GetServiceOrCreateInstance(serviceActivator, descriptor.ImplementationType);
+                if (implementationType == descriptor.ServiceType)
+                {
+                    // Since implementationType is equal to ServiceType we need explicitly create an implementation type through reflections in order to avoid infinite recursion.
+                    // Should not cause issue with singletons, since singleton will be a decorator and after this fact we can don't care about lifecycle of decorable service (for sure, if IDisposable of decorator disposes underlying type:))
+                    return provider.CreateInstance(implementationType);
+                }
+
+                return provider.GetServiceOrCreateInstance(implementationType);
             }
 
-            return descriptor.ImplementationFactory(provider);
+            if (descriptor.ImplementationFactory != null)
+            {
+                return descriptor.ImplementationFactory(provider);
+            }
+
+            throw new InvalidOperationException($"No implementation factory or instance or type found for {descriptor.ServiceType}.");
         }
 
         private static object GetServiceOrCreateInstance(this IServiceProvider provider, IServiceActivator serviceActivator, Type type)

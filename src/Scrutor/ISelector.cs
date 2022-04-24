@@ -4,6 +4,6 @@ namespace Scrutor
 {
     public interface ISelector
     {
-        void Populate(IServiceCollection services, RegistrationStrategy options);
+        void Populate(IServiceCollection services, RegistrationStrategy? options);
     }
 }

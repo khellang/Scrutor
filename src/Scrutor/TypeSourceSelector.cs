@@ -12,12 +12,12 @@ namespace Scrutor
         private static Assembly EntryAssembly => Assembly.GetEntryAssembly()
             ?? throw new InvalidOperationException("Could not get entry assembly.");
 
-        private List<ISelector> Selectors { get; } = new List<ISelector>();
+        private List<ISelector> Selectors { get; } = new();
 
         /// <inheritdoc />
         public IImplementationTypeSelector FromAssemblyOf<T>()
         {
-            return InternalFromAssembliesOf(new[] { typeof(T).GetTypeInfo() });
+            return InternalFromAssembliesOf(new[] { typeof(T) });
         }
 
         public IImplementationTypeSelector FromCallingAssembly()
@@ -96,14 +96,14 @@ namespace Scrutor
         {
             Preconditions.NotNull(types, nameof(types));
 
-            return InternalFromAssembliesOf(types.Select(x => x.GetTypeInfo()));
+            return InternalFromAssembliesOf(types);
         }
 
         public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
         {
             Preconditions.NotNull(types, nameof(types));
 
-            return InternalFromAssembliesOf(types.Select(t => t.GetTypeInfo()));
+            return InternalFromAssembliesOf(types);
         }
 
         public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
@@ -142,7 +142,7 @@ namespace Scrutor
             return selector.AddClasses();
         }
 
-        public void Populate(IServiceCollection services, RegistrationStrategy registrationStrategy)
+        public void Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
         {
             foreach (var selector in Selectors)
             {
@@ -150,9 +150,9 @@ namespace Scrutor
             }
         }
 
-        private IImplementationTypeSelector InternalFromAssembliesOf(IEnumerable<TypeInfo> typeInfos)
+        private IImplementationTypeSelector InternalFromAssembliesOf(IEnumerable<Type> types)
         {
-            return InternalFromAssemblies(typeInfos.Select(t => t.Assembly));
+            return InternalFromAssemblies(types.Select(t => t.Assembly));
         }
 
         private IImplementationTypeSelector InternalFromAssemblies(IEnumerable<Assembly> assemblies)

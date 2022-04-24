@@ -243,8 +243,46 @@ namespace Scrutor.Tests
             result = sp2.GetService<IDecoratedService>() as Decorator;
             Assert.True((result.Inner as DecoratedWithOptions).OptionalValue);
         }
+        
+        public void Issue148_Decorate_IsAbleToDecorateConcreateTypes()
+        {
+            var sp = ConfigureProvider(sc =>
+            {
+                sc
+                    .AddTransient<IService, SomeRandomService>()
+                    .AddTransient<DecoratedService>()
+                    .Decorate<DecoratedService, Decorator2>();
+            });
+            
+            var result = sp.GetService<DecoratedService>() as Decorator2;
+            
+            Assert.NotNull(result);  
+            Assert.NotNull(result.Inner);
+            Assert.NotNull(result.Inner.Dependency);
+        }
 
         public interface IDecoratedService { }
+
+        public class DecoratedService
+        {
+            public DecoratedService(IService dependency)
+            {
+                Dependency = dependency;
+            }
+
+            public IService Dependency { get; }
+        }
+
+        public class Decorator2 : DecoratedService
+        {
+            public Decorator2(DecoratedService decoratedService)
+                : base(null)
+            {
+                Inner = decoratedService;
+            }
+
+            public DecoratedService Inner { get; }
+        }
 
         public interface IService { }
 

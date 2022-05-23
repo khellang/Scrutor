@@ -2,13 +2,13 @@
 
 namespace Scrutor.Decoration
 {
-    internal sealed class OpenGenericDecorationStrategy : IDecorationStrategy
+    internal sealed class OpenGenericDecoratorStrategy : IDecoratorStrategy
     {
         private readonly Type _serviceType;
         private readonly Type? _decoratorType;
         private readonly Func<object, IServiceProvider, object>? _decoratorFactory;
 
-        public OpenGenericDecorationStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
+        public OpenGenericDecoratorStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
         {
             _serviceType = serviceType;
             _decoratorType = decoratorType;

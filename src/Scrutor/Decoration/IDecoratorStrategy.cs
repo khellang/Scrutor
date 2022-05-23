@@ -2,7 +2,7 @@
 
 namespace Scrutor.Decoration
 {
-    internal interface IDecorationStrategy
+    internal interface IDecoratorStrategy
     {
         public Type ServiceType { get; }
         public bool CanDecorate(Type serviceType);

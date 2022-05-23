@@ -28,10 +28,10 @@ public abstract class DecorationStrategy
         return ActivatorUtilities.CreateInstance(serviceProvider, decoratorType, instanceToDecorate);
     };
 
-    protected static Func<IServiceProvider, object> FactoryDecorator(Type decorated, Func<object, IServiceProvider, object> creationFactory) => serviceProvider =>
+    protected static Func<IServiceProvider, object> FactoryDecorator(Type decorated, Func<object, IServiceProvider, object> decoratorFactory) => serviceProvider =>
     {
         var instanceToDecorate = serviceProvider.GetRequiredService(decorated);
-        return creationFactory(instanceToDecorate, serviceProvider);
+        return decoratorFactory(instanceToDecorate, serviceProvider);
     };
 
     private static DecorationStrategy Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)

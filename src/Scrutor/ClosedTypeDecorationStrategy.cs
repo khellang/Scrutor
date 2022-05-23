@@ -2,9 +2,9 @@
 
 namespace Scrutor;
 
-internal sealed class ClosedTypeDecoratorStrategy : DecoratorStrategy
+internal sealed class ClosedTypeDecorationStrategy : DecorationStrategy
 {
-    public ClosedTypeDecoratorStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory) : base(serviceType)
+    public ClosedTypeDecorationStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory) : base(serviceType)
     {
         DecoratorType = decoratorType;
         DecoratorFactory = decoratorFactory;

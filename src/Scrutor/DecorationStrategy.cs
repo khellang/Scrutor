@@ -3,9 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor;
 
-public abstract class DecoratorStrategy
+public abstract class DecorationStrategy
 {
-    protected DecoratorStrategy(Type serviceType)
+    protected DecorationStrategy(Type serviceType)
     {
         ServiceType = serviceType;
     }
@@ -16,10 +16,10 @@ public abstract class DecoratorStrategy
     
     public abstract Func<IServiceProvider, object> CreateDecorator(Type serviceType);
     
-    internal static DecoratorStrategy WithType(Type serviceType, Type decoratorType) => 
+    internal static DecorationStrategy WithType(Type serviceType, Type decoratorType) => 
         Create(serviceType, decoratorType, decoratorFactory: null);
 
-    internal static DecoratorStrategy WithFactory(Type serviceType, Func<object, IServiceProvider, object> decoratorFactory) => 
+    internal static DecorationStrategy WithFactory(Type serviceType, Func<object, IServiceProvider, object> decoratorFactory) => 
         Create(serviceType, decoratorType: null, decoratorFactory);
     
     protected static Func<IServiceProvider, object> TypeDecorator(Type serviceType, Type decoratorType) => serviceProvider =>
@@ -34,13 +34,13 @@ public abstract class DecoratorStrategy
         return creationFactory(instanceToDecorate, serviceProvider);
     };
 
-    private static DecoratorStrategy Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
+    private static DecorationStrategy Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
     {
         if (serviceType.IsOpenGeneric())
         {
-            return new OpenGenericDecoratorStrategy(serviceType, decoratorType, decoratorFactory);
+            return new OpenGenericDecorationStrategy(serviceType, decoratorType, decoratorFactory);
         }
 
-        return new ClosedTypeDecoratorStrategy(serviceType, decoratorType, decoratorFactory);
+        return new ClosedTypeDecorationStrategy(serviceType, decoratorType, decoratorFactory);
     }
 }

@@ -1,5 +1,8 @@
+using JetBrains.Annotations;
+
 namespace Scrutor;
 
+[PublicAPI]
 public static class TypeSelectorExtensions
 {
     public static IServiceTypeSelector AddType<T>(this ITypeSelector selector)

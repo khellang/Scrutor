@@ -2,9 +2,9 @@
 
 namespace Scrutor;
 
-internal sealed class OpenGenericDecoratorStrategy : DecoratorStrategy
+internal sealed class OpenGenericDecorationStrategy : DecorationStrategy
 {
-    public OpenGenericDecoratorStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory) : base(serviceType)
+    public OpenGenericDecorationStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory) : base(serviceType)
     {
         DecoratorType = decoratorType;
         DecoratorFactory = decoratorFactory;

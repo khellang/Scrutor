@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor;
 
+[PublicAPI]
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class ServiceDescriptorAttribute : Attribute
 {

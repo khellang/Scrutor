@@ -19,7 +19,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            var decoration = DecorationFactory.Create<TService>(typeof(TDecorator), null);
+            var decoration = Decorator.Create<TService>(typeof(TDecorator), null);
             return decoration.Decorate(services);
         }
 
@@ -34,7 +34,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            var decoration = DecorationFactory.Create<TService>(typeof(TDecorator), null);
+            var decoration = Decorator.Create<TService>(typeof(TDecorator), null);
             return decoration.TryDecorate(services);
         }
 
@@ -54,7 +54,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decoratorType, nameof(decoratorType));
 
-            var decoration = DecorationFactory.Create(serviceType, decoratorType, null);
+            var decoration = Decorator.Create(serviceType, decoratorType, null);
             return decoration.Decorate(services);
         }
 
@@ -73,7 +73,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decoratorType, nameof(decoratorType));
 
-            var decoration = DecorationFactory.Create(serviceType, decoratorType, null);
+            var decoration = Decorator.Create(serviceType, decoratorType, null);
             return decoration.TryDecorate(services);
         }
 
@@ -92,7 +92,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            var decoration = DecorationFactory.Create<TService>(null, (decorated, serviceProvider) => decorator((TService)decorated, serviceProvider));
+            var decoration = Decorator.Create<TService>(null, (decorated, serviceProvider) => decorator((TService)decorated, serviceProvider));
             return decoration.Decorate(services);
         }
 
@@ -110,7 +110,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            var decoration = DecorationFactory.Create<TService>(null, (decorated, serviceProvider) => decorator((TService)decorated, serviceProvider));
+            var decoration = Decorator.Create<TService>(null, (decorated, serviceProvider) => decorator((TService)decorated, serviceProvider));
             return decoration.TryDecorate(services);
         }
 
@@ -129,7 +129,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            var decoration = DecorationFactory.Create<TService>(null, (decorated, serviceProvider) => decorator((TService)decorated));
+            var decoration = Decorator.Create<TService>(null, (decorated, serviceProvider) => decorator((TService)decorated));
             return decoration.Decorate(services);
         }
 
@@ -147,7 +147,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(services, nameof(services));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            var decoration = DecorationFactory.Create<TService>(null, (decorated, serviceProvider) => decorator((TService)decorated));
+            var decoration = Decorator.Create<TService>(null, (decorated, serviceProvider) => decorator((TService)decorated));
             return decoration.TryDecorate(services);
         }
 
@@ -167,7 +167,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            var decoration = DecorationFactory.Create(serviceType, null, decorator);
+            var decoration = Decorator.Create(serviceType, null, decorator);
             return decoration.Decorate(services);
         }
 
@@ -186,7 +186,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            var decoration = DecorationFactory.Create(serviceType, null, decorator);
+            var decoration = Decorator.Create(serviceType, null, decorator);
             return decoration.TryDecorate(services);
         }
 
@@ -206,7 +206,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            var decoration = DecorationFactory.Create(serviceType, null, (decorated, serviceProvider) => decorator(decorated));
+            var decoration = Decorator.Create(serviceType, null, (decorated, serviceProvider) => decorator(decorated));
             return decoration.Decorate(services);
         }
 
@@ -225,7 +225,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.NotNull(serviceType, nameof(serviceType));
             Preconditions.NotNull(decorator, nameof(decorator));
 
-            var decoration = DecorationFactory.Create(serviceType, null, (decorated, serviceProvider) => decorator(decorated));
+            var decoration = Decorator.Create(serviceType, null, (decorated, serviceProvider) => decorator(decorated));
             return decoration.TryDecorate(services);
         }
     }

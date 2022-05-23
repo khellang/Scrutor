@@ -5,10 +5,9 @@ namespace Scrutor.Decoration;
 
 internal readonly struct Decorator
 {
-    private Decorator(IDecoratorStrategy decoratorStrategy)
-        => DecoratorStrategy = decoratorStrategy;
+    private Decorator(IDecoratorStrategy strategy) => Strategy = strategy;
 
-    private IDecoratorStrategy DecoratorStrategy { get; }
+    private IDecoratorStrategy Strategy { get; }
 
     public static Decorator Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
     {
@@ -16,6 +15,7 @@ internal readonly struct Decorator
 
         if (serviceType.IsOpenGeneric())
         {
+            canDecorate = 
             strategy = new OpenGenericDecoratorStrategy(serviceType, decoratorType, decoratorFactory);
         }
         else
@@ -33,7 +33,7 @@ internal readonly struct Decorator
             return services;
         }
 
-        throw new MissingTypeRegistrationException(DecoratorStrategy.ServiceType);
+        throw new MissingTypeRegistrationException(Strategy.ServiceType);
 
     }
 
@@ -50,7 +50,7 @@ internal readonly struct Decorator
                 continue; // Service has already been decorated.
             }
 
-            if (!DecoratorStrategy.CanDecorate(serviceDescriptor.ServiceType))
+            if (!Strategy.CanDecorate(serviceDescriptor.ServiceType))
             {
                 continue; // Unable to decorate using the specified strategy.
             }
@@ -61,7 +61,7 @@ internal readonly struct Decorator
             services.Add(serviceDescriptor.WithServiceType(decoratedType));
 
             // replace decorator
-            var decoratorFactory = DecoratorStrategy.CreateDecorator(decoratedType);
+            var decoratorFactory = Strategy.CreateDecorator(decoratedType);
             services[i] = new ServiceDescriptor(serviceDescriptor.ServiceType, decoratorFactory, serviceDescriptor.Lifetime);
 
             decorated = true;

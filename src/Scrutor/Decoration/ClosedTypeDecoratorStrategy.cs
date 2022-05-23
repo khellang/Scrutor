@@ -4,31 +4,31 @@ namespace Scrutor.Decoration
 {
     internal sealed class ClosedTypeDecoratorStrategy : IDecoratorStrategy
     {
-        private readonly Type _serviceType;
-        private readonly Type? _decoratorType;
-        private readonly Func<object, IServiceProvider, object>? _decoratorFactory;
-
         public ClosedTypeDecoratorStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
         {
-            _serviceType = serviceType;
-            _decoratorType = decoratorType;
-            _decoratorFactory = decoratorFactory;
+            ServiceType = serviceType;
+            DecoratorType = decoratorType;
+            DecoratorFactory = decoratorFactory;
         }
 
-        public Type ServiceType => _serviceType;
+        public Type ServiceType { get; }
+        
+        private Type? DecoratorType { get; }
 
-        public bool CanDecorate(Type serviceType) => _serviceType == serviceType;
+        private Func<object, IServiceProvider, object>? DecoratorFactory { get; }
+
+        public bool CanDecorate(Type serviceType) => ServiceType == serviceType;
 
         public Func<IServiceProvider, object> CreateDecorator(Type serviceType)
         {
-            if (_decoratorType is not null)
+            if (DecoratorType is not null)
             {
-                return DecoratorInstanceFactory.Default(serviceType, _decoratorType);
+                return DecoratorInstanceFactory.Default(serviceType, DecoratorType);
             }
 
-            if (_decoratorFactory is not null)
+            if (DecoratorFactory is not null)
             {
-                return DecoratorInstanceFactory.Custom(serviceType, _decoratorFactory);
+                return DecoratorInstanceFactory.Custom(serviceType, DecoratorFactory);
             }
 
             throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");

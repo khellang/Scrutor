@@ -8,9 +8,9 @@ namespace Scrutor.Decoration
 {
     internal class DecoratedType : Type
     {
-        private readonly Type _proxiedType;
+        public DecoratedType(Type type) => ProxiedType = type;
 
-        public DecoratedType(Type type) => _proxiedType = type;
+        private Type ProxiedType { get; }
 
         // We use object reference equality here to ensure that only the decorating object can match.
 
@@ -18,166 +18,166 @@ namespace Scrutor.Decoration
 
         public override bool Equals(object? o) => ReferenceEquals(this, o);
 
-        public override int GetHashCode() => _proxiedType.GetHashCode();
+        public override int GetHashCode() => ProxiedType.GetHashCode();
 
-        public override string? Namespace => _proxiedType.Namespace;
-        public override string? AssemblyQualifiedName => _proxiedType.AssemblyQualifiedName;
-        public override string? FullName => _proxiedType.FullName;
+        public override string? Namespace => ProxiedType.Namespace;
+        public override string? AssemblyQualifiedName => ProxiedType.AssemblyQualifiedName;
+        public override string? FullName => ProxiedType.FullName;
 
 
-        public override Assembly Assembly => _proxiedType.Assembly;
-        public override Module Module => _proxiedType.Module;
+        public override Assembly Assembly => ProxiedType.Assembly;
+        public override Module Module => ProxiedType.Module;
 
-        public override Type? DeclaringType => _proxiedType.DeclaringType;
-        public override MethodBase? DeclaringMethod => _proxiedType.DeclaringMethod;
+        public override Type? DeclaringType => ProxiedType.DeclaringType;
+        public override MethodBase? DeclaringMethod => ProxiedType.DeclaringMethod;
 
-        public override Type? ReflectedType => _proxiedType.ReflectedType;
-        public override Type UnderlyingSystemType => _proxiedType.UnderlyingSystemType;
-
-#if NETCOREAPP3_1_OR_GREATER
-        public override bool IsTypeDefinition => _proxiedType.IsTypeDefinition;
-#endif
-        protected override bool IsArrayImpl() => _proxiedType.HasElementType;
-        protected override bool IsByRefImpl() => _proxiedType.IsByRef;
-        protected override bool IsPointerImpl() => _proxiedType.IsPointer;
-
-        public override bool IsConstructedGenericType => _proxiedType.IsConstructedGenericType;
-        public override bool IsGenericParameter => _proxiedType.IsGenericParameter;
-#if NETCOREAPP3_1_OR_GREATER
-        public override bool IsGenericTypeParameter => _proxiedType.IsGenericTypeParameter;
-        public override bool IsGenericMethodParameter => _proxiedType.IsGenericMethodParameter;
-#endif
-        public override bool IsGenericType => _proxiedType.IsGenericType;
-        public override bool IsGenericTypeDefinition => _proxiedType.IsGenericTypeDefinition;
+        public override Type? ReflectedType => ProxiedType.ReflectedType;
+        public override Type UnderlyingSystemType => ProxiedType.UnderlyingSystemType;
 
 #if NETCOREAPP3_1_OR_GREATER
-        public override bool IsSZArray => _proxiedType.IsSZArray;
-        public override bool IsVariableBoundArray => _proxiedType.IsVariableBoundArray;
-
-        public override bool IsByRefLike => _proxiedType.IsByRefLike;
+        public override bool IsTypeDefinition => ProxiedType.IsTypeDefinition;
 #endif
-        protected override bool HasElementTypeImpl() => _proxiedType.HasElementType;
-        public override Type? GetElementType() => _proxiedType.GetElementType();
+        protected override bool IsArrayImpl() => ProxiedType.HasElementType;
+        protected override bool IsByRefImpl() => ProxiedType.IsByRef;
+        protected override bool IsPointerImpl() => ProxiedType.IsPointer;
 
-        public override int GetArrayRank() => _proxiedType.GetArrayRank();
-
-        public override Type GetGenericTypeDefinition() => _proxiedType.GetGenericTypeDefinition();
-        public override Type[] GetGenericArguments() => _proxiedType.GetGenericArguments();
-
-        public override int GenericParameterPosition => _proxiedType.GenericParameterPosition;
-        public override GenericParameterAttributes GenericParameterAttributes => _proxiedType.GenericParameterAttributes;
-        public override Type[] GetGenericParameterConstraints() => _proxiedType.GetGenericParameterConstraints();
-
-        protected override TypeAttributes GetAttributeFlagsImpl() => _proxiedType.Attributes;
-
-        protected override bool IsCOMObjectImpl() => _proxiedType.IsCOMObject;
-        protected override bool IsContextfulImpl() => _proxiedType.IsContextful;
-
-        public override bool IsEnum => _proxiedType.IsEnum;
-        protected override bool IsMarshalByRefImpl() => _proxiedType.IsMarshalByRef;
-        protected override bool IsPrimitiveImpl() => _proxiedType.IsPrimitive;
-
-        protected override bool IsValueTypeImpl() => _proxiedType.IsValueType;
+        public override bool IsConstructedGenericType => ProxiedType.IsConstructedGenericType;
+        public override bool IsGenericParameter => ProxiedType.IsGenericParameter;
 #if NETCOREAPP3_1_OR_GREATER
-        public override bool IsSignatureType =>_proxiedType.IsSignatureType;
+        public override bool IsGenericTypeParameter => ProxiedType.IsGenericTypeParameter;
+        public override bool IsGenericMethodParameter => ProxiedType.IsGenericMethodParameter;
 #endif
-        public override bool IsSecurityCritical => _proxiedType.IsSecurityCritical;
-        public override bool IsSecuritySafeCritical => _proxiedType.IsSecuritySafeCritical;
-        public override bool IsSecurityTransparent => _proxiedType.IsSecurityTransparent;
+        public override bool IsGenericType => ProxiedType.IsGenericType;
+        public override bool IsGenericTypeDefinition => ProxiedType.IsGenericTypeDefinition;
 
-        public override StructLayoutAttribute? StructLayoutAttribute => _proxiedType.StructLayoutAttribute;
+#if NETCOREAPP3_1_OR_GREATER
+        public override bool IsSZArray => ProxiedType.IsSZArray;
+        public override bool IsVariableBoundArray => ProxiedType.IsVariableBoundArray;
+
+        public override bool IsByRefLike => ProxiedType.IsByRefLike;
+#endif
+        protected override bool HasElementTypeImpl() => ProxiedType.HasElementType;
+        public override Type? GetElementType() => ProxiedType.GetElementType();
+
+        public override int GetArrayRank() => ProxiedType.GetArrayRank();
+
+        public override Type GetGenericTypeDefinition() => ProxiedType.GetGenericTypeDefinition();
+        public override Type[] GetGenericArguments() => ProxiedType.GetGenericArguments();
+
+        public override int GenericParameterPosition => ProxiedType.GenericParameterPosition;
+        public override GenericParameterAttributes GenericParameterAttributes => ProxiedType.GenericParameterAttributes;
+        public override Type[] GetGenericParameterConstraints() => ProxiedType.GetGenericParameterConstraints();
+
+        protected override TypeAttributes GetAttributeFlagsImpl() => ProxiedType.Attributes;
+
+        protected override bool IsCOMObjectImpl() => ProxiedType.IsCOMObject;
+        protected override bool IsContextfulImpl() => ProxiedType.IsContextful;
+
+        public override bool IsEnum => ProxiedType.IsEnum;
+        protected override bool IsMarshalByRefImpl() => ProxiedType.IsMarshalByRef;
+        protected override bool IsPrimitiveImpl() => ProxiedType.IsPrimitive;
+
+        protected override bool IsValueTypeImpl() => ProxiedType.IsValueType;
+#if NETCOREAPP3_1_OR_GREATER
+        public override bool IsSignatureType =>ProxiedType.IsSignatureType;
+#endif
+        public override bool IsSecurityCritical => ProxiedType.IsSecurityCritical;
+        public override bool IsSecuritySafeCritical => ProxiedType.IsSecuritySafeCritical;
+        public override bool IsSecurityTransparent => ProxiedType.IsSecurityTransparent;
+
+        public override StructLayoutAttribute? StructLayoutAttribute => ProxiedType.StructLayoutAttribute;
 
         protected override ConstructorInfo? GetConstructorImpl(BindingFlags bindingAttr, Binder? binder, CallingConventions callConvention, Type[] types, ParameterModifier[]? modifiers)
-            => _proxiedType.GetConstructor(bindingAttr, binder, callConvention, types, modifiers);
+            => ProxiedType.GetConstructor(bindingAttr, binder, callConvention, types, modifiers);
 
-        public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr) => _proxiedType.GetConstructors(bindingAttr);
+        public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr) => ProxiedType.GetConstructors(bindingAttr);
 
-        public override EventInfo? GetEvent(string name, BindingFlags bindingAttr) => _proxiedType.GetEvent(name, bindingAttr);
+        public override EventInfo? GetEvent(string name, BindingFlags bindingAttr) => ProxiedType.GetEvent(name, bindingAttr);
 
-        public override EventInfo[] GetEvents() => _proxiedType.GetEvents();
+        public override EventInfo[] GetEvents() => ProxiedType.GetEvents();
 
-        public override EventInfo[] GetEvents(BindingFlags bindingAttr) => _proxiedType.GetEvents(bindingAttr);
+        public override EventInfo[] GetEvents(BindingFlags bindingAttr) => ProxiedType.GetEvents(bindingAttr);
 
-        public override FieldInfo? GetField(string name, BindingFlags bindingAttr) => _proxiedType.GetField(name, bindingAttr);
+        public override FieldInfo? GetField(string name, BindingFlags bindingAttr) => ProxiedType.GetField(name, bindingAttr);
 
-        public override FieldInfo[] GetFields(BindingFlags bindingAttr) => _proxiedType.GetFields(bindingAttr);
+        public override FieldInfo[] GetFields(BindingFlags bindingAttr) => ProxiedType.GetFields(bindingAttr);
 
-        public override MemberInfo[] GetMember(string name, BindingFlags bindingAttr) => _proxiedType.GetMember(name, bindingAttr);
+        public override MemberInfo[] GetMember(string name, BindingFlags bindingAttr) => ProxiedType.GetMember(name, bindingAttr);
 
-        public override MemberInfo[] GetMember(string name, MemberTypes type, BindingFlags bindingAttr) => _proxiedType.GetMember(name, type, bindingAttr);
+        public override MemberInfo[] GetMember(string name, MemberTypes type, BindingFlags bindingAttr) => ProxiedType.GetMember(name, type, bindingAttr);
 
 #if NET6_0
-        public override MemberInfo GetMemberWithSameMetadataDefinitionAs(MemberInfo member) => _proxiedType.GetMemberWithSameMetadataDefinitionAs(member);
+        public override MemberInfo GetMemberWithSameMetadataDefinitionAs(MemberInfo member) => ProxiedType.GetMemberWithSameMetadataDefinitionAs(member);
 #endif
-        public override MemberInfo[] GetMembers(BindingFlags bindingAttr) => _proxiedType.GetMembers(bindingAttr);
+        public override MemberInfo[] GetMembers(BindingFlags bindingAttr) => ProxiedType.GetMembers(bindingAttr);
 
         protected override MethodInfo? GetMethodImpl(string name, BindingFlags bindingAttr, Binder? binder, CallingConventions callConvention, Type[]? types, ParameterModifier[]? modifiers)
-           => _proxiedType.GetMethod(name, bindingAttr, binder, callConvention, types!, modifiers);
+           => ProxiedType.GetMethod(name, bindingAttr, binder, callConvention, types!, modifiers);
 
-        public override MethodInfo[] GetMethods(BindingFlags bindingAttr) => _proxiedType.GetMethods(bindingAttr);
+        public override MethodInfo[] GetMethods(BindingFlags bindingAttr) => ProxiedType.GetMethods(bindingAttr);
 
-        public override Type? GetNestedType(string name, BindingFlags bindingAttr) => _proxiedType.GetNestedType(name, bindingAttr);
+        public override Type? GetNestedType(string name, BindingFlags bindingAttr) => ProxiedType.GetNestedType(name, bindingAttr);
 
-        public override Type[] GetNestedTypes(BindingFlags bindingAttr) => _proxiedType.GetNestedTypes(bindingAttr);
+        public override Type[] GetNestedTypes(BindingFlags bindingAttr) => ProxiedType.GetNestedTypes(bindingAttr);
 
         protected override PropertyInfo? GetPropertyImpl(string name, BindingFlags bindingAttr, Binder? binder, Type? returnType, Type[]? types, ParameterModifier[]? modifiers)
-            => _proxiedType.GetProperty(name, bindingAttr, binder, returnType, types!, modifiers);
+            => ProxiedType.GetProperty(name, bindingAttr, binder, returnType, types!, modifiers);
 
-        public override PropertyInfo[] GetProperties(BindingFlags bindingAttr) => _proxiedType.GetProperties(bindingAttr);
+        public override PropertyInfo[] GetProperties(BindingFlags bindingAttr) => ProxiedType.GetProperties(bindingAttr);
 
-        public override MemberInfo[] GetDefaultMembers() => _proxiedType.GetDefaultMembers();
+        public override MemberInfo[] GetDefaultMembers() => ProxiedType.GetDefaultMembers();
 
-        public override RuntimeTypeHandle TypeHandle => _proxiedType.TypeHandle;
+        public override RuntimeTypeHandle TypeHandle => ProxiedType.TypeHandle;
 
-        protected override TypeCode GetTypeCodeImpl() => Type.GetTypeCode(_proxiedType);
+        protected override TypeCode GetTypeCodeImpl() => Type.GetTypeCode(ProxiedType);
 
-        public override Guid GUID => _proxiedType.GUID;
+        public override Guid GUID => ProxiedType.GUID;
 
-        public override Type? BaseType => _proxiedType.BaseType;
+        public override Type? BaseType => ProxiedType.BaseType;
 
         public override object? InvokeMember(string name, BindingFlags invokeAttr, Binder? binder, object? target, object?[]? args, ParameterModifier[]? modifiers, CultureInfo? culture, string[]? namedParameters) =>
-            _proxiedType.InvokeMember(name, invokeAttr, binder, target, args, modifiers, culture, namedParameters);
+            ProxiedType.InvokeMember(name, invokeAttr, binder, target, args, modifiers, culture, namedParameters);
 
-        public override Type? GetInterface(string name, bool ignoreCase) => _proxiedType.GetInterface(name, ignoreCase);
-        public override Type[] GetInterfaces() => _proxiedType.GetInterfaces();
+        public override Type? GetInterface(string name, bool ignoreCase) => ProxiedType.GetInterface(name, ignoreCase);
+        public override Type[] GetInterfaces() => ProxiedType.GetInterfaces();
 
-        public override InterfaceMapping GetInterfaceMap(Type interfaceType) => _proxiedType.GetInterfaceMap(interfaceType);
+        public override InterfaceMapping GetInterfaceMap(Type interfaceType) => ProxiedType.GetInterfaceMap(interfaceType);
 
-        public override bool IsInstanceOfType(object? o) => _proxiedType.IsInstanceOfType(o);
+        public override bool IsInstanceOfType(object? o) => ProxiedType.IsInstanceOfType(o);
 
-        public override bool IsEquivalentTo(Type? other) => _proxiedType.IsEquivalentTo(other);
+        public override bool IsEquivalentTo(Type? other) => ProxiedType.IsEquivalentTo(other);
 
-        public override Type GetEnumUnderlyingType() => _proxiedType.GetEnumUnderlyingType();
+        public override Type GetEnumUnderlyingType() => ProxiedType.GetEnumUnderlyingType();
 
-        public override Array GetEnumValues() => _proxiedType.GetEnumValues();
+        public override Array GetEnumValues() => ProxiedType.GetEnumValues();
 
-        public override Type MakeArrayType() => _proxiedType.MakeArrayType();
-        public override Type MakeArrayType(int rank) => _proxiedType.MakeArrayType(rank);
-        public override Type MakeByRefType() => _proxiedType.MakeByRefType();
+        public override Type MakeArrayType() => ProxiedType.MakeArrayType();
+        public override Type MakeArrayType(int rank) => ProxiedType.MakeArrayType(rank);
+        public override Type MakeByRefType() => ProxiedType.MakeByRefType();
 
-        public override Type MakeGenericType(params Type[] typeArguments) => _proxiedType.MakeGenericType(typeArguments);
+        public override Type MakeGenericType(params Type[] typeArguments) => ProxiedType.MakeGenericType(typeArguments);
 
-        public override Type MakePointerType() => _proxiedType.MakePointerType();
+        public override Type MakePointerType() => ProxiedType.MakePointerType();
 
         public override string ToString() => "Type: " + Name;
 
         #region MemberInfo overrides
 
-        public override MemberTypes MemberType => _proxiedType.MemberType;
+        public override MemberTypes MemberType => ProxiedType.MemberType;
 
-        public override string Name => "Decorated " + _proxiedType.Name;
+        public override string Name => "Decorated " + ProxiedType.Name;
 
-        public override IEnumerable<CustomAttributeData> CustomAttributes => _proxiedType.CustomAttributes;
+        public override IEnumerable<CustomAttributeData> CustomAttributes => ProxiedType.CustomAttributes;
 
-        public override int MetadataToken => _proxiedType.MetadataToken;
+        public override int MetadataToken => ProxiedType.MetadataToken;
 
-        public override object[] GetCustomAttributes(bool inherit) => _proxiedType.GetCustomAttributes(inherit);
+        public override object[] GetCustomAttributes(bool inherit) => ProxiedType.GetCustomAttributes(inherit);
 
-        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => _proxiedType.GetCustomAttributes(attributeType, inherit);
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => ProxiedType.GetCustomAttributes(attributeType, inherit);
 
-        public override bool IsDefined(Type attributeType, bool inherit) => _proxiedType.IsDefined(attributeType, inherit);
+        public override bool IsDefined(Type attributeType, bool inherit) => ProxiedType.IsDefined(attributeType, inherit);
 
-        public override IList<CustomAttributeData> GetCustomAttributesData() => _proxiedType.GetCustomAttributesData();
+        public override IList<CustomAttributeData> GetCustomAttributesData() => ProxiedType.GetCustomAttributesData();
 
         #endregion
     }

@@ -4,24 +4,24 @@ namespace Scrutor.Decoration
 {
     internal sealed class OpenGenericDecoratorStrategy : IDecoratorStrategy
     {
-        private readonly Type _serviceType;
-        private readonly Type? _decoratorType;
-        private readonly Func<object, IServiceProvider, object>? _decoratorFactory;
-
         public OpenGenericDecoratorStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
         {
-            _serviceType = serviceType;
-            _decoratorType = decoratorType;
-            _decoratorFactory = decoratorFactory;
+            ServiceType = serviceType;
+            DecoratorType = decoratorType;
+            DecoratorFactory = decoratorFactory;
         }
 
-        public Type ServiceType => _serviceType;
+        public Type ServiceType { get; }
+        
+        private Type? DecoratorType { get; }
+
+        private Func<object, IServiceProvider, object>? DecoratorFactory { get; }
 
         public bool CanDecorate(Type serviceType)
         {
             var canHandle = serviceType.IsGenericType
                 && (!serviceType.IsGenericTypeDefinition)
-                && _serviceType.GetGenericTypeDefinition() == serviceType.GetGenericTypeDefinition()
+                && ServiceType.GetGenericTypeDefinition() == serviceType.GetGenericTypeDefinition()
                 && HasCompatibleGenericArguments(serviceType);
 
             return canHandle;
@@ -29,17 +29,17 @@ namespace Scrutor.Decoration
 
         public Func<IServiceProvider, object> CreateDecorator(Type serviceType)
         {
-            if (_decoratorType is not null)
+            if (DecoratorType is not null)
             {
                 var genericArguments = serviceType.GetGenericArguments();
-                var closedDecorator = _decoratorType.MakeGenericType(genericArguments);
+                var closedDecorator = DecoratorType.MakeGenericType(genericArguments);
 
                 return DecoratorInstanceFactory.Default(serviceType, closedDecorator);
             }
 
-            if (_decoratorFactory is not null)
+            if (DecoratorFactory is not null)
             {
-                return DecoratorInstanceFactory.Custom(serviceType, _decoratorFactory);
+                return DecoratorInstanceFactory.Custom(serviceType, DecoratorFactory);
             }
 
             throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");
@@ -49,7 +49,7 @@ namespace Scrutor.Decoration
         {
             var canHandle = false;
 
-            if (_decoratorType is null)
+            if (DecoratorType is null)
             {
                 canHandle = true;
             }
@@ -59,7 +59,7 @@ namespace Scrutor.Decoration
 
                 try
                 {
-                    _ = _decoratorType.MakeGenericType(genericArguments);
+                    _ = DecoratorType.MakeGenericType(genericArguments);
                     canHandle = true;
                 }
                 catch (ArgumentException)

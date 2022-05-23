@@ -3,7 +3,7 @@ using System;
 
 namespace Scrutor.Decoration
 {
-    internal sealed class Decoration
+    internal readonly struct Decoration
     {
         private readonly IDecorationStrategy _decorationStrategy;
 

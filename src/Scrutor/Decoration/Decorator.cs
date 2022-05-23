@@ -26,9 +26,6 @@ namespace Scrutor.Decoration
             return new Decorator(strategy);
         }
 
-        public static Decorator Create<TService>(Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
-            => new(new ClosedTypeDecoratorStrategy(typeof(TService), decoratorType, decoratorFactory));
-
         public bool TryDecorate(IServiceCollection services)
         {
             var decorated = DecorateServices(services);

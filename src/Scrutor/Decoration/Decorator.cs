@@ -5,29 +5,29 @@ namespace Scrutor.Decoration
 {
     internal readonly struct Decorator
     {
-        private readonly IDecorationStrategy _decorationStrategy;
+        private readonly IDecoratorStrategy _decoratorStrategy;
 
-        public Decorator(IDecorationStrategy decorationStrategy)
-            => _decorationStrategy = decorationStrategy;
+        public Decorator(IDecoratorStrategy decoratorStrategy)
+            => _decoratorStrategy = decoratorStrategy;
         
         public static Decorator Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
         {
-            IDecorationStrategy strategy;
+            IDecoratorStrategy strategy;
 
             if (serviceType.IsOpenGeneric())
             {
-                strategy = new OpenGenericDecorationStrategy(serviceType, decoratorType, decoratorFactory);
+                strategy = new OpenGenericDecoratorStrategy(serviceType, decoratorType, decoratorFactory);
             }
             else
             {
-                strategy = new ClosedTypeDecorationStrategy(serviceType, decoratorType, decoratorFactory);
+                strategy = new ClosedTypeDecoratorStrategy(serviceType, decoratorType, decoratorFactory);
             }
 
             return new Decorator(strategy);
         }
 
         public static Decorator Create<TService>(Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
-            => new(new ClosedTypeDecorationStrategy(typeof(TService), decoratorType, decoratorFactory));
+            => new(new ClosedTypeDecoratorStrategy(typeof(TService), decoratorType, decoratorFactory));
 
         public bool TryDecorate(IServiceCollection services)
         {
@@ -41,7 +41,7 @@ namespace Scrutor.Decoration
 
             if (decorated == 0)
             {
-                throw new MissingTypeRegistrationException(_decorationStrategy.ServiceType);
+                throw new MissingTypeRegistrationException(_decoratorStrategy.ServiceType);
             }
 
             return services;
@@ -56,11 +56,11 @@ namespace Scrutor.Decoration
                 var serviceDescriptor = services[i];
 
                 if (IsNotAlreadyDecorated(serviceDescriptor)
-                    && _decorationStrategy.CanDecorate(serviceDescriptor.ServiceType))
+                    && _decoratorStrategy.CanDecorate(serviceDescriptor.ServiceType))
                 {
                     var decoratedType = new DecoratedType(serviceDescriptor.ServiceType);
 
-                    var decoratorFactory = _decorationStrategy.CreateDecorator(decoratedType);
+                    var decoratorFactory = _decoratorStrategy.CreateDecorator(decoratedType);
 
                     // insert decorated
                     var decoratedServiceDescriptor = CreateDecoratedServiceDescriptor(serviceDescriptor, decoratedType);

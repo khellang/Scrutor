@@ -52,8 +52,12 @@ namespace Scrutor.Decoration
             {
                 var serviceDescriptor = services[i];
 
-                if (IsNotAlreadyDecorated(serviceDescriptor)
-                    && DecoratorStrategy.CanDecorate(serviceDescriptor.ServiceType))
+                if (serviceDescriptor.ServiceType is DecoratedType)
+                {
+                    continue; // Service has already been decorated.
+                }
+
+                if (DecoratorStrategy.CanDecorate(serviceDescriptor.ServiceType))
                 {
                     var decoratedType = new DecoratedType(serviceDescriptor.ServiceType);
 
@@ -70,7 +74,5 @@ namespace Scrutor.Decoration
 
             return decorated;
         }
-
-        private static bool IsNotAlreadyDecorated(ServiceDescriptor serviceDescriptor) => serviceDescriptor.ServiceType is not DecoratedType;
     }
 }

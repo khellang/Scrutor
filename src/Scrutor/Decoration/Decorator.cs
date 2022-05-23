@@ -15,7 +15,6 @@ internal readonly struct Decorator
 
         if (serviceType.IsOpenGeneric())
         {
-            canDecorate = 
             strategy = new OpenGenericDecoratorStrategy(serviceType, decoratorType, decoratorFactory);
         }
         else

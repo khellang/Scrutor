@@ -9,6 +9,25 @@ namespace Scrutor.Decoration
 
         public Decorator(IDecorationStrategy decorationStrategy)
             => _decorationStrategy = decorationStrategy;
+        
+        public static Decorator Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
+        {
+            IDecorationStrategy strategy;
+
+            if (serviceType.IsOpenGeneric())
+            {
+                strategy = new OpenGenericDecorationStrategy(serviceType, decoratorType, decoratorFactory);
+            }
+            else
+            {
+                strategy = new ClosedTypeDecorationStrategy(serviceType, decoratorType, decoratorFactory);
+            }
+
+            return new Decorator(strategy);
+        }
+
+        public static Decorator Create<TService>(Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
+            => new(new ClosedTypeDecorationStrategy(typeof(TService), decoratorType, decoratorFactory));
 
         public bool TryDecorate(IServiceCollection services)
         {

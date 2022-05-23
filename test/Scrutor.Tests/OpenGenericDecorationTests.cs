@@ -44,7 +44,7 @@ public class OpenGenericDecorationTests : TestBase
     [Fact]
     public void DecoratingNonRegisteredOpenGenericServiceThrows()
     {
-        Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IQueryHandler<,>), typeof(QueryHandler<,>))));
+        Assert.Throws<DecorationException>(() => ConfigureProvider(services => services.Decorate(typeof(IQueryHandler<,>), typeof(QueryHandler<,>))));
     }
 
     [Fact]

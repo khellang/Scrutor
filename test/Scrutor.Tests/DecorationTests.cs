@@ -309,14 +309,14 @@ public class DecorationTests : TestBase
     }
 
     [Fact]
-    public void DecorateThrowsMissingTypeRegistrationWhenNoTypeRegistered()
+    public void DecorateThrowsDecorationExceptionWhenNoTypeRegistered()
     {
-        Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
-        Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IDecoratedService), typeof(Decorator))));
-        Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate((IDecoratedService obj, IServiceProvider sp) => new Decorated())));
-        Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate((IDecoratedService sp) => new Decorated())));
-        Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IDecoratedService), (object obj, IServiceProvider sp) => new Decorated())));
-        Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate(typeof(IDecoratedService), (object obj) => new Decorated())));
+        Assert.Throws<DecorationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
+        Assert.Throws<DecorationException>(() => ConfigureProvider(services => services.Decorate(typeof(IDecoratedService), typeof(Decorator))));
+        Assert.Throws<DecorationException>(() => ConfigureProvider(services => services.Decorate((IDecoratedService obj, IServiceProvider sp) => new Decorated())));
+        Assert.Throws<DecorationException>(() => ConfigureProvider(services => services.Decorate((IDecoratedService sp) => new Decorated())));
+        Assert.Throws<DecorationException>(() => ConfigureProvider(services => services.Decorate(typeof(IDecoratedService), (object obj, IServiceProvider sp) => new Decorated())));
+        Assert.Throws<DecorationException>(() => ConfigureProvider(services => services.Decorate(typeof(IDecoratedService), (object obj) => new Decorated())));
     }
 
     [Fact]

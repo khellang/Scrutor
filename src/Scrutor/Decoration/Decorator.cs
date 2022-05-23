@@ -56,12 +56,11 @@ internal readonly struct Decorator
 
             var decoratedType = new DecoratedType(serviceDescriptor.ServiceType);
 
-            // insert decorated
+            // Insert decorated
             services.Add(serviceDescriptor.WithServiceType(decoratedType));
 
-            // replace decorator
-            var decoratorFactory = Strategy.CreateDecorator(decoratedType);
-            services[i] = new ServiceDescriptor(serviceDescriptor.ServiceType, decoratorFactory, serviceDescriptor.Lifetime);
+            // Replace decorator
+            services[i] = serviceDescriptor.WithImplementationFactory(Strategy.CreateDecorator(decoratedType));
 
             decorated = true;
         }

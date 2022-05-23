@@ -4,50 +4,49 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Scrutor
+namespace Scrutor;
+
+internal class AttributeSelector : ISelector
 {
-    internal class AttributeSelector : ISelector
+    public AttributeSelector(IEnumerable<Type> types)
     {
-        public AttributeSelector(IEnumerable<Type> types)
+        Types = types;
+    }
+
+    private IEnumerable<Type> Types { get; }
+
+    void ISelector.Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
+    {
+        var strategy = registrationStrategy ?? RegistrationStrategy.Append;
+
+        foreach (var type in Types)
         {
-            Types = types;
-        }
+            var attributes = type.GetCustomAttributes<ServiceDescriptorAttribute>().ToArray();
 
-        private IEnumerable<Type> Types { get; }
+            // Check if the type has multiple attributes with same ServiceType.
+            var duplicates = GetDuplicates(attributes);
 
-        void ISelector.Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
-        {
-            var strategy = registrationStrategy ?? RegistrationStrategy.Append;
-
-            foreach (var type in Types)
+            if (duplicates.Any())
             {
-                var attributes = type.GetCustomAttributes<ServiceDescriptorAttribute>().ToArray();
+                throw new InvalidOperationException($@"Type ""{type.ToFriendlyName()}"" has multiple ServiceDescriptor attributes with the same service type.");
+            }
 
-                // Check if the type has multiple attributes with same ServiceType.
-                var duplicates = GetDuplicates(attributes);
+            foreach (var attribute in attributes)
+            {
+                var serviceTypes = attribute.GetServiceTypes(type);
 
-                if (duplicates.Any())
+                foreach (var serviceType in serviceTypes)
                 {
-                    throw new InvalidOperationException($@"Type ""{type.ToFriendlyName()}"" has multiple ServiceDescriptor attributes with the same service type.");
-                }
+                    var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
 
-                foreach (var attribute in attributes)
-                {
-                    var serviceTypes = attribute.GetServiceTypes(type);
-
-                    foreach (var serviceType in serviceTypes)
-                    {
-                        var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
-
-                        strategy.Apply(services, descriptor);
-                    }
+                    strategy.Apply(services, descriptor);
                 }
             }
         }
+    }
 
-        private static IEnumerable<ServiceDescriptorAttribute> GetDuplicates(IEnumerable<ServiceDescriptorAttribute> attributes)
-        {
-            return attributes.GroupBy(s => s.ServiceType).SelectMany(grp => grp.Skip(1));
-        }
+    private static IEnumerable<ServiceDescriptorAttribute> GetDuplicates(IEnumerable<ServiceDescriptorAttribute> attributes)
+    {
+        return attributes.GroupBy(s => s.ServiceType).SelectMany(grp => grp.Skip(1));
     }
 }

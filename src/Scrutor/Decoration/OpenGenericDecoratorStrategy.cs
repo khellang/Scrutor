@@ -1,73 +1,72 @@
 ﻿using System;
 
-namespace Scrutor.Decoration
+namespace Scrutor.Decoration;
+
+internal sealed class OpenGenericDecoratorStrategy : IDecoratorStrategy
 {
-    internal sealed class OpenGenericDecoratorStrategy : IDecoratorStrategy
+    public OpenGenericDecoratorStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
     {
-        public OpenGenericDecoratorStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
-        {
-            ServiceType = serviceType;
-            DecoratorType = decoratorType;
-            DecoratorFactory = decoratorFactory;
-        }
+        ServiceType = serviceType;
+        DecoratorType = decoratorType;
+        DecoratorFactory = decoratorFactory;
+    }
 
-        public Type ServiceType { get; }
+    public Type ServiceType { get; }
         
-        private Type? DecoratorType { get; }
+    private Type? DecoratorType { get; }
 
-        private Func<object, IServiceProvider, object>? DecoratorFactory { get; }
+    private Func<object, IServiceProvider, object>? DecoratorFactory { get; }
 
-        public bool CanDecorate(Type serviceType)
+    public bool CanDecorate(Type serviceType)
+    {
+        var canHandle = serviceType.IsGenericType
+                        && (!serviceType.IsGenericTypeDefinition)
+                        && ServiceType.GetGenericTypeDefinition() == serviceType.GetGenericTypeDefinition()
+                        && HasCompatibleGenericArguments(serviceType);
+
+        return canHandle;
+    }
+
+    public Func<IServiceProvider, object> CreateDecorator(Type serviceType)
+    {
+        if (DecoratorType is not null)
         {
-            var canHandle = serviceType.IsGenericType
-                && (!serviceType.IsGenericTypeDefinition)
-                && ServiceType.GetGenericTypeDefinition() == serviceType.GetGenericTypeDefinition()
-                && HasCompatibleGenericArguments(serviceType);
+            var genericArguments = serviceType.GetGenericArguments();
+            var closedDecorator = DecoratorType.MakeGenericType(genericArguments);
 
-            return canHandle;
+            return DecoratorInstanceFactory.Default(serviceType, closedDecorator);
         }
 
-        public Func<IServiceProvider, object> CreateDecorator(Type serviceType)
+        if (DecoratorFactory is not null)
         {
-            if (DecoratorType is not null)
-            {
-                var genericArguments = serviceType.GetGenericArguments();
-                var closedDecorator = DecoratorType.MakeGenericType(genericArguments);
-
-                return DecoratorInstanceFactory.Default(serviceType, closedDecorator);
-            }
-
-            if (DecoratorFactory is not null)
-            {
-                return DecoratorInstanceFactory.Custom(serviceType, DecoratorFactory);
-            }
-
-            throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");
+            return DecoratorInstanceFactory.Custom(serviceType, DecoratorFactory);
         }
 
-        private bool HasCompatibleGenericArguments(Type serviceType)
-        {
-            var canHandle = false;
+        throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");
+    }
 
-            if (DecoratorType is null)
+    private bool HasCompatibleGenericArguments(Type serviceType)
+    {
+        var canHandle = false;
+
+        if (DecoratorType is null)
+        {
+            canHandle = true;
+        }
+        else
+        {
+            var genericArguments = serviceType.GetGenericArguments();
+
+            try
             {
+                _ = DecoratorType.MakeGenericType(genericArguments);
                 canHandle = true;
             }
-            else
+            catch (ArgumentException)
             {
-                var genericArguments = serviceType.GetGenericArguments();
-
-                try
-                {
-                    _ = DecoratorType.MakeGenericType(genericArguments);
-                    canHandle = true;
-                }
-                catch (ArgumentException)
-                {
-                }
             }
-
-            return canHandle;
         }
+
+        return canHandle;
     }
 }

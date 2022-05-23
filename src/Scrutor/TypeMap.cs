@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Scrutor
+namespace Scrutor;
+
+internal struct TypeMap
 {
-    internal struct TypeMap
+    public TypeMap(Type implementationType, IEnumerable<Type> serviceTypes)
     {
-        public TypeMap(Type implementationType, IEnumerable<Type> serviceTypes)
-        {
-            ImplementationType = implementationType;
-            ServiceTypes = serviceTypes;
-        }
-
-        public Type ImplementationType { get; }
-
-        public IEnumerable<Type> ServiceTypes { get; }
+        ImplementationType = implementationType;
+        ServiceTypes = serviceTypes;
     }
+
+    public Type ImplementationType { get; }
+
+    public IEnumerable<Type> ServiceTypes { get; }
 }

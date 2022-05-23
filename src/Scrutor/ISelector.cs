@@ -1,9 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Scrutor
+namespace Scrutor;
+
+public interface ISelector
 {
-    public interface ISelector
-    {
-        void Populate(IServiceCollection services, RegistrationStrategy? options);
-    }
+    void Populate(IServiceCollection services, RegistrationStrategy? options);
 }

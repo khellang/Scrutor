@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Scrutor
+namespace Scrutor;
+
+internal struct TypeFactoryMap
 {
-    internal struct TypeFactoryMap
+    public TypeFactoryMap(Func<IServiceProvider, object> implementationFactory, IEnumerable<Type> serviceTypes)
     {
-        public TypeFactoryMap(Func<IServiceProvider, object> implementationFactory, IEnumerable<Type> serviceTypes)
-        {
-            ImplementationFactory = implementationFactory;
-            ServiceTypes = serviceTypes;
-        }
-
-        public Func<IServiceProvider, object> ImplementationFactory { get; }
-
-        public IEnumerable<Type> ServiceTypes { get; }
+        ImplementationFactory = implementationFactory;
+        ServiceTypes = serviceTypes;
     }
+
+    public Func<IServiceProvider, object> ImplementationFactory { get; }
+
+    public IEnumerable<Type> ServiceTypes { get; }
 }

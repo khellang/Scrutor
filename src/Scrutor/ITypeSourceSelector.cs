@@ -1,6 +1,5 @@
-namespace Scrutor
+namespace Scrutor;
+
+public interface ITypeSourceSelector : IAssemblySelector, ITypeSelector
 {
-    public interface ITypeSourceSelector : IAssemblySelector, ITypeSelector
-    {
-    }
 }

@@ -1,37 +1,36 @@
 ﻿using System;
 
-namespace Scrutor.Decoration
+namespace Scrutor.Decoration;
+
+internal sealed class ClosedTypeDecoratorStrategy : IDecoratorStrategy
 {
-    internal sealed class ClosedTypeDecoratorStrategy : IDecoratorStrategy
+    public ClosedTypeDecoratorStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
     {
-        public ClosedTypeDecoratorStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
+        ServiceType = serviceType;
+        DecoratorType = decoratorType;
+        DecoratorFactory = decoratorFactory;
+    }
+
+    public Type ServiceType { get; }
+        
+    private Type? DecoratorType { get; }
+
+    private Func<object, IServiceProvider, object>? DecoratorFactory { get; }
+
+    public bool CanDecorate(Type serviceType) => ServiceType == serviceType;
+
+    public Func<IServiceProvider, object> CreateDecorator(Type serviceType)
+    {
+        if (DecoratorType is not null)
         {
-            ServiceType = serviceType;
-            DecoratorType = decoratorType;
-            DecoratorFactory = decoratorFactory;
+            return DecoratorInstanceFactory.Default(serviceType, DecoratorType);
         }
 
-        public Type ServiceType { get; }
-        
-        private Type? DecoratorType { get; }
-
-        private Func<object, IServiceProvider, object>? DecoratorFactory { get; }
-
-        public bool CanDecorate(Type serviceType) => ServiceType == serviceType;
-
-        public Func<IServiceProvider, object> CreateDecorator(Type serviceType)
+        if (DecoratorFactory is not null)
         {
-            if (DecoratorType is not null)
-            {
-                return DecoratorInstanceFactory.Default(serviceType, DecoratorType);
-            }
+            return DecoratorInstanceFactory.Custom(serviceType, DecoratorFactory);
+        }
 
-            if (DecoratorFactory is not null)
-            {
-                return DecoratorInstanceFactory.Custom(serviceType, DecoratorFactory);
-            }
-
-            throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");
-        } 
-    }
+        throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");
+    } 
 }

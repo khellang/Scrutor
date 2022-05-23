@@ -1,17 +1,16 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Scrutor.Tests
+namespace Scrutor.Tests;
+
+public class TestBase
 {
-    public class TestBase
+    protected static ServiceProvider ConfigureProvider(Action<IServiceCollection> configure)
     {
-        protected static ServiceProvider ConfigureProvider(Action<IServiceCollection> configure)
-        {
-            var services = new ServiceCollection();
+        var services = new ServiceCollection();
 
-            configure(services);
+        configure(services);
 
-            return services.BuildServiceProvider();
-        }
+        return services.BuildServiceProvider();
     }
 }

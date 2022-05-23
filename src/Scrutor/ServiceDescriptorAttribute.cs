@@ -2,52 +2,51 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Scrutor
+namespace Scrutor;
+
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+public class ServiceDescriptorAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class ServiceDescriptorAttribute : Attribute
+    public ServiceDescriptorAttribute() : this(null) { }
+
+    public ServiceDescriptorAttribute(Type? serviceType) : this(serviceType, ServiceLifetime.Transient) { }
+
+    public ServiceDescriptorAttribute(Type? serviceType, ServiceLifetime lifetime)
     {
-        public ServiceDescriptorAttribute() : this(null) { }
+        ServiceType = serviceType;
+        Lifetime = lifetime;
+    }
 
-        public ServiceDescriptorAttribute(Type? serviceType) : this(serviceType, ServiceLifetime.Transient) { }
+    public Type? ServiceType { get; }
 
-        public ServiceDescriptorAttribute(Type? serviceType, ServiceLifetime lifetime)
+    public ServiceLifetime Lifetime { get; }
+
+    public IEnumerable<Type> GetServiceTypes(Type fallbackType)
+    {
+        if (ServiceType is null)
         {
-            ServiceType = serviceType;
-            Lifetime = lifetime;
-        }
+            yield return fallbackType;
 
-        public Type? ServiceType { get; }
+            var fallbackTypes = fallbackType.GetBaseTypes();
 
-        public ServiceLifetime Lifetime { get; }
-
-        public IEnumerable<Type> GetServiceTypes(Type fallbackType)
-        {
-            if (ServiceType is null)
+            foreach (var type in fallbackTypes)
             {
-                yield return fallbackType;
-
-                var fallbackTypes = fallbackType.GetBaseTypes();
-
-                foreach (var type in fallbackTypes)
+                if (type == typeof(object))
                 {
-                    if (type == typeof(object))
-                    {
-                        continue;
-                    }
-
-                    yield return type;
+                    continue;
                 }
 
-                yield break;
+                yield return type;
             }
 
-            if (!fallbackType.IsBasedOn(ServiceType))
-            {
-                throw new InvalidOperationException($@"Type ""{fallbackType.ToFriendlyName()}"" is not assignable to ""{ServiceType.ToFriendlyName()}"".");
-            }
-
-            yield return ServiceType;
+            yield break;
         }
+
+        if (!fallbackType.IsBasedOn(ServiceType))
+        {
+            throw new InvalidOperationException($@"Type ""{fallbackType.ToFriendlyName()}"" is not assignable to ""{ServiceType.ToFriendlyName()}"".");
+        }
+
+        yield return ServiceType;
     }
 }

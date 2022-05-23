@@ -1,21 +1,20 @@
 using System;
 using System.ComponentModel;
 
-namespace Scrutor
+namespace Scrutor;
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+public interface IFluentInterface
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public interface IFluentInterface
-    {
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        Type GetType();
+    Type GetType();
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        int GetHashCode();
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    int GetHashCode();
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        string? ToString();
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    string? ToString();
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        bool Equals(object? obj);
-    }
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    bool Equals(object? obj);
 }

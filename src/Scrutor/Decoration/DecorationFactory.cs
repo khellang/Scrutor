@@ -4,7 +4,7 @@ namespace Scrutor.Decoration
 {
     internal static class DecorationFactory
     {
-        public static Decoration Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
+        public static Decorator Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
         {
             IDecorationStrategy strategy;
 
@@ -17,10 +17,10 @@ namespace Scrutor.Decoration
                 strategy = new ClosedTypeDecorationStrategy(serviceType, decoratorType, decoratorFactory);
             }
 
-            return new Decoration(strategy);
+            return new Decorator(strategy);
         }
 
-        public static Decoration Create<TService>(Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
+        public static Decorator Create<TService>(Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
             => new(new ClosedTypeDecorationStrategy(typeof(TService), decoratorType, decoratorFactory)); 
     }
 }

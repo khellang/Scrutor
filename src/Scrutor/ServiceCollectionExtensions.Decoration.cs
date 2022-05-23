@@ -1,5 +1,4 @@
 ﻿using Scrutor;
-using Scrutor.Decoration;
 using System;
 
 // ReSharper disable once CheckNamespace
@@ -19,7 +18,7 @@ public static partial class ServiceCollectionExtensions
     {
         Preconditions.NotNull(services, nameof(services));
 
-        return Decorator.WithType(typeof(TService), typeof(TDecorator)).Decorate(services);
+        return services.Decorate(typeof(TService), typeof(TDecorator));
     }
 
     /// <summary>
@@ -33,7 +32,7 @@ public static partial class ServiceCollectionExtensions
     {
         Preconditions.NotNull(services, nameof(services));
 
-        return Decorator.WithType(typeof(TService), typeof(TDecorator)).TryDecorate(services);
+        return services.TryDecorate(typeof(TService), typeof(TDecorator));
     }
 
     /// <summary>
@@ -52,7 +51,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decoratorType, nameof(decoratorType));
 
-        return Decorator.WithType(serviceType, decoratorType).Decorate(services);
+        return services.Decorate(DecoratorStrategy.WithType(serviceType, decoratorType));
     }
 
     /// <summary>
@@ -70,44 +69,9 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decoratorType, nameof(decoratorType));
 
-        return Decorator.WithType(serviceType, decoratorType).TryDecorate(services);
+        return services.TryDecorate(DecoratorStrategy.WithType(serviceType, decoratorType));
     }
-
-    /// <summary>
-    /// Decorates all registered services of type <typeparamref name="TService"/>
-    /// using the <paramref name="decorator"/> function.
-    /// </summary>
-    /// <typeparam name="TService">The type of services to decorate.</typeparam>
-    /// <param name="services">The services to add to.</param>
-    /// <param name="decorator">The decorator function.</param>
-    /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
-    /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
-    /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-    public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
-    {
-        Preconditions.NotNull(services, nameof(services));
-        Preconditions.NotNull(decorator, nameof(decorator));
-
-        return Decorator.WithFactory(typeof(TService), (decorated, serviceProvider) => decorator((TService)decorated, serviceProvider)).Decorate(services);
-    }
-
-    /// <summary>
-    /// Decorates all registered services of type <typeparamref name="TService"/>
-    /// using the <paramref name="decorator"/> function.
-    /// </summary>
-    /// <typeparam name="TService">The type of services to decorate.</typeparam>
-    /// <param name="services">The services to add to.</param>
-    /// <param name="decorator">The decorator function.</param>
-    /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
-    /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-    public static bool TryDecorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
-    {
-        Preconditions.NotNull(services, nameof(services));
-        Preconditions.NotNull(decorator, nameof(decorator));
-
-        return Decorator.WithFactory(typeof(TService), (decorated, serviceProvider) => decorator((TService)decorated, serviceProvider)).TryDecorate(services);
-    }
-
+    
     /// <summary>
     /// Decorates all registered services of type <typeparamref name="TService"/>
     /// using the <paramref name="decorator"/> function.
@@ -123,7 +87,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(services, nameof(services));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.WithFactory(typeof(TService), (decorated, _) => decorator((TService)decorated)).Decorate(services);
+        return services.Decorate<TService>((service, _) => decorator(service));
     }
 
     /// <summary>
@@ -140,47 +104,45 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(services, nameof(services));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.WithFactory(typeof(TService), (decorated, _) => decorator((TService)decorated)).TryDecorate(services);
+        return services.TryDecorate<TService>((service, _) => decorator(service));
     }
 
     /// <summary>
-    /// Decorates all registered services of the specified <paramref name="serviceType"/>
+    /// Decorates all registered services of type <typeparamref name="TService"/>
     /// using the <paramref name="decorator"/> function.
     /// </summary>
+    /// <typeparam name="TService">The type of services to decorate.</typeparam>
     /// <param name="services">The services to add to.</param>
-    /// <param name="serviceType">The type of services to decorate.</param>
     /// <param name="decorator">The decorator function.</param>
-    /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
-    /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
-    /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-    public static IServiceCollection Decorate(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+    /// <exception cref="MissingTypeRegistrationException">If no service of <typeparamref name="TService"/> has been registered.</exception>
+    /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+    /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+    public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
     {
         Preconditions.NotNull(services, nameof(services));
-        Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decorator, nameof(decorator));
-
-        return Decorator.WithFactory(serviceType, decorator).Decorate(services);
+        
+        return services.Decorate(typeof(TService), (service, provider) => decorator((TService)service, provider));
     }
 
     /// <summary>
-    /// Decorates all registered services of the specified <paramref name="serviceType"/>
+    /// Decorates all registered services of type <typeparamref name="TService"/>
     /// using the <paramref name="decorator"/> function.
     /// </summary>
+    /// <typeparam name="TService">The type of services to decorate.</typeparam>
     /// <param name="services">The services to add to.</param>
-    /// <param name="serviceType">The type of services to decorate.</param>
     /// <param name="decorator">The decorator function.</param>
-    /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
-    /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
-    public static bool TryDecorate(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+    /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>
+    /// or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+    public static bool TryDecorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator) where TService : notnull
     {
         Preconditions.NotNull(services, nameof(services));
-        Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decorator, nameof(decorator));
-
-        return Decorator.WithFactory(serviceType, decorator).TryDecorate(services);
+        
+        return services.TryDecorate(typeof(TService), (service, provider) => decorator((TService)service, provider));
     }
-
-    /// <summary>
+    
+        /// <summary>
     /// Decorates all registered services of the specified <paramref name="serviceType"/>
     /// using the <paramref name="decorator"/> function.
     /// </summary>
@@ -196,7 +158,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.WithFactory(serviceType, (decorated, _) => decorator(decorated)).Decorate(services);
+        return services.Decorate(serviceType, (decorated, _) => decorator(decorated));
     }
 
     /// <summary>
@@ -214,6 +176,86 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.WithFactory(serviceType, (decorated, _) => decorator(decorated)).TryDecorate(services);
+        return services.TryDecorate(serviceType, (decorated, _) => decorator(decorated));
+    }
+
+    /// <summary>
+    /// Decorates all registered services of the specified <paramref name="serviceType"/>
+    /// using the <paramref name="decorator"/> function.
+    /// </summary>
+    /// <param name="services">The services to add to.</param>
+    /// <param name="serviceType">The type of services to decorate.</param>
+    /// <param name="decorator">The decorator function.</param>
+    /// <exception cref="MissingTypeRegistrationException">If no service of the specified <paramref name="serviceType"/> has been registered.</exception>
+    /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+    /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+    public static IServiceCollection Decorate(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+    {
+        Preconditions.NotNull(services, nameof(services));
+        Preconditions.NotNull(serviceType, nameof(serviceType));
+        Preconditions.NotNull(decorator, nameof(decorator));
+        
+        return services.Decorate(DecoratorStrategy.WithFactory(serviceType, decorator));
+    }
+
+    /// <summary>
+    /// Decorates all registered services of the specified <paramref name="serviceType"/>
+    /// using the <paramref name="decorator"/> function.
+    /// </summary>
+    /// <param name="services">The services to add to.</param>
+    /// <param name="serviceType">The type of services to decorate.</param>
+    /// <param name="decorator">The decorator function.</param>
+    /// <exception cref="ArgumentNullException">If either the <paramref name="services"/>,
+    /// <paramref name="serviceType"/> or <paramref name="decorator"/> arguments are <c>null</c>.</exception>
+    public static bool TryDecorate(this IServiceCollection services, Type serviceType, Func<object, IServiceProvider, object> decorator)
+    {
+        Preconditions.NotNull(services, nameof(services));
+        Preconditions.NotNull(serviceType, nameof(serviceType));
+        Preconditions.NotNull(decorator, nameof(decorator));
+
+        return services.TryDecorate(DecoratorStrategy.WithFactory(serviceType, decorator));
+    }
+
+    public static IServiceCollection Decorate(this IServiceCollection services, DecoratorStrategy strategy)
+    {
+        if (services.TryDecorate(strategy))
+        {
+            return services;
+        }
+
+        throw new MissingTypeRegistrationException(strategy.ServiceType);
+
+    }
+
+    public static bool TryDecorate(this IServiceCollection services, DecoratorStrategy strategy)
+    {
+        var decorated = false;
+
+        for (var i = services.Count - 1; i >= 0; i--)
+        {
+            var serviceDescriptor = services[i];
+
+            if (serviceDescriptor.ServiceType is DecoratedType)
+            {
+                continue; // Service has already been decorated.
+            }
+
+            if (!strategy.CanDecorate(serviceDescriptor.ServiceType))
+            {
+                continue; // Unable to decorate using the specified strategy.
+            }
+
+            var decoratedType = new DecoratedType(serviceDescriptor.ServiceType);
+
+            // Insert decorated
+            services.Add(serviceDescriptor.WithServiceType(decoratedType));
+
+            // Replace decorator
+            services[i] = serviceDescriptor.WithImplementationFactory(strategy.CreateDecorator(decoratedType));
+
+            decorated = true;
+        }
+
+        return decorated;
     }
 }

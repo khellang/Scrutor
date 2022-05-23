@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Scrutor.Decoration;
+namespace Scrutor;
 
 internal class DecoratedType : Type
 {

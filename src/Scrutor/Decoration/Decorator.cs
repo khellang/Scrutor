@@ -57,13 +57,11 @@ namespace Scrutor.Decoration
                 {
                     var decoratedType = new DecoratedType(serviceDescriptor.ServiceType);
 
-                    var decoratorFactory = DecoratorStrategy.CreateDecorator(decoratedType);
-
                     // insert decorated
-                    var decoratedServiceDescriptor = CreateDecoratedServiceDescriptor(serviceDescriptor, decoratedType);
-                    services.Add(decoratedServiceDescriptor);
+                    services.Add(serviceDescriptor.WithServiceType(decoratedType));
 
                     // replace decorator
+                    var decoratorFactory = DecoratorStrategy.CreateDecorator(decoratedType);
                     services[i] = new ServiceDescriptor(serviceDescriptor.ServiceType, decoratorFactory, serviceDescriptor.Lifetime);
 
                     ++decorated;
@@ -74,13 +72,5 @@ namespace Scrutor.Decoration
         }
 
         private static bool IsNotAlreadyDecorated(ServiceDescriptor serviceDescriptor) => serviceDescriptor.ServiceType is not DecoratedType;
-
-        private static ServiceDescriptor CreateDecoratedServiceDescriptor(ServiceDescriptor serviceDescriptor, Type decoratedType) => serviceDescriptor switch
-        {
-            { ImplementationType: not null } => new ServiceDescriptor(decoratedType, serviceDescriptor.ImplementationType, serviceDescriptor.Lifetime),
-            { ImplementationFactory: not null } => new ServiceDescriptor(decoratedType, serviceDescriptor.ImplementationFactory, serviceDescriptor.Lifetime),
-            { ImplementationInstance: not null } => new ServiceDescriptor(decoratedType, serviceDescriptor.ImplementationInstance),
-            _ => throw new ArgumentException($"No implementation factory or instance or type found for {serviceDescriptor.ServiceType}.", nameof(serviceDescriptor))
-        };
     }
 }

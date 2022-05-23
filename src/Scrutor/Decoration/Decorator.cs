@@ -7,7 +7,7 @@ namespace Scrutor.Decoration
     {
         private readonly IDecoratorStrategy _decoratorStrategy;
 
-        public Decorator(IDecoratorStrategy decoratorStrategy)
+        private Decorator(IDecoratorStrategy decoratorStrategy)
             => _decoratorStrategy = decoratorStrategy;
         
         public static Decorator Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)

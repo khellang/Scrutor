@@ -21,7 +21,35 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.NotNull(services, nameof(services));
 
-            return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator)));
+            if (typeof(TDecorator).IsInterface)
+            {
+                return DecorateUsingInterface<TService, TDecorator>(services);
+            }
+            else
+            {
+                return services.DecorateDescriptors(typeof(TService), x => x.Decorate(typeof(TDecorator)));
+            }
+        }
+
+        private static IServiceCollection DecorateUsingInterface<TService, TDecorator>(IServiceCollection services) where TDecorator : TService
+        {
+            if (typeof(TDecorator).IsGenericType)
+            {
+                var decoratorDescriptor = services.Where(service => HasSameTypeDefinition(service.ServiceType, typeof(TDecorator))).FirstOrDefault();
+                if (decoratorDescriptor == null)
+                    throw new MissingTypeRegistrationException(typeof(TDecorator).IsGenericType ? typeof(TDecorator).GetGenericTypeDefinition() : typeof(TDecorator));
+
+                return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decoratorDescriptor.ImplementationType.MakeGenericType(typeof(TDecorator).GetGenericArguments().First())));
+            }
+            else
+            {
+                var decoratorDescriptor = services.Where(service => service.ServiceType == typeof(TDecorator)).FirstOrDefault();
+                if (decoratorDescriptor == null)
+                    throw new MissingTypeRegistrationException(typeof(TDecorator).IsGenericType ? typeof(TDecorator).GetGenericTypeDefinition() : typeof(TDecorator));
+
+                return services.DecorateDescriptors(typeof(TService), x => x.Decorate(decoratorDescriptor.ImplementationType));
+            }
+
         }
 
         /// <summary>

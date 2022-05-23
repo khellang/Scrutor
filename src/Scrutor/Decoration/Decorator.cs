@@ -3,11 +3,11 @@ using System;
 
 namespace Scrutor.Decoration
 {
-    internal readonly struct Decoration
+    internal readonly struct Decorator
     {
         private readonly IDecorationStrategy _decorationStrategy;
 
-        public Decoration(IDecorationStrategy decorationStrategy)
+        public Decorator(IDecorationStrategy decorationStrategy)
             => _decorationStrategy = decorationStrategy;
 
         public bool TryDecorate(IServiceCollection services)

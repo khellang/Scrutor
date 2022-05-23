@@ -26,29 +26,22 @@ internal readonly struct Decorator
         return new Decorator(strategy);
     }
 
-    public bool TryDecorate(IServiceCollection services)
-    {
-        var decorated = DecorateServices(services);
-        return decorated != 0;
-    }
-
     public IServiceCollection Decorate(IServiceCollection services)
     {
-        var decorated = DecorateServices(services);
-
-        if (decorated == 0)
+        if (TryDecorate(services))
         {
-            throw new MissingTypeRegistrationException(DecoratorStrategy.ServiceType);
+            return services;
         }
 
-        return services;
+        throw new MissingTypeRegistrationException(DecoratorStrategy.ServiceType);
+
     }
 
-    private int DecorateServices(IServiceCollection services)
+    public bool TryDecorate(IServiceCollection services)
     {
-        int decorated = 0;
+        var decorated = false;
 
-        for (int i = services.Count - 1; i >= 0; i--)
+        for (var i = services.Count - 1; i >= 0; i--)
         {
             var serviceDescriptor = services[i];
 
@@ -57,19 +50,21 @@ internal readonly struct Decorator
                 continue; // Service has already been decorated.
             }
 
-            if (DecoratorStrategy.CanDecorate(serviceDescriptor.ServiceType))
+            if (!DecoratorStrategy.CanDecorate(serviceDescriptor.ServiceType))
             {
-                var decoratedType = new DecoratedType(serviceDescriptor.ServiceType);
-
-                // insert decorated
-                services.Add(serviceDescriptor.WithServiceType(decoratedType));
-
-                // replace decorator
-                var decoratorFactory = DecoratorStrategy.CreateDecorator(decoratedType);
-                services[i] = new ServiceDescriptor(serviceDescriptor.ServiceType, decoratorFactory, serviceDescriptor.Lifetime);
-
-                ++decorated;
+                continue; // Unable to decorate using the specified strategy.
             }
+
+            var decoratedType = new DecoratedType(serviceDescriptor.ServiceType);
+
+            // insert decorated
+            services.Add(serviceDescriptor.WithServiceType(decoratedType));
+
+            // replace decorator
+            var decoratorFactory = DecoratorStrategy.CreateDecorator(decoratedType);
+            services[i] = new ServiceDescriptor(serviceDescriptor.ServiceType, decoratorFactory, serviceDescriptor.Lifetime);
+
+            decorated = true;
         }
 
         return decorated;

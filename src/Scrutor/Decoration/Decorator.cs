@@ -9,7 +9,13 @@ internal readonly struct Decorator
 
     private IDecoratorStrategy Strategy { get; }
 
-    public static Decorator Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
+    public static Decorator WithType(Type serviceType, Type decoratorType) => 
+        Create(serviceType, decoratorType, decoratorFactory: null);
+
+    public static Decorator WithFactory(Type serviceType, Func<object, IServiceProvider, object> decoratorFactory) => 
+        Create(serviceType, decoratorType: null, decoratorFactory);
+
+    private static Decorator Create(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory)
     {
         IDecoratorStrategy strategy;
 

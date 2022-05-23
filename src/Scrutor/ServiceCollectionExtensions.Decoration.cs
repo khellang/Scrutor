@@ -19,7 +19,7 @@ public static partial class ServiceCollectionExtensions
     {
         Preconditions.NotNull(services, nameof(services));
 
-        return Decorator.Create(typeof(TService), typeof(TDecorator), null).Decorate(services);
+        return Decorator.WithType(typeof(TService), typeof(TDecorator)).Decorate(services);
     }
 
     /// <summary>
@@ -33,7 +33,7 @@ public static partial class ServiceCollectionExtensions
     {
         Preconditions.NotNull(services, nameof(services));
 
-        return Decorator.Create(typeof(TService), typeof(TDecorator), null).TryDecorate(services);
+        return Decorator.WithType(typeof(TService), typeof(TDecorator)).TryDecorate(services);
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decoratorType, nameof(decoratorType));
 
-        return Decorator.Create(serviceType, decoratorType, null).Decorate(services);
+        return Decorator.WithType(serviceType, decoratorType).Decorate(services);
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decoratorType, nameof(decoratorType));
 
-        return Decorator.Create(serviceType, decoratorType, null).TryDecorate(services);
+        return Decorator.WithType(serviceType, decoratorType).TryDecorate(services);
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(services, nameof(services));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.Create(typeof(TService), null, (decorated, serviceProvider) => decorator((TService)decorated, serviceProvider)).Decorate(services);
+        return Decorator.WithFactory(typeof(TService), (decorated, serviceProvider) => decorator((TService)decorated, serviceProvider)).Decorate(services);
     }
 
     /// <summary>
@@ -105,7 +105,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(services, nameof(services));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.Create(typeof(TService), null, (decorated, serviceProvider) => decorator((TService)decorated, serviceProvider)).TryDecorate(services);
+        return Decorator.WithFactory(typeof(TService), (decorated, serviceProvider) => decorator((TService)decorated, serviceProvider)).TryDecorate(services);
     }
 
     /// <summary>
@@ -123,7 +123,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(services, nameof(services));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.Create(typeof(TService), null, (decorated, _) => decorator((TService)decorated)).Decorate(services);
+        return Decorator.WithFactory(typeof(TService), (decorated, _) => decorator((TService)decorated)).Decorate(services);
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(services, nameof(services));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.Create(typeof(TService), null, (decorated, _) => decorator((TService)decorated)).TryDecorate(services);
+        return Decorator.WithFactory(typeof(TService), (decorated, _) => decorator((TService)decorated)).TryDecorate(services);
     }
 
     /// <summary>
@@ -159,7 +159,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.Create(serviceType, null, decorator).Decorate(services);
+        return Decorator.WithFactory(serviceType, decorator).Decorate(services);
     }
 
     /// <summary>
@@ -177,7 +177,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.Create(serviceType, null, decorator).TryDecorate(services);
+        return Decorator.WithFactory(serviceType, decorator).TryDecorate(services);
     }
 
     /// <summary>
@@ -196,7 +196,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.Create(serviceType, null, (decorated, _) => decorator(decorated)).Decorate(services);
+        return Decorator.WithFactory(serviceType, (decorated, _) => decorator(decorated)).Decorate(services);
     }
 
     /// <summary>
@@ -214,6 +214,6 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return Decorator.Create(serviceType, null, (decorated, _) => decorator(decorated)).TryDecorate(services);
+        return Decorator.WithFactory(serviceType, (decorated, _) => decorator(decorated)).TryDecorate(services);
     }
 }

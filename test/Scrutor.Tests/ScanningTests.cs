@@ -17,7 +17,7 @@ namespace Scrutor.Tests
         public void Scan_TheseTypes()
         {
             Collection.Scan(scan => scan
-                .AddTypes<TransientService1, TransientService2>()
+                .FromTypes<TransientService1, TransientService2>()
                     .AsImplementedInterfaces(x => x != typeof(IOtherInheritance))
                     .WithSingletonLifetime());
 
@@ -383,7 +383,7 @@ namespace Scrutor.Tests
             };
 
             Collection.Scan(scan => scan
-                .AddTypes(genericTypes)
+                .FromTypes(genericTypes)
                     .AddClasses()
                     .AsImplementedInterfaces());
 
@@ -402,7 +402,7 @@ namespace Scrutor.Tests
         [Fact]
         public void ShouldNotIncludeCompilerGeneratedTypes()
         {
-            Assert.Empty(Collection.Scan(scan => scan.AddType<CompilerGenerated>()));
+            Assert.Empty(Collection.Scan(scan => scan.FromType<CompilerGenerated>()));
         }
 
         [Fact]

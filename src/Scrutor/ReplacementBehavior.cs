@@ -21,7 +21,7 @@ public enum ReplacementBehavior
     ImplementationType = 2,
 
     /// <summary>
-    /// Replace existing services by either service- or implementation type.
+    /// Replace existing services by either service or implementation type.
     /// </summary>
     All = ServiceType | ImplementationType
 }

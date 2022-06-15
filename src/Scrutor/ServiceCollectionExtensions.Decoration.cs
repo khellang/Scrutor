@@ -263,7 +263,7 @@ public static partial class ServiceCollectionExtensions
             var decoratedType = new DecoratedType(serviceDescriptor.ServiceType);
 
             // Insert decorated
-            services.Add(serviceDescriptor.WithServiceType(decoratedType));
+            services.Add(serviceDescriptor.WithDecoratedType(decoratedType));
 
             // Replace decorator
             services[i] = serviceDescriptor.WithImplementationFactory(strategy.CreateDecorator(decoratedType));

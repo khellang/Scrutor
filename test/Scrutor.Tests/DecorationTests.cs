@@ -229,6 +229,27 @@ public class DecorationTests : TestBase
         Assert.NotNull(inner.Dependency);
     }
 
+    [Fact]
+    public void Issue171_Decorate_IsAbleToCreateValidRegistration()
+    {
+        var services = new ServiceCollection();
+
+        services
+            .AddTransient<IDecoratedService, Decorated>()
+            .Decorate<IDecoratedService, Decorator>();
+
+        foreach (var serviceDescriptor in services)
+        {
+            if (serviceDescriptor.ImplementationType != null
+                && serviceDescriptor.ServiceType != serviceDescriptor.ImplementationType)
+            {
+                var implementationTypeInterfaces = serviceDescriptor.ImplementationType.GetInterfaces();
+                var implementationAssignableToServiceType = implementationTypeInterfaces.Any(t => t == serviceDescriptor.ServiceType);
+                Assert.True(implementationAssignableToServiceType);
+            }
+        }
+    }
+
     #region Individual functions tests
 
     [Fact]

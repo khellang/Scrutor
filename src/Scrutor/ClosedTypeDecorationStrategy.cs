@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace Scrutor;
 
@@ -16,16 +17,16 @@ internal sealed class ClosedTypeDecorationStrategy : DecorationStrategy
 
     public override bool CanDecorate(Type serviceType) => ServiceType == serviceType;
 
-    public override Func<IServiceProvider, object> CreateDecorator(Type serviceType)
+    public override Func<IServiceProvider, object> CreateDecorator(ServiceDescriptor descriptor)
     {
         if (DecoratorType is not null)
         {
-            return TypeDecorator(serviceType, DecoratorType);
+            return TypeDecorator(descriptor, DecoratorType);
         }
 
         if (DecoratorFactory is not null)
         {
-            return FactoryDecorator(serviceType, DecoratorFactory);
+            return FactoryDecorator(descriptor, DecoratorFactory);
         }
 
         throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");

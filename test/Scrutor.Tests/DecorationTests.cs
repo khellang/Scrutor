@@ -139,26 +139,6 @@ public class DecorationTests : TestBase
     }
 
     [Fact]
-    public void DisposableServicesAreDisposed()
-    {
-        var provider = ConfigureProvider(services =>
-        {
-            services.AddScoped<IDisposableService, DisposableService>();
-            services.Decorate<IDisposableService, DisposableServiceDecorator>();
-        });
-
-        DisposableServiceDecorator decorator;
-        using (var scope = provider.CreateScope())
-        {
-            var disposable = scope.ServiceProvider.GetRequiredService<IDisposableService>();
-            decorator = Assert.IsType<DisposableServiceDecorator>(disposable);
-        }
-
-        Assert.True(decorator.WasDisposed);
-        Assert.True(decorator.Inner.WasDisposed);
-    }
-
-    [Fact]
     public void ServicesWithSameServiceTypeAreOnlyDecoratedOnce()
     {
         // See issue: https://github.com/khellang/Scrutor/issues/125

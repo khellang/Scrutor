@@ -7,37 +7,124 @@ namespace Scrutor.Tests;
 public class OpenGenericDecorationTests : TestBase
 {
     [Fact]
-    public void CanDecorateOpenGenericTypeBasedOnClass()
+    public void Decorate_OpenGenericTypeBasedOnClass_DecoratedInstanceHasSameTypeOfTelemetryDecorator()
     {
-        var provider = ConfigureProvider(services =>
+        var stubProvider = ConfigureProvider(services =>
+        {
+            services.AddSingleton<QueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+            services.Decorate(typeof(QueryHandler<,>), typeof(TelemetryQueryHandler<,>));
+        });
+
+        var mockInstance = provider.GetRequiredService<QueryHandler<MyQuery, MyResult>>();
+        Assert.IsType<TelemetryQueryHandler<MyQuery, MyResult>>(mockInstance);
+    }
+    
+    [Fact]
+    public void Decorate_OpenGenericTypeBasedOnClassWithTwoDecorators_DecoratedInstanceHasSameTypeOfTelemetryDecorator()
+    {
+        var stubProvider = ConfigureProvider(services =>
         {
             services.AddSingleton<QueryHandler<MyQuery, MyResult>, MyQueryHandler>();
             services.Decorate(typeof(QueryHandler<,>), typeof(LoggingQueryHandler<,>));
             services.Decorate(typeof(QueryHandler<,>), typeof(TelemetryQueryHandler<,>));
         });
 
-        var instance = provider.GetRequiredService<QueryHandler<MyQuery, MyResult>>();
+        var mockInstance = provider.GetRequiredService<QueryHandler<MyQuery, MyResult>>();
+        Assert.IsType<TelemetryQueryHandler<MyQuery, MyResult>>(mockInstance);
+    }
+    
+    
+    [Fact]
+    public void Decorate_OpenGenericTypeBasedOnClassWithTwoDecorators_InnerDecoratedInstanceHasSameTypeOfLoggingDecorator()
+    {
+        var stubProvider = ConfigureProvider(services =>
+        {
+            services.AddSingleton<QueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+            services.Decorate(typeof(QueryHandler<,>), typeof(LoggingQueryHandler<,>));
+            services.Decorate(typeof(QueryHandler<,>), typeof(TelemetryQueryHandler<,>));
+        });
 
-        var telemetryDecorator = Assert.IsType<TelemetryQueryHandler<MyQuery, MyResult>>(instance);
-        var loggingDecorator = Assert.IsType<LoggingQueryHandler<MyQuery, MyResult>>(telemetryDecorator.Inner);
+        var mockInstance = provider.GetRequiredService<QueryHandler<MyQuery, MyResult>>();
+
+        var telemetryDecorator = (TelemetryQueryHandler<MyQuery, MyResult>) mockInstance;
+        Assert.IsType<LoggingQueryHandler<MyQuery, MyResult>>(telemetryDecorator.Inner);
+    }
+    
+    [Fact]
+    public void Decorate_OpenGenericTypeBasedOnClassWithTwoDecorators_RootInnerDecoratedInstanceHasTheSameTypeOfOriginalClass()
+    {
+        var stubProvider = ConfigureProvider(services =>
+        {
+            services.AddSingleton<QueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+            services.Decorate(typeof(QueryHandler<,>), typeof(LoggingQueryHandler<,>));
+            services.Decorate(typeof(QueryHandler<,>), typeof(TelemetryQueryHandler<,>));
+        });
+
+        var mockInstance = provider.GetRequiredService<QueryHandler<MyQuery, MyResult>>();
+
+        var telemetryDecorator = (TelemetryQueryHandler<MyQuery, MyResult>) mockInstance;
+        var loggingDecorator = (LoggingQueryHandler<MyQuery, MyResult>) telemetryDecorator.Inner;
         Assert.IsType<MyQueryHandler>(loggingDecorator.Inner);
     }
 
 
     [Fact]
-    public void CanDecorateOpenGenericTypeBasedOnInterface()
+    public void Decorate_OpenGenericTypeBasedOnInterface_DecoratedInstanceHasSameTypeOfTelemetryDecorator()
     {
-        var provider = ConfigureProvider(services =>
+        var stubProvider = ConfigureProvider(services =>
+        {
+            services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+            services.Decorate(typeof(IQueryHandler<,>), typeof(TelemetryQueryHandler<,>));
+        });
+
+        var mockInstance = provider.GetRequiredService<IQueryHandler<MyQuery, MyResult>>();
+        Assert.IsType<TelemetryQueryHandler<MyQuery, MyResult>>(mockInstance);
+    }
+    
+    [Fact]
+    public void Decorate_OpenGenericTypeBasedOnInterfaceWithTwoDecorators_DecoratedInstanceHasSameTypeOfTelemetryDecorator()
+    {
+        var stubProvider = ConfigureProvider(services =>
         {
             services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MyQueryHandler>();
             services.Decorate(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
             services.Decorate(typeof(IQueryHandler<,>), typeof(TelemetryQueryHandler<,>));
         });
 
-        var instance = provider.GetRequiredService<IQueryHandler<MyQuery, MyResult>>();
+        var mockInstance = provider.GetRequiredService<IQueryHandler<MyQuery, MyResult>>();
+        Assert.IsType<TelemetryQueryHandler<MyQuery, MyResult>>(mockInstance);
+    }
+    
+    [Fact]
+    public void Decorate_OpenGenericTypeBasedOnInterfaceWithTwoDecorators_InnerDecoratedInstanceHasSameTypeOfLoggingDecorator()
+    {
+        var stubProvider = ConfigureProvider(services =>
+        {
+            services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+            services.Decorate(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
+            services.Decorate(typeof(IQueryHandler<,>), typeof(TelemetryQueryHandler<,>));
+        });
 
-        var telemetryDecorator = Assert.IsType<TelemetryQueryHandler<MyQuery, MyResult>>(instance);
-        var loggingDecorator = Assert.IsType<LoggingQueryHandler<MyQuery, MyResult>>(telemetryDecorator.Inner);
+        var mockInstance = provider.GetRequiredService<IQueryHandler<MyQuery, MyResult>>();
+
+        var telemetryDecorator = (TelemetryQueryHandler<MyQuery, MyResult>) mockInstance;
+        Assert.IsType<LoggingQueryHandler<MyQuery, MyResult>>(telemetryDecorator.Inner);
+    }
+    
+    [Fact]
+    public void Decorate_OpenGenericTypeBasedOnInterfaceWithTwoDecorators_RootInnerDecoratedInstanceHasSameTypeOfOriginalClass()
+    {
+        var stubProvider = ConfigureProvider(services =>
+        {
+            services.AddSingleton<IQueryHandler<MyQuery, MyResult>, MyQueryHandler>();
+            services.Decorate(typeof(IQueryHandler<,>), typeof(LoggingQueryHandler<,>));
+            services.Decorate(typeof(IQueryHandler<,>), typeof(TelemetryQueryHandler<,>));
+        });
+
+        var mockInstance = provider.GetRequiredService<IQueryHandler<MyQuery, MyResult>>();
+
+        var telemetryDecorator = (TelemetryQueryHandler<MyQuery, MyResult>) mockInstance;
+        var loggingDecorator = (LoggingQueryHandler<MyQuery, MyResult>) telemetryDecorator.Inner;
         Assert.IsType<MyQueryHandler>(loggingDecorator.Inner);
     }
 

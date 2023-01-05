@@ -21,10 +21,10 @@ jobs:
               with:
                   dotnet-version: "3.1.x"
 
-            - name: Setup .NET 6 SDK
+            - name: Setup .NET 7 SDK
               uses: actions/setup-dotnet@v1
               with:
-                  dotnet-version: "6.0.x"
+                  dotnet-version: "7.0.x"
 
             - name: Test
               run: dotnet test --collect:"XPlat Code Coverage"

@@ -52,3 +52,12 @@ public class ServiceDescriptorAttribute : Attribute
         yield return ServiceType;
     }
 }
+
+[PublicAPI]
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+public sealed class ServiceDescriptorAttribute<TService> : ServiceDescriptorAttribute
+{
+    public ServiceDescriptorAttribute() : base(typeof(TService)) { }
+
+    public ServiceDescriptorAttribute(ServiceLifetime lifetime) : base(typeof(TService), lifetime) { }
+}

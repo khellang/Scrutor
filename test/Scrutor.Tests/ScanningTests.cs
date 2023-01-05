@@ -260,6 +260,22 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void CanFilterGenericAttributeTypes()
+        {
+            Collection.Scan(scan => scan.FromAssemblyOf<IGenericAttribute>()
+                .AddClasses(t => t.AssignableTo<IGenericAttribute>())
+                    .UsingAttributes());
+
+            Assert.Equal(1, Collection.Count);
+
+            var service = Collection.GetDescriptor<IGenericAttribute>();
+
+            Assert.NotNull(service);
+            Assert.Equal(ServiceLifetime.Transient, service.Lifetime);
+            Assert.Equal(typeof(GenericAttribute), service.ImplementationType);
+        }
+
+        [Fact]
         public void CanCreateDefault()
         {
             var types = new[]
@@ -310,6 +326,19 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void ThrowsOnDuplicateWithMixedAttributes()
+        {
+            var collection = new ServiceCollection();
+
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+                collection.Scan(scan => scan.FromAssemblyOf<IMixedAttribute>()
+                    .AddClasses(t => t.AssignableTo<IMixedAttribute>())
+                        .UsingAttributes()));
+
+            Assert.Equal(@"Type ""Scrutor.Tests.MixedAttribute"" has multiple ServiceDescriptor attributes with the same service type.", ex.Message);
+        }
+
+        [Fact]
         public void CanHandleMultipleAttributes()
         {
             Collection.Scan(scan => scan.FromAssemblyOf<ITransientServiceToCombine>()
@@ -343,7 +372,7 @@ namespace Scrutor.Tests
                     .AsMatchingInterface()
                     .WithTransientLifetime());
 
-            Assert.Equal(6, Collection.Count);
+            Assert.Equal(8, Collection.Count);
 
             var services = Collection.GetDescriptors<ITransientService>();
 
@@ -363,7 +392,7 @@ namespace Scrutor.Tests
                     .AsMatchingInterface((t, x) => x.InNamespaceOf(t))
                     .WithTransientLifetime());
 
-            Assert.Equal(5, Collection.Count);
+            Assert.Equal(7, Collection.Count);
 
             var service = Collection.GetDescriptor<ITransientService>();
 
@@ -574,6 +603,17 @@ namespace Scrutor.Tests
     public class CompilerGenerated { }
 
     public class CombinedService2: IDefault1, IDefault2, IDefault3Level2 { }
+
+    public interface IGenericAttribute { }
+
+    [ServiceDescriptor<IGenericAttribute>]
+    public class GenericAttribute : IGenericAttribute { }
+
+    public interface IMixedAttribute { }
+
+    [ServiceDescriptor(typeof(IMixedAttribute), ServiceLifetime.Scoped)]
+    [ServiceDescriptor<IMixedAttribute>(ServiceLifetime.Singleton)]
+    public class MixedAttribute : IMixedAttribute { }
 }
 
 namespace Scrutor.Tests.ChildNamespace

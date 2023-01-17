@@ -26,6 +26,13 @@
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
+    <WarningsNotAsErrors>CS8604</WarningsNotAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
+    <WarningsNotAsErrors>CS8604</WarningsNotAsErrors>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
@@ -37,5 +44,10 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <PackageReference Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
     <PackageReference Update="Microsoft.Extensions.DependencyModel" Version="6.0.0" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+    <PackageReference Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+    <PackageReference Update="Microsoft.Extensions.DependencyModel" Version="7.0.0" />
   </ItemGroup>
 </Project>

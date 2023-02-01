@@ -2,7 +2,7 @@
 
 namespace Scrutor;
 
-internal sealed class OpenGenericDecorationStrategy : DecorationStrategy
+public class OpenGenericDecorationStrategy : DecorationStrategy
 {
     public OpenGenericDecorationStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory) : base(serviceType)
     {

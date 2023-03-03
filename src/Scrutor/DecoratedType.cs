@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Scrutor;
 
-internal class DecoratedType : Type
+public class DecoratedType : Type
 {
     public DecoratedType(Type type) => ProxiedType = type;
     private Type ProxiedType { get; }

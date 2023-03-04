@@ -44,7 +44,7 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
         try
         {
-            return FromDependencyContext(DependencyContext.Default, predicate);
+            return FromDependencyContext(DependencyContext.Default!, predicate);
         }
         catch
         {

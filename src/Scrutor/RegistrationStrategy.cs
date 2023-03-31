@@ -6,9 +6,14 @@ namespace Scrutor;
 public abstract class RegistrationStrategy
 {
     /// <summary>
-    /// Skips registrations for services that already exists.
+    /// Appends a new registration when no registration exists for the same Service type.
     /// </summary>
     public static readonly RegistrationStrategy Skip = new SkipRegistrationStrategy();
+
+    /// <summary>
+    /// Appends a new registration when no registration exists for the same Service and Implementation type.
+    /// </summary>
+    public static readonly RegistrationStrategy Distinct = new DistinctRegistrationStrategy();
 
     /// <summary>
     /// Appends a new registration for existing services.
@@ -47,6 +52,26 @@ public abstract class RegistrationStrategy
     private sealed class SkipRegistrationStrategy : RegistrationStrategy
     {
         public override void Apply(IServiceCollection services, ServiceDescriptor descriptor) => services.TryAdd(descriptor);
+    }
+
+    private sealed class DistinctRegistrationStrategy : RegistrationStrategy {
+        /// <summary>
+        /// Adds the service descriptor if the service collection does not contain a desriptor with the same Service and Implementation type.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <param name="descriptor">The descriptor to apply.</param>
+        /// <remarks>
+        /// Unable to use 
+        /// <see href="https://source.dot.net/#Microsoft.Extensions.DependencyInjection.Abstractions/Extensions/ServiceCollectionDescriptorExtensions.cs,c2d39606abcd4e54,references">TryAddEnumerable()</see>
+        /// since it would throw an ArgumentException when used with AsSelf().
+        /// </remarks>
+        public override void Apply(IServiceCollection services, ServiceDescriptor descriptor)
+        {
+            if (services.HasRegistration(descriptor)) {
+                return;
+            }
+            services.Add(descriptor);
+        }
     }
 
     private sealed class AppendRegistrationStrategy : RegistrationStrategy

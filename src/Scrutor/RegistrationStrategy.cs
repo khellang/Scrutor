@@ -110,24 +110,38 @@ public abstract class RegistrationStrategy
                 behavior = ReplacementBehavior.ServiceType;
             }
 
-            if (behavior.HasFlag(ReplacementBehavior.ServiceType))
+            if (behavior == ReplacementBehavior.Both) 
             {
+                var implementationType = descriptor.GetImplementationType();
                 for (var i = services.Count - 1; i >= 0; i--)
                 {
-                    if (services[i].ServiceType == descriptor.ServiceType)
+                    if (services[i].ServiceType == descriptor.ServiceType && services[i].GetImplementationType() == implementationType)
                     {
                         services.RemoveAt(i);
                     }
                 }
             }
-
-            if (behavior.HasFlag(ReplacementBehavior.ImplementationType))
-            {
-                for (var i = services.Count - 1; i >= 0; i--)
+            else {
+                if (behavior.HasFlag(ReplacementBehavior.ServiceType))
                 {
-                    if (services[i].ImplementationType == descriptor.ImplementationType)
+                    for (var i = services.Count - 1; i >= 0; i--)
                     {
-                        services.RemoveAt(i);
+                        if (services[i].ServiceType == descriptor.ServiceType)
+                        {
+                            services.RemoveAt(i);
+                        }
+                    }
+                }
+
+                if (behavior.HasFlag(ReplacementBehavior.ImplementationType))
+                {
+                    var implementationType = descriptor.GetImplementationType();
+                    for (var i = services.Count - 1; i >= 0; i--)
+                    {
+                        if (services[i].GetImplementationType() == implementationType)
+                        {
+                            services.RemoveAt(i);
+                        }
                     }
                 }
             }

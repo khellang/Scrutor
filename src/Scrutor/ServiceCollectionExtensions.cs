@@ -19,6 +19,7 @@ internal static class ServiceCollectionExtensions
     /// <returns><c>true</c> if the service collection contains the specified service descriptor; otherwise, <c>false</c>.</returns>
     public static bool HasRegistration(this IServiceCollection services, ServiceDescriptor descriptor)
     {
-        return services.Any(x => x.ServiceType == descriptor.ServiceType && x.ImplementationType == descriptor.ImplementationType);
+        var implementationType = descriptor.GetImplementationType();
+        return services.Any(x => x.ServiceType == descriptor.ServiceType && x.ImplementationType == implementationType);
     }
 }

@@ -212,6 +212,52 @@ namespace Scrutor.Tests
             Assert.Equal(3, services.Count(x => x.ServiceType == typeof(ITransientService)));
         }
 
+        [Theory]
+        [InlineData(ReplacementBehavior.ServiceType)]
+        [InlineData(ReplacementBehavior.ImplementationType)]
+        [InlineData(ReplacementBehavior.Both)]
+        [InlineData(ReplacementBehavior.Either)]
+        public void UsingRegistrationStrategy_Replace_ReplacesInstances(ReplacementBehavior behavior) 
+        {
+            var instanceToReplace = new Replacement1();
+            Collection.Add(new(typeof(IReplacement), instanceToReplace));
+
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<IReplacement>())
+                        .UsingRegistrationStrategy(RegistrationStrategy.Replace(behavior))
+                        .AsImplementedInterfaces()
+                        .WithSingletonLifetime());
+
+            var services = Collection.GetDescriptors<IReplacement>();
+
+            Assert.Equal(1, services.Count(x => x.ServiceType == typeof(IReplacement)));
+            Assert.Equal(0, services.Count(x => x.ImplementationInstance == instanceToReplace));
+        }
+
+        [Theory]
+        [InlineData(ReplacementBehavior.ServiceType)]
+        [InlineData(ReplacementBehavior.ImplementationType)]
+        [InlineData(ReplacementBehavior.Both)]
+        [InlineData(ReplacementBehavior.Either)]
+        public void UsingRegistrationStrategy_Replace_ReplacesFactories(ReplacementBehavior behavior)
+        {
+            Replacement1 factory(IServiceProvider _) => new();
+            Collection.Add(new(typeof(IReplacement), factory, ServiceLifetime.Transient));
+
+            Collection.Scan(scan => scan
+                .FromAssemblyOf<ITransientService>()
+                    .AddClasses(classes => classes.AssignableTo<IReplacement>())
+                        .UsingRegistrationStrategy(RegistrationStrategy.Replace(behavior))
+                        .AsImplementedInterfaces()
+                        .WithSingletonLifetime());
+
+            var services = Collection.GetDescriptors<IReplacement>();
+
+            Assert.Equal(1, services.Count(x => x.ServiceType == typeof(IReplacement)));
+            Assert.Equal(0, services.Count(x => x.ImplementationFactory is not null));
+        }
+
         [Fact]
         public void UsingRegistrationStrategy_Throw()
         {
@@ -707,6 +753,10 @@ namespace Scrutor.Tests
     [ServiceDescriptor(typeof(IMixedAttribute), ServiceLifetime.Scoped)]
     [ServiceDescriptor<IMixedAttribute>(ServiceLifetime.Singleton)]
     public class MixedAttribute : IMixedAttribute { }
+
+    public interface IReplacement { }
+
+    public class Replacement1 : IReplacement { }
 }
 
 namespace Scrutor.Tests.ChildNamespace

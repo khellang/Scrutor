@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net7.0</TargetFrameworks>
+    <TargetFrameworks>net7.0;net6.0;net462</TargetFrameworks>
     <LangVersion>11.0</LangVersion>
   </PropertyGroup>
 
@@ -15,11 +15,8 @@
     <PackageReference Include="coverlet.collector" Version="3.2.0" PrivateAssets="All" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.32" />
-  </ItemGroup>
-
   <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
   </ItemGroup>
+  
 </Project>

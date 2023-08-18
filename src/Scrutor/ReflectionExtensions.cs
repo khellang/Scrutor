@@ -245,7 +245,7 @@ internal static class ReflectionExtensions
 
         return true;
     }
-    
+
     public static bool HasCompatibleGenericArguments(this Type type, Type genericTypeDefinition)
     {
         var genericArguments = type.GetGenericArguments();

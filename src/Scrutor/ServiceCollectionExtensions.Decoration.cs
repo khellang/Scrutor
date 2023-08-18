@@ -73,7 +73,7 @@ public static partial class ServiceCollectionExtensions
 
         return services.TryDecorate(DecorationStrategy.WithType(serviceType, decoratorType));
     }
-    
+
     /// <summary>
     /// Decorates all registered services of type <typeparamref name="TService"/>
     /// using the <paramref name="decorator"/> function.
@@ -123,7 +123,7 @@ public static partial class ServiceCollectionExtensions
     {
         Preconditions.NotNull(services, nameof(services));
         Preconditions.NotNull(decorator, nameof(decorator));
-        
+
         return services.Decorate(typeof(TService), (service, provider) => decorator((TService)service, provider));
     }
 
@@ -140,10 +140,10 @@ public static partial class ServiceCollectionExtensions
     {
         Preconditions.NotNull(services, nameof(services));
         Preconditions.NotNull(decorator, nameof(decorator));
-        
+
         return services.TryDecorate(typeof(TService), (service, provider) => decorator((TService)service, provider));
     }
-    
+
     /// <summary>
     /// Decorates all registered services of the specified <paramref name="serviceType"/>
     /// using the <paramref name="decorator"/> function.

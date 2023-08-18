@@ -9,19 +9,19 @@ public abstract class DecorationStrategy
     {
         ServiceType = serviceType;
     }
-    
+
     public Type ServiceType { get; }
-    
+
     public abstract bool CanDecorate(Type serviceType);
-    
+
     public abstract Func<IServiceProvider, object> CreateDecorator(Type serviceType);
-    
-    internal static DecorationStrategy WithType(Type serviceType, Type decoratorType) => 
+
+    internal static DecorationStrategy WithType(Type serviceType, Type decoratorType) =>
         Create(serviceType, decoratorType, decoratorFactory: null);
 
-    internal static DecorationStrategy WithFactory(Type serviceType, Func<object, IServiceProvider, object> decoratorFactory) => 
+    internal static DecorationStrategy WithFactory(Type serviceType, Func<object, IServiceProvider, object> decoratorFactory) =>
         Create(serviceType, decoratorType: null, decoratorFactory);
-    
+
     protected static Func<IServiceProvider, object> TypeDecorator(Type serviceType, Type decoratorType) => serviceProvider =>
     {
         var instanceToDecorate = serviceProvider.GetRequiredService(serviceType);

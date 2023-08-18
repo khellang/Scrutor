@@ -29,5 +29,5 @@ internal sealed class ClosedTypeDecorationStrategy : DecorationStrategy
         }
 
         throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");
-    } 
+    }
 }

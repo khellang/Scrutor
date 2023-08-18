@@ -16,11 +16,6 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v2
 
-            - name: Setup .NET Core SDK
-              uses: actions/setup-dotnet@v1
-              with:
-                  dotnet-version: "3.1.x"
-
             - name: Setup .NET 8 SDK
               uses: actions/setup-dotnet@v3
               with:

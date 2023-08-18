@@ -3,7 +3,7 @@
     <Description>Register services using assembly scanning and a fluent API.</Description>
     <VersionPrefix>4.2.2</VersionPrefix>
     <Authors>Kristian Hellang</Authors>
-    <TargetFrameworks>net461;netstandard2.0;netcoreapp3.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>net462;netstandard2.0;net8.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
@@ -27,15 +27,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
+    <PackageReference Include="JetBrains.Annotations" Version="2023.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.25" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.1.25" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <PackageReference Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
-    <PackageReference Update="Microsoft.Extensions.DependencyModel" Version="6.0.0" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0-rc.2.23417.23" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="8.0.0-preview.7.23375.6" />
   </ItemGroup>
 </Project>

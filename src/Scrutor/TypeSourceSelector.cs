@@ -44,7 +44,13 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
         try
         {
-            return FromDependencyContext(DependencyContext.Default, predicate);
+            var context = DependencyContext.Default;
+            if (context is null)
+            {
+                return FromAssemblyDependencies(EntryAssembly);
+            }
+
+            return FromDependencyContext(context, predicate);
         }
         catch
         {

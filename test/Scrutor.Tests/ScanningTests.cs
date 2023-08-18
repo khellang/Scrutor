@@ -611,7 +611,7 @@ namespace Scrutor.Tests
     [ServiceDescriptor(typeof(IDuplicateInheritance))]
     [ServiceDescriptor(typeof(IDuplicateInheritance))]
     public class DuplicateInheritance : IDuplicateInheritance, IOtherInheritance { }
-    
+
     public interface IDefault1 { }
 
     public interface IDefault2 { }

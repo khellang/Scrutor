@@ -6,6 +6,6 @@ public class DecorationException : MissingTypeRegistrationException
     {
         Strategy = strategy;
     }
-    
+
     public DecorationStrategy Strategy { get; }
 }

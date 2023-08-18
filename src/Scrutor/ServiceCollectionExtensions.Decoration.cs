@@ -8,6 +8,8 @@ namespace Microsoft.Extensions.DependencyInjection;
 [PublicAPI]
 public static partial class ServiceCollectionExtensions
 {
+    private const string DecoratedServiceKeySuffix = "+Decorated";
+
     /// <summary>
     /// Decorates all registered services of type <typeparamref name="TService"/>
     /// using the specified type <typeparamref name="TDecorator"/>.
@@ -250,27 +252,48 @@ public static partial class ServiceCollectionExtensions
         {
             var serviceDescriptor = services[i];
 
-            if (serviceDescriptor.ServiceType is DecoratedType)
+            if (IsDecorated(serviceDescriptor) || !strategy.CanDecorate(serviceDescriptor.ServiceType))
             {
-                continue; // Service has already been decorated.
+                continue;
             }
 
-            if (!strategy.CanDecorate(serviceDescriptor.ServiceType))
+            var serviceKey = GetDecoratorKey(serviceDescriptor);
+            if (serviceKey is null)
             {
-                continue; // Unable to decorate using the specified strategy.
+                return false;
             }
-
-            var decoratedType = new DecoratedType(serviceDescriptor.ServiceType);
 
             // Insert decorated
-            services.Add(serviceDescriptor.WithServiceType(decoratedType));
+            services.Add(serviceDescriptor.WithServiceKey(serviceKey));
 
             // Replace decorator
-            services[i] = serviceDescriptor.WithImplementationFactory(strategy.CreateDecorator(decoratedType));
+            services[i] = serviceDescriptor.WithImplementationFactory(strategy.CreateDecorator(serviceDescriptor.ServiceType, serviceKey));
 
             decorated = true;
         }
 
         return decorated;
+    }
+
+    private static string? GetDecoratorKey(ServiceDescriptor descriptor)
+    {
+        var uniqueId = Guid.NewGuid().ToString("n");
+
+        if (descriptor.ServiceKey is null)
+        {
+            return $"{descriptor.ServiceType.Name}+{uniqueId}{DecoratedServiceKeySuffix}";
+        }
+
+        if (descriptor.ServiceKey is string stringKey)
+        {
+            return $"{stringKey}+{uniqueId}{DecoratedServiceKeySuffix}";
+        }
+
+        return null;
+    }
+
+    private static bool IsDecorated(ServiceDescriptor descriptor)
+    {
+        return descriptor.ServiceKey is string stringKey && stringKey.EndsWith(DecoratedServiceKeySuffix);
     }
 }

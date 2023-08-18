@@ -20,19 +20,19 @@ public class OpenGenericDecorationStrategy : DecorationStrategy
             && serviceType.GetGenericTypeDefinition() == ServiceType.GetGenericTypeDefinition()
             && (DecoratorType is null || serviceType.HasCompatibleGenericArguments(DecoratorType));
 
-    public override Func<IServiceProvider, object> CreateDecorator(Type serviceType)
+    public override Func<IServiceProvider, object?, object> CreateDecorator(Type serviceType, string serviceKey)
     {
         if (DecoratorType is not null)
         {
             var genericArguments = serviceType.GetGenericArguments();
             var closedDecorator = DecoratorType.MakeGenericType(genericArguments);
 
-            return TypeDecorator(serviceType, closedDecorator);
+            return TypeDecorator(serviceType, serviceKey, closedDecorator);
         }
 
         if (DecoratorFactory is not null)
         {
-            return FactoryDecorator(serviceType, DecoratorFactory);
+            return FactoryDecorator(serviceType, serviceKey, DecoratorFactory);
         }
 
         throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");

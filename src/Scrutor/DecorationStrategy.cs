@@ -14,7 +14,7 @@ public abstract class DecorationStrategy
 
     public abstract bool CanDecorate(Type serviceType);
 
-    public abstract Func<IServiceProvider, object> CreateDecorator(Type serviceType);
+    public abstract Func<IServiceProvider, object?, object> CreateDecorator(Type serviceType, string serviceKey);
 
     internal static DecorationStrategy WithType(Type serviceType, Type decoratorType) =>
         Create(serviceType, decoratorType, decoratorFactory: null);
@@ -22,15 +22,15 @@ public abstract class DecorationStrategy
     internal static DecorationStrategy WithFactory(Type serviceType, Func<object, IServiceProvider, object> decoratorFactory) =>
         Create(serviceType, decoratorType: null, decoratorFactory);
 
-    protected static Func<IServiceProvider, object> TypeDecorator(Type serviceType, Type decoratorType) => serviceProvider =>
+    protected static Func<IServiceProvider, object?, object> TypeDecorator(Type serviceType, string serviceKey, Type decoratorType) => (serviceProvider, _) =>
     {
-        var instanceToDecorate = serviceProvider.GetRequiredService(serviceType);
+        var instanceToDecorate = serviceProvider.GetRequiredKeyedService(serviceType, serviceKey);
         return ActivatorUtilities.CreateInstance(serviceProvider, decoratorType, instanceToDecorate);
     };
 
-    protected static Func<IServiceProvider, object> FactoryDecorator(Type decorated, Func<object, IServiceProvider, object> decoratorFactory) => serviceProvider =>
+    protected static Func<IServiceProvider, object?, object> FactoryDecorator(Type serviceType, string serviceKey, Func<object, IServiceProvider, object> decoratorFactory) => (serviceProvider, _) =>
     {
-        var instanceToDecorate = serviceProvider.GetRequiredService(decorated);
+        var instanceToDecorate = serviceProvider.GetRequiredKeyedService(serviceType, serviceKey);
         return decoratorFactory(instanceToDecorate, serviceProvider);
     };
 

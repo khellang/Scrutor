@@ -18,6 +18,6 @@ internal static class ServiceCollectionExtensions
 
     public static ServiceDescriptor[] GetDescriptors(this IServiceCollection services, Type serviceType)
     {
-        return services.Where(x => x.ServiceType == serviceType).ToArray();
+        return services.Where(x => x.ServiceType == serviceType && x.ServiceKey is null).ToArray();
     }
 }

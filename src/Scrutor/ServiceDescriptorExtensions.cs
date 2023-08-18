@@ -5,14 +5,46 @@ namespace Scrutor;
 
 internal static class ServiceDescriptorExtensions
 {
-    public static ServiceDescriptor WithImplementationFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object> implementationFactory) =>
-        new(descriptor.ServiceType, implementationFactory, descriptor.Lifetime);
+    public static ServiceDescriptor WithImplementationFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object?, object> implementationFactory) =>
+        new(descriptor.ServiceType, descriptor.ServiceKey, implementationFactory, descriptor.Lifetime);
 
-    public static ServiceDescriptor WithServiceType(this ServiceDescriptor descriptor, Type serviceType) => descriptor switch
+    public static ServiceDescriptor WithServiceKey(this ServiceDescriptor descriptor, string serviceKey)
     {
-        { ImplementationType: not null } => new ServiceDescriptor(serviceType, descriptor.ImplementationType, descriptor.Lifetime),
-        { ImplementationFactory: not null } => new ServiceDescriptor(serviceType, descriptor.ImplementationFactory, descriptor.Lifetime),
-        { ImplementationInstance: not null } => new ServiceDescriptor(serviceType, descriptor.ImplementationInstance),
-        _ => throw new ArgumentException($"No implementation factory or instance or type found for {descriptor.ServiceType}.", nameof(descriptor))
-    };
+        if (descriptor.IsKeyedService)
+        {
+            if (descriptor.KeyedImplementationType is not null)
+            {
+                return new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.KeyedImplementationType, descriptor.Lifetime);
+            }
+
+            if (descriptor.KeyedImplementationInstance is not null)
+            {
+                return new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.KeyedImplementationInstance);
+            }
+
+            if (descriptor.KeyedImplementationFactory is not null)
+            {
+                return new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.KeyedImplementationFactory, descriptor.Lifetime);
+            }
+
+            throw new InvalidOperationException($"One of the following properties must be set: {nameof(ServiceDescriptor.KeyedImplementationType)}, {nameof(ServiceDescriptor.KeyedImplementationInstance)} or {nameof(ServiceDescriptor.KeyedImplementationFactory)}");
+        }
+
+        if (descriptor.ImplementationType is not null)
+        {
+            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.ImplementationType, descriptor.Lifetime);
+        }
+
+        if (descriptor.ImplementationInstance is not null)
+        {
+            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.ImplementationInstance);
+        }
+
+        if (descriptor.ImplementationFactory is not null)
+        {
+            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, (sp, key) => descriptor.ImplementationFactory(sp), descriptor.Lifetime);
+        }
+
+        throw new InvalidOperationException($"One of the following properties must be set: {nameof(ServiceDescriptor.ImplementationType)}, {nameof(ServiceDescriptor.ImplementationInstance)} or {nameof(ServiceDescriptor.ImplementationFactory)}");
+    }
 }

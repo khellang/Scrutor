@@ -71,7 +71,8 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
         Preconditions.NotNull(predicate, nameof(predicate));
 
         var assemblyNames = context.RuntimeLibraries
-            .SelectMany(library => library.GetDefaultAssemblyNames(context));
+            .SelectMany(library => library.GetDefaultAssemblyNames(context))
+            .ToHashSet();
 
         var assemblies = LoadAssemblies(assemblyNames);
 
@@ -82,19 +83,21 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
         Preconditions.NotNull(assembly, nameof(assembly));
 
-        var assemblies = new List<Assembly> { assembly };
-
         try
         {
-            var dependencyNames = assembly.GetReferencedAssemblies();
+            var dependencyNames = assembly
+                .GetReferencedAssemblies()
+                .ToHashSet();
 
-            assemblies.AddRange(LoadAssemblies(dependencyNames));
+            var assemblies = LoadAssemblies(dependencyNames);
+
+            assemblies.Add(assembly);
 
             return InternalFromAssemblies(assemblies);
         }
         catch
         {
-            return InternalFromAssemblies(assemblies);
+            return FromAssemblies(assembly);
         }
     }
 
@@ -132,11 +135,7 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
         Preconditions.NotNull(types, nameof(types));
 
-        var selector = new ImplementationTypeSelector(this, types);
-
-        Selectors.Add(selector);
-
-        return selector.AddClasses();
+        return AddSelector(types).AddClasses();
     }
 
     public void Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
@@ -154,12 +153,12 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
 
     private IImplementationTypeSelector InternalFromAssemblies(IEnumerable<Assembly> assemblies)
     {
-        return AddSelector(assemblies.SelectMany(asm => asm.ExportedTypes));
+        return AddSelector(assemblies.SelectMany(asm => asm.GetTypes()));
     }
 
-    private static IEnumerable<Assembly> LoadAssemblies(IEnumerable<AssemblyName> assemblyNames)
+    private static ISet<Assembly> LoadAssemblies(ISet<AssemblyName> assemblyNames)
     {
-        var assemblies = new List<Assembly>();
+        var assemblies = new HashSet<Assembly>();
 
         foreach (var assemblyName in assemblyNames)
         {
@@ -179,7 +178,7 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
 
     private IImplementationTypeSelector AddSelector(IEnumerable<Type> types)
     {
-        var selector = new ImplementationTypeSelector(this, types);
+        var selector = new ImplementationTypeSelector(this, types.ToHashSet());
 
         Selectors.Add(selector);
 

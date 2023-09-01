@@ -143,9 +143,9 @@ internal static class ReflectionExtensions
 
         var matchedInterfaces = GetImplementedInterfacesToMap(type)
             .Where(x => string.Equals(x.Name, matchingInterfaceName, StringComparison.Ordinal))
-            .ToArray();
+            .ToHashSet();
 
-        if (matchedInterfaces.Length == 0)
+        if (matchedInterfaces.Count == 0)
         {
             yield break;
         }

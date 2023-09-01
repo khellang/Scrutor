@@ -292,8 +292,7 @@ public static partial class ServiceCollectionExtensions
         return null;
     }
 
-    private static bool IsDecorated(ServiceDescriptor descriptor)
-    {
-        return descriptor.ServiceKey is string stringKey && stringKey.EndsWith(DecoratedServiceKeySuffix);
-    }
+    private static bool IsDecorated(ServiceDescriptor descriptor) =>
+        descriptor.ServiceKey is string stringKey
+            && stringKey.EndsWith(DecoratedServiceKeySuffix, StringComparison.Ordinal);
 }

@@ -9,7 +9,7 @@ namespace Scrutor;
 
 internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelector
 {
-    public ImplementationTypeSelector(ITypeSourceSelector inner, IEnumerable<Type> types)
+    public ImplementationTypeSelector(ITypeSourceSelector inner, ISet<Type> types)
     {
         Inner = inner;
         Types = types;
@@ -17,7 +17,7 @@ internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelect
 
     private ITypeSourceSelector Inner { get; }
 
-    private IEnumerable<Type> Types { get; }
+    private ISet<Type> Types { get; }
 
     private List<ISelector> Selectors { get; } = new();
 
@@ -135,15 +135,15 @@ internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelect
 
     private IServiceTypeSelector AddSelector(IEnumerable<Type> types)
     {
-        var selector = new ServiceTypeSelector(this, types);
+        var selector = new ServiceTypeSelector(this, types.ToHashSet());
 
         Selectors.Add(selector);
 
         return selector;
     }
 
-    private IEnumerable<Type> GetNonAbstractClasses(bool publicOnly)
+    private ISet<Type> GetNonAbstractClasses(bool publicOnly)
     {
-        return Types.Where(t => t.IsNonAbstractClass(publicOnly));
+        return Types.Where(t => t.IsNonAbstractClass(publicOnly)).ToHashSet();
     }
 }

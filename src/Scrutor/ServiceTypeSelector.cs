@@ -9,7 +9,7 @@ namespace Scrutor;
 
 internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 {
-    public ServiceTypeSelector(IImplementationTypeSelector inner, IEnumerable<Type> types)
+    public ServiceTypeSelector(IImplementationTypeSelector inner, ISet<Type> types)
     {
         Inner = inner;
         Types = types;
@@ -17,7 +17,7 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 
     private IImplementationTypeSelector Inner { get; }
 
-    private IEnumerable<Type> Types { get; }
+    private ISet<Type> Types { get; }
 
     private List<ISelector> Selectors { get; } = new();
 

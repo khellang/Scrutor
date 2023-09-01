@@ -126,12 +126,6 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
         return InternalFromAssemblies(assemblies);
     }
 
-    [Obsolete("This method has been marked obsolete and will be removed in the next major version. Use " + nameof(FromTypes) + " instead.")]
-    public IServiceTypeSelector AddTypes(params Type[] types) => FromTypes(types);
-
-    [Obsolete("This method has been marked obsolete and will be removed in the next major version. Use " + nameof(FromTypes) + " instead.")]
-    public IServiceTypeSelector AddTypes(IEnumerable<Type> types) => FromTypes(types);
-
     public IServiceTypeSelector FromTypes(params Type[] types) => FromTypes(types.AsEnumerable());
 
     public IServiceTypeSelector FromTypes(IEnumerable<Type> types)

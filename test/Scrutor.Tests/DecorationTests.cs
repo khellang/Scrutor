@@ -63,7 +63,7 @@ public class DecorationTests : TestBase
     }
 
     [Fact]
-    public void ShouldReplaceExistingServiceDescriptor()
+    public void ShouldAddServiceKeyToExistingServiceDescriptor()
     {
         var services = new ServiceCollection();
 
@@ -71,10 +71,17 @@ public class DecorationTests : TestBase
 
         services.Decorate<IDecoratedService, Decorator>();
 
-        var descriptor = services.GetDescriptor<IDecoratedService>();
+        var descriptors = services.GetDescriptors<IDecoratedService>();
 
-        Assert.Equal(typeof(IDecoratedService), descriptor.ServiceType);
-        Assert.NotNull(descriptor.ImplementationFactory);
+        Assert.Equal(2, descriptors.Length);
+
+        var decorated = descriptors.SingleOrDefault(x => x.ServiceKey is not null);
+
+        Assert.NotNull(decorated);
+        Assert.NotNull(decorated.KeyedImplementationType);
+        var key = Assert.IsType<string>(decorated.ServiceKey);
+        Assert.StartsWith("IDecoratedService", key);
+        Assert.EndsWith("+Decorated", key);
     }
 
     [Fact]

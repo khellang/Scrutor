@@ -11,44 +11,21 @@ internal static class ServiceDescriptorExtensions
     public static ServiceDescriptor WithServiceKey(this ServiceDescriptor descriptor, string serviceKey) =>
         descriptor.IsKeyedService ? ReplaceServiceKey(descriptor, serviceKey) : AddServiceKey(descriptor, serviceKey);
 
-    private static ServiceDescriptor ReplaceServiceKey(ServiceDescriptor descriptor, string serviceKey)
+    private static ServiceDescriptor ReplaceServiceKey(ServiceDescriptor descriptor, string serviceKey) => descriptor switch
     {
-        if (descriptor.KeyedImplementationType is not null)
-        {
-            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.KeyedImplementationType, descriptor.Lifetime);
-        }
+        { KeyedImplementationType: not null } => new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.KeyedImplementationType, descriptor.Lifetime),
+        { KeyedImplementationFactory: not null } => new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.KeyedImplementationFactory, descriptor.Lifetime),
+        { KeyedImplementationInstance: not null } => new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.KeyedImplementationInstance),
+        _ => throw new ArgumentException($"No implementation factory or instance or type found for {descriptor.ServiceType}.", nameof(descriptor))
+    };
 
-        if (descriptor.KeyedImplementationInstance is not null)
-        {
-            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.KeyedImplementationInstance);
-        }
-
-        if (descriptor.KeyedImplementationFactory is not null)
-        {
-            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.KeyedImplementationFactory, descriptor.Lifetime);
-        }
-
-        throw new InvalidOperationException($"One of the following properties must be set: {nameof(ServiceDescriptor.KeyedImplementationType)}, {nameof(ServiceDescriptor.KeyedImplementationInstance)} or {nameof(ServiceDescriptor.KeyedImplementationFactory)}");
-    }
-
-    private static ServiceDescriptor AddServiceKey(ServiceDescriptor descriptor, string serviceKey)
+    private static ServiceDescriptor AddServiceKey(ServiceDescriptor descriptor, string serviceKey) => descriptor switch
     {
-        if (descriptor.ImplementationType is not null)
-        {
-            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.ImplementationType, descriptor.Lifetime);
-        }
+        { ImplementationType: not null } => new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.ImplementationType, descriptor.Lifetime),
+        { ImplementationFactory: not null } => new ServiceDescriptor(descriptor.ServiceType, serviceKey, DiscardServiceKey(descriptor.ImplementationFactory), descriptor.Lifetime),
+        { ImplementationInstance: not null } => new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.ImplementationInstance),
+        _ => throw new ArgumentException($"No implementation factory or instance or type found for {descriptor.ServiceType}.", nameof(descriptor))
+    };
 
-        if (descriptor.ImplementationInstance is not null)
-        {
-            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, descriptor.ImplementationInstance);
-        }
-
-        if (descriptor.ImplementationFactory is not null)
-        {
-            var factory = descriptor.ImplementationFactory; // Local to avoid capturing descriptor in lambda below.
-            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, (sp, key) => factory(sp), descriptor.Lifetime);
-        }
-
-        throw new InvalidOperationException($"One of the following properties must be set: {nameof(ServiceDescriptor.ImplementationType)}, {nameof(ServiceDescriptor.ImplementationInstance)} or {nameof(ServiceDescriptor.ImplementationFactory)}");
-    }
+    private static Func<IServiceProvider, object?, object> DiscardServiceKey(Func<IServiceProvider, object> factory) => (sp, key) => factory(sp);
 }

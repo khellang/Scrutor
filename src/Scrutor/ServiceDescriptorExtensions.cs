@@ -42,7 +42,8 @@ internal static class ServiceDescriptorExtensions
 
         if (descriptor.ImplementationFactory is not null)
         {
-            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, (sp, key) => descriptor.ImplementationFactory(sp), descriptor.Lifetime);
+            var factory = descriptor.ImplementationFactory; // Local to avoid capturing descriptor in lambda below.
+            return new ServiceDescriptor(descriptor.ServiceType, serviceKey, (sp, key) => factory(sp), descriptor.Lifetime);
         }
 
         throw new InvalidOperationException($"One of the following properties must be set: {nameof(ServiceDescriptor.ImplementationType)}, {nameof(ServiceDescriptor.ImplementationInstance)} or {nameof(ServiceDescriptor.ImplementationFactory)}");

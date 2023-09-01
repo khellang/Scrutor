@@ -35,6 +35,6 @@ public class OpenGenericDecorationStrategy : DecorationStrategy
             return FactoryDecorator(serviceType, serviceKey, DecoratorFactory);
         }
 
-        throw new InvalidOperationException($"Both serviceType and decoratorFactory can not be null.");
+        throw new InvalidOperationException($"Both {nameof(DecoratorType)} and {nameof(DecoratorFactory)} can not be null.");
     }
 }

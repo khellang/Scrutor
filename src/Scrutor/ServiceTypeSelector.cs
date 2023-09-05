@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -57,7 +58,7 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
         Preconditions.NotNull(predicate, nameof(predicate));
 
         return As(t => t.GetInterfaces()
-            .Where(x => x.HasMatchingGenericArity(t))
+            .Where(x => ShouldRegister(x) && x.HasMatchingGenericArity(t))
             .Select(x => x.GetRegistrationType(t))
             .Where(predicate));
     }
@@ -233,6 +234,21 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
         {
             selector.Populate(services, strategy);
         }
+    }
+
+    private static bool ShouldRegister(Type type)
+    {
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+        {
+            return false;
+        }
+
+        if (type == typeof(IEnumerable))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private ILifetimeSelector AddSelector(IEnumerable<TypeMap> types, IEnumerable<TypeFactoryMap> factories)

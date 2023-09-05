@@ -57,20 +57,12 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
     {
         Preconditions.NotNull(predicate, nameof(predicate));
 
-        return As(t => t.GetInterfaces()
-            .Where(x => ShouldRegister(x) && x.HasMatchingGenericArity(t))
-            .Select(x => x.GetRegistrationType(t))
-            .Where(predicate));
+        return As(t => GetInterfaces(t).Where(predicate));
     }
 
     public ILifetimeSelector AsSelfWithInterfaces()
     {
-        return AsSelfWithInterfaces(_ => true);
-    }
-
-    public ILifetimeSelector AsSelfWithInterfaces(Func<Type, bool> predicate)
-    {
-        IEnumerable<Type> Selector(Type type)
+        static IEnumerable<Type> Selector(Type type)
         {
             if (type.IsGenericTypeDefinition)
             {
@@ -79,10 +71,7 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
                 return Enumerable.Empty<Type>();
             }
 
-            return type.GetInterfaces()
-                .Where(x => x.HasMatchingGenericArity(type))
-                .Where(predicate)
-                .Select(x => x.GetRegistrationType(type));
+            return GetInterfaces(type);
         }
 
         return AddSelector(
@@ -236,14 +225,25 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
         }
     }
 
-    private static bool ShouldRegister(Type type)
+    private static IEnumerable<Type> GetInterfaces(Type type) =>
+        type.GetInterfaces()
+            .Where(x => ShouldRegister(x, type))
+            .Select(x => x.GetRegistrationType(type))
+            .ToList();
+
+    private static bool ShouldRegister(Type serviceType, Type implementationType)
     {
-        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+        if (!serviceType.HasMatchingGenericArity(implementationType))
         {
             return false;
         }
 
-        if (type == typeof(IEnumerable))
+        if (serviceType.IsGenericType && serviceType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+        {
+            return false;
+        }
+
+        if (serviceType == typeof(IEnumerable))
         {
             return false;
         }

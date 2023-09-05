@@ -62,7 +62,18 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 
     public ILifetimeSelector AsSelfWithInterfaces()
     {
-        static IEnumerable<Type> Selector(Type type)
+        return AsSelfWithInterfaces(_ => true);
+    }
+
+    public ILifetimeSelector AsSelfWithInterfaces(Func<Type, bool> predicate)
+    {
+        Preconditions.NotNull(predicate, nameof(predicate));
+
+        return AddSelector(
+            Types.Select(t => new TypeMap(t, new[] { t })),
+            Types.Select(t => new TypeFactoryMap(x => x.GetRequiredService(t), Selector(t, predicate))));
+
+        static IEnumerable<Type> Selector(Type type, Func<Type, bool> predicate)
         {
             if (type.IsGenericTypeDefinition)
             {
@@ -71,12 +82,8 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
                 return Enumerable.Empty<Type>();
             }
 
-            return GetInterfaces(type);
+            return GetInterfaces(type).Where(predicate);
         }
-
-        return AddSelector(
-            Types.Select(t => new TypeMap(t, new[] { t })),
-            Types.Select(t => new TypeFactoryMap(x => x.GetRequiredService(t), Selector(t))));
     }
 
     public ILifetimeSelector AsMatchingInterface()

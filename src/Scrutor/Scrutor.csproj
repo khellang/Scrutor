@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Register services using assembly scanning and a fluent API.</Description>
-    <VersionPrefix>4.2.2</VersionPrefix>
+    <VersionPrefix>5.0.0</VersionPrefix>
     <Authors>Kristian Hellang</Authors>
     <TargetFrameworks>net462;netstandard2.0;net8.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
@@ -23,7 +23,7 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!-- Only increase this value in case of incompatible API changes. -->
-    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <AssemblyVersion>5.0.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>

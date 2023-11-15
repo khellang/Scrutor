@@ -4,7 +4,7 @@ namespace Scrutor;
 
 public class OpenGenericDecorationStrategy : DecorationStrategy
 {
-    public OpenGenericDecorationStrategy(Type serviceType, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory) : base(serviceType)
+    public OpenGenericDecorationStrategy(Type serviceType, string? serviceKey, Type? decoratorType, Func<object, IServiceProvider, object>? decoratorFactory) : base(serviceType, serviceKey)
     {
         DecoratorType = decoratorType;
         DecoratorFactory = decoratorFactory;
@@ -14,7 +14,7 @@ public class OpenGenericDecorationStrategy : DecorationStrategy
 
     private Func<object, IServiceProvider, object>? DecoratorFactory { get; }
 
-    public override bool CanDecorate(Type serviceType) =>
+    protected override bool CanDecorate(Type serviceType) =>
         serviceType.IsGenericType
             && !serviceType.IsGenericTypeDefinition
             && serviceType.GetGenericTypeDefinition() == ServiceType.GetGenericTypeDefinition()

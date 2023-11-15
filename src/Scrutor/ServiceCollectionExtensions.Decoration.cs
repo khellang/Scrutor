@@ -55,7 +55,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decoratorType, nameof(decoratorType));
 
-        return services.Decorate(DecorationStrategy.WithType(serviceType, decoratorType));
+        return services.Decorate(DecorationStrategy.WithType(serviceType, serviceKey: null, decoratorType));
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decoratorType, nameof(decoratorType));
 
-        return services.TryDecorate(DecorationStrategy.WithType(serviceType, decoratorType));
+        return services.TryDecorate(DecorationStrategy.WithType(serviceType, serviceKey: null, decoratorType));
     }
 
     /// <summary>
@@ -199,7 +199,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return services.Decorate(DecorationStrategy.WithFactory(serviceType, decorator));
+        return services.Decorate(DecorationStrategy.WithFactory(serviceType, serviceKey: null, decorator));
     }
 
     /// <summary>
@@ -217,7 +217,7 @@ public static partial class ServiceCollectionExtensions
         Preconditions.NotNull(serviceType, nameof(serviceType));
         Preconditions.NotNull(decorator, nameof(decorator));
 
-        return services.TryDecorate(DecorationStrategy.WithFactory(serviceType, decorator));
+        return services.TryDecorate(DecorationStrategy.WithFactory(serviceType, serviceKey: null, decorator));
     }
 
     /// <summary>
@@ -252,7 +252,7 @@ public static partial class ServiceCollectionExtensions
         {
             var serviceDescriptor = services[i];
 
-            if (IsDecorated(serviceDescriptor) || !strategy.CanDecorate(serviceDescriptor.ServiceType))
+            if (IsDecorated(serviceDescriptor) || !strategy.CanDecorate(serviceDescriptor))
             {
                 continue;
             }

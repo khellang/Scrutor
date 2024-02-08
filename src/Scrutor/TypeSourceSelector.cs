@@ -20,11 +20,46 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
         return InternalFromAssembliesOf(new[] { typeof(T) });
     }
 
+    /// <summary>
+    /// Uses the assembly that called Scrutor.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Returned <see cref="Assembly"/> might not be the one expected do to (lack of) inlining.
+    /// To ensure proper assembly is resolved, use:
+    /// <code>
+    /// services.Scan(s => s.FromAssemblies(Assembly.GetExecutingAssembly())
+    /// </code>
+    /// or
+    /// <code>
+    /// var assembly = Assembly.GetCallingAssembly();
+    /// services.Scan(s => s.FromAssemblies(assembly));
+    /// </code>
+    /// </para>
+    /// </remarks>
+    [Obsolete("Misleading, as it might not always determine the correct assembly that called Scrutor. Will be removed in a future release")]
     public IImplementationTypeSelector FromCallingAssembly()
     {
         return FromAssemblies(Assembly.GetCallingAssembly());
     }
-
+    
+    /// <summary>
+    /// Always uses the Scrutor assembly.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// To ensure proper assembly is resolved, use:
+    /// <code>
+    /// services.Scan(s => s.FromAssemblies(Assembly.GetExecutingAssembly())
+    /// </code>
+    /// or
+    /// <code>
+    /// var assembly = Assembly.GetCallingAssembly();
+    /// services.Scan(s => s.FromAssemblies(assembly));
+    /// </code>
+    /// </para>
+    /// </remarks>
+    [Obsolete("Misleading, as it always uses Scrutor's assembly. Will be removed in a future release")]
     public IImplementationTypeSelector FromExecutingAssembly()
     {
         return FromAssemblies(Assembly.GetExecutingAssembly());
@@ -44,7 +79,13 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
         try
         {
-            return FromDependencyContext(DependencyContext.Default, predicate);
+            var context = DependencyContext.Default;
+            if (context is null)
+            {
+                return FromAssemblyDependencies(EntryAssembly);
+            }
+
+            return FromDependencyContext(context, predicate);
         }
         catch
         {
@@ -65,7 +106,8 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
         Preconditions.NotNull(predicate, nameof(predicate));
 
         var assemblyNames = context.RuntimeLibraries
-            .SelectMany(library => library.GetDefaultAssemblyNames(context));
+            .SelectMany(library => library.GetDefaultAssemblyNames(context))
+            .ToHashSet();
 
         var assemblies = LoadAssemblies(assemblyNames);
 
@@ -76,19 +118,21 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
         Preconditions.NotNull(assembly, nameof(assembly));
 
-        var assemblies = new List<Assembly> { assembly };
-
         try
         {
-            var dependencyNames = assembly.GetReferencedAssemblies();
+            var dependencyNames = assembly
+                .GetReferencedAssemblies()
+                .ToHashSet();
 
-            assemblies.AddRange(LoadAssemblies(dependencyNames));
+            var assemblies = LoadAssemblies(dependencyNames);
+
+            assemblies.Add(assembly);
 
             return InternalFromAssemblies(assemblies);
         }
         catch
         {
-            return InternalFromAssemblies(assemblies);
+            return FromAssemblies(assembly);
         }
     }
 
@@ -120,23 +164,13 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
         return InternalFromAssemblies(assemblies);
     }
 
-    [Obsolete("This method has been marked obsolete and will be removed in the next major version. Use " + nameof(FromTypes) + " instead.")]
-    public IServiceTypeSelector AddTypes(params Type[] types) => FromTypes(types);
-
-    [Obsolete("This method has been marked obsolete and will be removed in the next major version. Use " + nameof(FromTypes) + " instead.")]
-    public IServiceTypeSelector AddTypes(IEnumerable<Type> types) => FromTypes(types);
-
     public IServiceTypeSelector FromTypes(params Type[] types) => FromTypes(types.AsEnumerable());
 
     public IServiceTypeSelector FromTypes(IEnumerable<Type> types)
     {
         Preconditions.NotNull(types, nameof(types));
 
-        var selector = new ImplementationTypeSelector(this, types);
-
-        Selectors.Add(selector);
-
-        return selector.AddClasses();
+        return AddSelector(types).AddClasses();
     }
 
     public void Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
@@ -154,12 +188,12 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
 
     private IImplementationTypeSelector InternalFromAssemblies(IEnumerable<Assembly> assemblies)
     {
-        return AddSelector(assemblies.SelectMany(asm => asm.DefinedTypes).Select(x => x.AsType()));
+        return AddSelector(assemblies.SelectMany(asm => asm.GetTypes()));
     }
 
-    private static IEnumerable<Assembly> LoadAssemblies(IEnumerable<AssemblyName> assemblyNames)
+    private static ISet<Assembly> LoadAssemblies(ISet<AssemblyName> assemblyNames)
     {
-        var assemblies = new List<Assembly>();
+        var assemblies = new HashSet<Assembly>();
 
         foreach (var assemblyName in assemblyNames)
         {
@@ -179,7 +213,7 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
 
     private IImplementationTypeSelector AddSelector(IEnumerable<Type> types)
     {
-        var selector = new ImplementationTypeSelector(this, types);
+        var selector = new ImplementationTypeSelector(this, types.ToHashSet());
 
         Selectors.Add(selector);
 

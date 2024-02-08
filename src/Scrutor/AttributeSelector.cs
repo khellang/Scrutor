@@ -8,12 +8,12 @@ namespace Scrutor;
 
 internal class AttributeSelector : ISelector
 {
-    public AttributeSelector(IEnumerable<Type> types)
+    public AttributeSelector(ISet<Type> types)
     {
         Types = types;
     }
 
-    private IEnumerable<Type> Types { get; }
+    private ISet<Type> Types { get; }
 
     void ISelector.Populate(IServiceCollection services, RegistrationStrategy? registrationStrategy)
     {

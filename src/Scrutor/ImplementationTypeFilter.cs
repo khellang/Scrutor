@@ -6,12 +6,12 @@ namespace Scrutor;
 
 internal class ImplementationTypeFilter : IImplementationTypeFilter
 {
-    public ImplementationTypeFilter(IEnumerable<Type> types)
+    public ImplementationTypeFilter(ISet<Type> types)
     {
         Types = types;
     }
 
-    internal IEnumerable<Type> Types { get; private set; }
+    internal ISet<Type> Types { get; private set; }
 
     public IImplementationTypeFilter AssignableTo<T>()
     {
@@ -151,7 +151,7 @@ internal class ImplementationTypeFilter : IImplementationTypeFilter
     {
         Preconditions.NotNull(predicate, nameof(predicate));
 
-        Types = Types.Where(predicate);
+        Types.IntersectWith(Types.Where(predicate));
         return this;
     }
 }

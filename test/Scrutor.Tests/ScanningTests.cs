@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Scrutor.Tests;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Xunit;
@@ -250,7 +252,7 @@ namespace Scrutor.Tests
                 .AddClasses(t => t.AssignableTo<ITransientService>())
                     .UsingAttributes());
 
-            Assert.Equal(1, Collection.Count);
+            Assert.Single(Collection);
 
             var service = Collection.GetDescriptor<ITransientService>();
 
@@ -266,7 +268,7 @@ namespace Scrutor.Tests
                 .AddClasses(t => t.AssignableTo<IGenericAttribute>())
                     .UsingAttributes());
 
-            Assert.Equal(1, Collection.Count);
+            Assert.Single(Collection);
 
             var service = Collection.GetDescriptor<IGenericAttribute>();
 
@@ -541,7 +543,18 @@ namespace Scrutor.Tests
 
     public class TransientService2 : ITransientService, IOtherInheritance { }
 
-    public class TransientService : ITransientService { }
+    public class TransientService : ITransientService, IEnumerable<string>
+    {
+        public IEnumerator<string> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     public interface IScopedService { }
 
@@ -587,7 +600,7 @@ namespace Scrutor.Tests
     [ServiceDescriptor(typeof(IDuplicateInheritance))]
     [ServiceDescriptor(typeof(IDuplicateInheritance))]
     public class DuplicateInheritance : IDuplicateInheritance, IOtherInheritance { }
-    
+
     public interface IDefault1 { }
 
     public interface IDefault2 { }

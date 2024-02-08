@@ -47,6 +47,12 @@ public interface IServiceTypeSelector : IImplementationTypeSelector
     ILifetimeSelector AsSelfWithInterfaces();
 
     /// <summary>
+    /// Registers each matching concrete type as all of its implemented interfaces, by returning an instance of the main type
+    /// </summary>
+    /// <param name="predicate">A predicate to filter which interfaces to register.</param>
+    ILifetimeSelector AsSelfWithInterfaces(Func<Type, bool> predicate);
+
+    /// <summary>
     /// Registers the type with the first found matching interface name.  (e.g. ClassName is matched to IClassName)
     /// </summary>
     ILifetimeSelector AsMatchingInterface();

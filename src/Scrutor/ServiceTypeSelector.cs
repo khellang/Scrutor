@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,7 +10,7 @@ namespace Scrutor;
 
 internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 {
-    public ServiceTypeSelector(IImplementationTypeSelector inner, IEnumerable<Type> types)
+    public ServiceTypeSelector(IImplementationTypeSelector inner, ISet<Type> types)
     {
         Inner = inner;
         Types = types;
@@ -17,7 +18,7 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 
     private IImplementationTypeSelector Inner { get; }
 
-    private IEnumerable<Type> Types { get; }
+    private ISet<Type> Types { get; }
 
     private List<ISelector> Selectors { get; } = new();
 
@@ -56,15 +57,23 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
     {
         Preconditions.NotNull(predicate, nameof(predicate));
 
-        return As(t => t.GetInterfaces()
-            .Where(x => x.HasMatchingGenericArity(t))
-            .Select(x => x.GetRegistrationType(t))
-            .Where(predicate));
+        return As(t => GetInterfaces(t).Where(predicate));
     }
 
     public ILifetimeSelector AsSelfWithInterfaces()
     {
-        IEnumerable<Type> Selector(Type type)
+        return AsSelfWithInterfaces(_ => true);
+    }
+
+    public ILifetimeSelector AsSelfWithInterfaces(Func<Type, bool> predicate)
+    {
+        Preconditions.NotNull(predicate, nameof(predicate));
+
+        return AddSelector(
+            Types.Select(t => new TypeMap(t, new[] { t })),
+            Types.Select(t => new TypeFactoryMap(x => x.GetRequiredService(t), Selector(t, predicate))));
+
+        static IEnumerable<Type> Selector(Type type, Func<Type, bool> predicate)
         {
             if (type.IsGenericTypeDefinition)
             {
@@ -73,14 +82,8 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
                 return Enumerable.Empty<Type>();
             }
 
-            return type.GetInterfaces()
-                .Where(x => x.HasMatchingGenericArity(type))
-                .Select(x => x.GetRegistrationType(type));
+            return GetInterfaces(type).Where(predicate);
         }
-
-        return AddSelector(
-            Types.Select(t => new TypeMap(t, new[] { t })),
-            Types.Select(t => new TypeFactoryMap(x => x.GetRequiredService(t), Selector(t))));
     }
 
     public ILifetimeSelector AsMatchingInterface()
@@ -227,6 +230,32 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
         {
             selector.Populate(services, strategy);
         }
+    }
+
+    private static IEnumerable<Type> GetInterfaces(Type type) =>
+        type.GetInterfaces()
+            .Where(x => ShouldRegister(x, type))
+            .Select(x => x.GetRegistrationType(type))
+            .ToList();
+
+    private static bool ShouldRegister(Type serviceType, Type implementationType)
+    {
+        if (!serviceType.HasMatchingGenericArity(implementationType))
+        {
+            return false;
+        }
+
+        if (serviceType.IsGenericType && serviceType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+        {
+            return false;
+        }
+
+        if (serviceType == typeof(IEnumerable))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private ILifetimeSelector AddSelector(IEnumerable<TypeMap> types, IEnumerable<TypeFactoryMap> factories)

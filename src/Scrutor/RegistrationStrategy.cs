@@ -21,24 +21,16 @@ public abstract class RegistrationStrategy
     public static readonly RegistrationStrategy Throw = new ThrowRegistrationStrategy();
 
     /// <summary>
-    /// Replaces existing service registrations using <see cref="ReplacementBehavior.Default"/>.
-    /// </summary>
-    public static RegistrationStrategy Replace()
-    {
-        return Replace(ReplacementBehavior.Default);
-    }
-
-    /// <summary>
     /// Replaces existing service registrations based on the specified <see cref="ReplacementBehavior"/>.
     /// </summary>
     /// <param name="behavior">The behavior to use when replacing services.</param>
-    public static RegistrationStrategy Replace(ReplacementBehavior behavior)
+    public static RegistrationStrategy Replace(ReplacementBehavior behavior = ReplacementBehavior.Default)
     {
         return new ReplaceRegistrationStrategy(behavior);
     }
 
     /// <summary>
-    /// Applies the the <see cref="ServiceDescriptor"/> to the <see cref="IServiceCollection"/>.
+    /// Applies the <see cref="ServiceDescriptor"/> to the <see cref="IServiceCollection"/>.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="descriptor">The descriptor to apply.</param>

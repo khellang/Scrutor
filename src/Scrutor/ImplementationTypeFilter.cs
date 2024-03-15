@@ -154,4 +154,12 @@ internal class ImplementationTypeFilter : IImplementationTypeFilter
         Types = Types.Where(predicate);
         return this;
     }
+
+    public IImplementationTypeFilter Select(Func<Type, Type> selector)
+    {
+        Preconditions.NotNull(selector, nameof(selector));
+
+        Types = Types.Select(selector);
+        return this;
+    }
 }

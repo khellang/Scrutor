@@ -155,4 +155,11 @@ public interface IImplementationTypeFilter : IFluentInterface
     /// <param name="predicate">The predicate to match types.</param>
     /// <exception cref="ArgumentNullException">If the <paramref name="predicate" /> argument is <c>null</c>.</exception>
     IImplementationTypeFilter Where(Func<Type, bool> predicate);
+    
+    /// <summary>
+    /// Will transform the types using the specified <paramref name="selector"/>.
+    /// </summary>
+    /// <param name="selector">A transform function to apply to each element.</param>
+    /// <exception cref="ArgumentNullException">If the <paramref name="selector" /> argument is <c>null</c>.</exception>
+    IImplementationTypeFilter Select(Func<Type, Type> selector);
 }

@@ -519,6 +519,30 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void AsSelfWithInterfacesShouldFilterInterfaces()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.Scan(scan => scan
+                    .FromAssemblyOf<CombinedService2>()
+                    .AddClasses(classes => classes.AssignableTo<CombinedService2>())
+                    .AsSelfWithInterfaces(x => x == typeof(IDefault1) || x == typeof(CombinedService2))
+                    .WithSingletonLifetime());
+            });
+
+            var instance1 = provider.GetRequiredService<CombinedService2>();
+            var instance2 = provider.GetRequiredService<IDefault1>();
+            var instance3 = provider.GetService<IDefault2>();
+            var instance4 = provider.GetService<IDefault3Level2>();
+            var instance5 = provider.GetService<IDefault3Level1>();
+
+            Assert.Same(instance1, instance2);
+            Assert.Null(instance3);
+            Assert.Null(instance4);
+            Assert.Null(instance5);
+        }
+
+        [Fact]
         public void AsSelfWithInterfacesHandlesOpenGenericTypes()
         {
             ConfigureProvider(services =>

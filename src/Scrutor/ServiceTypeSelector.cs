@@ -64,6 +64,11 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 
     public ILifetimeSelector AsSelfWithInterfaces()
     {
+        return AsSelfWithInterfaces(_ => true);
+    }
+
+    public ILifetimeSelector AsSelfWithInterfaces(Func<Type, bool> predicate)
+    {
         IEnumerable<Type> Selector(Type type)
         {
             if (type.IsGenericTypeDefinition)
@@ -75,6 +80,7 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 
             return type.GetInterfaces()
                 .Where(x => x.HasMatchingGenericArity(type))
+                .Where(predicate)
                 .Select(x => x.GetRegistrationType(type));
         }
 

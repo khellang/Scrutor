@@ -169,6 +169,11 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
         return Inner.AsSelfWithInterfaces();
     }
 
+    public ILifetimeSelector AsSelfWithInterfaces(Func<Type, bool> predicate)
+    {
+        return Inner.AsSelfWithInterfaces(predicate);
+    }
+
     public ILifetimeSelector AsMatchingInterface()
     {
         return Inner.AsMatchingInterface();

@@ -154,7 +154,7 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
 
     private IImplementationTypeSelector InternalFromAssemblies(IEnumerable<Assembly> assemblies)
     {
-        return AddSelector(assemblies.SelectMany(asm => asm.ExportedTypes);
+        return AddSelector(assemblies.SelectMany(asm => asm.ExportedTypes));
     }
 
     private static IEnumerable<Assembly> LoadAssemblies(IEnumerable<AssemblyName> assemblyNames)

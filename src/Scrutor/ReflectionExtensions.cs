@@ -234,6 +234,11 @@ internal static class ReflectionExtensions
         {
             if (interfaceType.IsGenericType)
             {
+                if (!interfaceType.ContainsGenericParameters)
+                {
+                    return true;
+                }
+
                 var argumentCount = interfaceType.GetGenericArguments().Length;
                 var parameterCount = type.GetGenericArguments().Length;
 

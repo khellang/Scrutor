@@ -221,6 +221,19 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void CanRegisterFullyClosedGenericWithDifferentArityThanServiceType()
+        {
+            Collection.Scan(scan => scan
+                .FromTypes(typeof(PartiallyClosedGeneric<string>))
+                .AsImplementedInterfaces()
+                .WithTransientLifetime());
+
+            var descriptor = Assert.Single(Collection);
+
+            Assert.Equal(typeof(IPartiallyClosedGeneric<string, int>), descriptor.ServiceType);
+        }
+
+        [Fact]
         public void CanScanUsingAttributes()
         {
             var interfaces = new[]

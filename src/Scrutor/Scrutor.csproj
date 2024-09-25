@@ -13,6 +13,7 @@
     <PackageTags>Dependency;Injection;DI;Scanning;Conventions;Decoration</PackageTags>
     <PackageProjectUrl>https://github.com/khellang/Scrutor</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/khellang/Scrutor</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -25,6 +26,10 @@
     <!-- Only increase this value in case of incompatible API changes. -->
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" PrivateAssets="All" />

@@ -429,6 +429,20 @@ namespace Scrutor.Tests
         }
 
         [Fact]
+        public void ShouldRegisterPartiallyOpenGenericTypesUsingSelect()
+        {
+            Collection.Scan(scan => scan.FromAssemblyOf<IDto>()
+                .AddClasses(classes =>
+                    classes.AssignableTo<IDto>().Select(x => typeof(ProcessDtoCommandHandler<>).MakeGenericType(x)))
+                .AsImplementedInterfaces());
+
+            var provider = Collection.BuildServiceProvider();
+
+            Assert.NotNull(provider.GetService<ICommandHandler<ProcessDto<FooDto>>>());
+            Assert.NotNull(provider.GetService<ICommandHandler<ProcessDto<BarDto>>>());
+        }
+
+        [Fact]
         public void ShouldNotIncludeCompilerGeneratedTypes()
         {
             Assert.Empty(Collection.Scan(scan => scan.FromType<CompilerGenerated>()));
@@ -580,6 +594,17 @@ namespace Scrutor.Tests
     public interface IOpenGeneric<T> : IOtherInheritance { }
 
     public class OpenGeneric<T> : IOpenGeneric<T> { }
+    
+    public interface ICommandHandler<T> { }
+    
+    public class ProcessDto<T> where T : IDto { }
+    public class ProcessDtoCommandHandler<T> : ICommandHandler<ProcessDto<T>> where T : IDto { }
+    
+    public interface IDto {}
+    
+    public record FooDto : IDto {}
+    
+    public record BarDto : IDto {}
 
     public interface IPartiallyClosedGeneric<T1, T2> { }
 

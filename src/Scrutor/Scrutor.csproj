@@ -5,7 +5,7 @@
     <Authors>Kristian Hellang</Authors>
     <TargetFrameworks>net462;netstandard2.0;net8.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
-    <LangVersion>11.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

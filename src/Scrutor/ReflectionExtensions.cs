@@ -218,6 +218,23 @@ internal static class ReflectionExtensions
         return true;
     }
 
+    // Workaround for type load issues in .NET Framework
+    public static IReadOnlyCollection<Type> GetLoadableTypes(this Assembly assembly)
+    {
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            return ex.Types.Where(t => t is not null).ToArray()!;
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
     public static string ToFriendlyName(this Type type)
     {
         return TypeNameHelper.GetTypeDisplayName(type, includeGenericParameterNames: true);

@@ -42,7 +42,7 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
     {
         return FromAssemblies(Assembly.GetCallingAssembly());
     }
-    
+
     /// <summary>
     /// Always uses the Scrutor assembly.
     /// </summary>
@@ -188,7 +188,7 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
 
     private IImplementationTypeSelector InternalFromAssemblies(IEnumerable<Assembly> assemblies)
     {
-        return AddSelector(assemblies.SelectMany(asm => asm.GetTypes()));
+        return AddSelector(assemblies.SelectMany(asm => asm.GetLoadableTypes()));
     }
 
     private static ISet<Assembly> LoadAssemblies(ISet<AssemblyName> assemblyNames)

@@ -30,11 +30,10 @@ public abstract class DecorationStrategy
 
     protected static Func<IServiceProvider, object?, object> TypeDecorator(Type serviceType, string serviceKey, Type decoratorType)
     {
-        var factory = ActivatorUtilities.CreateFactory(decoratorType, new[] { serviceType });
         return (serviceProvider, _) =>
         {
             var instanceToDecorate = serviceProvider.GetRequiredKeyedService(serviceType, serviceKey);
-            return factory(serviceProvider, new object[] { instanceToDecorate });
+            return ActivatorUtilities.CreateInstance(serviceProvider, decoratorType, instanceToDecorate);
         };
     }
 

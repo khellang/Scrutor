@@ -236,6 +236,23 @@ public class DecorationTests : TestBase
         Assert.NotNull(inner.Dependency);
     }
 
+    [Fact]
+    public void Issue235_Decorate_IsAbleToDecorateClassesThatTheirConstructorDoesNotContainTheDecoratedTypeDirectly()
+    {
+        var provider = ConfigureProvider(services =>
+        {
+            services.AddScoped<Decorated>()
+                    .AddScoped<IDecoratedService>(x => x.GetRequiredService<Decorated>())
+                    .Decorate<IDecoratedService, Decorator3>();
+        });
+
+        using (var scope = provider.CreateScope())
+        {
+            var result = scope.ServiceProvider.GetService<IDecoratedService>();
+            Assert.NotNull(result);
+        }
+    }
+
     #region Individual functions tests
 
     [Fact]
@@ -468,6 +485,16 @@ public class DecorationTests : TestBase
         }
 
         public DecoratedService Inner { get; }
+    }
+
+    public class Decorator3 : IDecoratedService
+    {
+        public Decorator3(Decorated inner)
+        {
+            Inner = inner ?? throw new ArgumentNullException(nameof(inner));
+        }
+
+        public Decorated Inner { get; }
     }
 
     public interface IService { }

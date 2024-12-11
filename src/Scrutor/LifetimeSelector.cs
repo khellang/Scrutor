@@ -21,7 +21,7 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
 
     private IEnumerable<TypeFactoryMap> TypeFactoryMaps { get; }
 
-    public ServiceLifetime? Lifetime { get; set; }
+    public Func<Type, ServiceLifetime>? Lifetime { get; set; }
 
     public IImplementationTypeSelector WithSingletonLifetime()
     {
@@ -37,10 +37,16 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
     {
         return WithLifetime(ServiceLifetime.Transient);
     }
-
     public IImplementationTypeSelector WithLifetime(ServiceLifetime lifetime)
     {
         Preconditions.IsDefined(lifetime, nameof(lifetime));
+
+        return WithLifetime(_ => lifetime);
+    }
+
+    public IImplementationTypeSelector WithLifetime(Func<Type, ServiceLifetime> lifetime)
+    {
+        Preconditions.NotNull(lifetime, nameof(lifetime));
 
         Inner.PropagateLifetime(lifetime);
 
@@ -205,7 +211,7 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
     {
         strategy ??= RegistrationStrategy.Append;
 
-        var lifetime = Lifetime ?? ServiceLifetime.Transient;
+        var serviceLifetimes = new Dictionary<Type, ServiceLifetime>();
 
         foreach (var typeMap in TypeMaps)
         {
@@ -218,7 +224,7 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
                     throw new InvalidOperationException($@"Type ""{implementationType.ToFriendlyName()}"" is not assignable to ""${serviceType.ToFriendlyName()}"".");
                 }
 
-                var descriptor = new ServiceDescriptor(serviceType, implementationType, lifetime);
+                var descriptor = new ServiceDescriptor(serviceType, implementationType, GetOrAddLifetime(serviceLifetimes, implementationType));
 
                 strategy.Apply(services, descriptor);
             }
@@ -228,10 +234,17 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
         {
             foreach (var serviceType in typeFactoryMap.ServiceTypes)
             {
-                var descriptor = new ServiceDescriptor(serviceType, typeFactoryMap.ImplementationFactory, lifetime);
+                var descriptor = new ServiceDescriptor(serviceType, typeFactoryMap.ImplementationFactory, GetOrAddLifetime(serviceLifetimes, typeFactoryMap.ImplementationType));
 
                 strategy.Apply(services, descriptor);
             }
         }
+    }
+
+    private ServiceLifetime GetOrAddLifetime(Dictionary<Type, ServiceLifetime> serviceLifetimes, Type implementationType)
+    {
+        return serviceLifetimes.TryGetValue(implementationType, out var lifetime)
+            ? lifetime
+            : (serviceLifetimes[implementationType] = Lifetime?.Invoke(implementationType) ?? ServiceLifetime.Transient);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Scrutor;
 
@@ -23,4 +24,9 @@ public interface ILifetimeSelector : IServiceTypeSelector
     /// Registers each matching concrete type with the specified <paramref name="lifetime"/>.
     /// </summary>
     IImplementationTypeSelector WithLifetime(ServiceLifetime lifetime);
+
+    /// <summary>
+    /// Registers each matching concrete type with the specified <paramref name="lifetime"/>.
+    /// </summary>
+    IImplementationTypeSelector WithLifetime(Func<Type, ServiceLifetime> lifetime);
 }

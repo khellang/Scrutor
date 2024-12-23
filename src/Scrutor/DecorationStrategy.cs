@@ -16,7 +16,7 @@ public abstract class DecorationStrategy
     public string? ServiceKey { get; }
 
     public virtual bool CanDecorate(ServiceDescriptor descriptor) =>
-        string.Equals(ServiceKey, descriptor.ServiceKey) && CanDecorate(descriptor.ServiceType);
+        string.Equals(ServiceKey, descriptor.ServiceKey as string, StringComparison.Ordinal) && CanDecorate(descriptor.ServiceType);
 
     protected abstract bool CanDecorate(Type serviceType);
 

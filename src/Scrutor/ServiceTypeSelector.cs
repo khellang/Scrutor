@@ -20,13 +20,13 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 
     private ISet<Type> Types { get; }
 
-    private List<ISelector> Selectors { get; } = new();
+    private List<ISelector> Selectors { get; } = [];
 
     private RegistrationStrategy? RegistrationStrategy { get; set; }
 
     public ILifetimeSelector AsSelf()
     {
-        return As(t => new[] { t });
+        return As(t => [t]);
     }
 
     public ILifetimeSelector As<T>()
@@ -45,7 +45,7 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
     {
         Preconditions.NotNull(types, nameof(types));
 
-        return AddSelector(Types.Select(t => new TypeMap(t, types)), Enumerable.Empty<TypeFactoryMap>());
+        return AddSelector(Types.Select(t => new TypeMap(t, types)), []);
     }
 
     public ILifetimeSelector AsImplementedInterfaces()
@@ -70,7 +70,7 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
         Preconditions.NotNull(predicate, nameof(predicate));
 
         return AddSelector(
-            Types.Select(t => new TypeMap(t, new[] { t })),
+            Types.Select(t => new TypeMap(t, [t])),
             Types.Select(t => new TypeFactoryMap(t, x => x.GetRequiredService(t), Selector(t, predicate))));
 
         static IEnumerable<Type> Selector(Type type, Func<Type, bool> predicate)
@@ -79,7 +79,7 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
             {
                 // This prevents trying to register open generic types
                 // with an ImplementationFactory, which is unsupported.
-                return Enumerable.Empty<Type>();
+                return [];
             }
 
             return GetInterfaces(type).Where(predicate);
@@ -100,7 +100,7 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
     {
         Preconditions.NotNull(selector, nameof(selector));
 
-        return AddSelector(Types.Select(t => new TypeMap(t, selector(t))), Enumerable.Empty<TypeFactoryMap>());
+        return AddSelector(Types.Select(t => new TypeMap(t, selector(t))), []);
     }
 
     public IImplementationTypeSelector UsingAttributes()

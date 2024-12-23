@@ -307,7 +307,7 @@ namespace Scrutor.Tests
 
             var remainingSetOfTypes = Collection
                 .Select(descriptor => descriptor.ServiceType)
-                .Except(types.Concat(new[] { typeof(DefaultAttributes) }))
+                .Except(types.Concat([typeof(DefaultAttributes)]))
                 .ToList();
 
             Assert.Equal(5, Collection.Count);

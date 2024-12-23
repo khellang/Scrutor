@@ -12,12 +12,12 @@ public class TypeSourceSelector : ITypeSourceSelector, ISelector
     private static Assembly EntryAssembly => Assembly.GetEntryAssembly()
                                              ?? throw new InvalidOperationException("Could not get entry assembly.");
 
-    private List<ISelector> Selectors { get; } = new();
+    private List<ISelector> Selectors { get; } = [];
 
     /// <inheritdoc />
     public IImplementationTypeSelector FromAssemblyOf<T>()
     {
-        return InternalFromAssembliesOf(new[] { typeof(T) });
+        return InternalFromAssembliesOf([typeof(T)]);
     }
 
     /// <summary>

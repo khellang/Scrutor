@@ -6,9 +6,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3F8D19AB-70F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EA96AC3B-130F-4415-9D22-0074ECF8880F}"
 	ProjectSection(SolutionItems) = preProject
-		Build.ps1 = Build.ps1
 		NuGet.Config = NuGet.Config
 		README.md = README.md
+		.github\workflows\build.yml = .github\workflows\build.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{34EEB067-2738-4DD0-8596-D67A9461833A}"

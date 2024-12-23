@@ -281,7 +281,7 @@ public static partial class ServiceCollectionExtensions
     /// <param name="descriptor">The service descriptor.</param>
     public static bool IsDecorated(this ServiceDescriptor descriptor) =>
         descriptor.ServiceKey is string stringKey
-        && stringKey.EndsWith(DecoratedServiceKeySuffix, StringComparison.Ordinal);
+            && stringKey.EndsWith(DecoratedServiceKeySuffix, StringComparison.Ordinal);
 
     private static string? GetDecoratorKey(ServiceDescriptor descriptor)
     {

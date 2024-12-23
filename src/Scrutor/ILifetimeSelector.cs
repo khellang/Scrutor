@@ -26,7 +26,7 @@ public interface ILifetimeSelector : IServiceTypeSelector
     IImplementationTypeSelector WithLifetime(ServiceLifetime lifetime);
 
     /// <summary>
-    /// Registers each matching concrete type with the specified <paramref name="lifetime"/>.
+    /// Registers each matching concrete type with a lifetime based on the provided <paramref name="selector"/>.
     /// </summary>
-    IImplementationTypeSelector WithLifetime(Func<Type, ServiceLifetime> lifetime);
+    IImplementationTypeSelector WithLifetime(Func<Type, ServiceLifetime> selector);
 }

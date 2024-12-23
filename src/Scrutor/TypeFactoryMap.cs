@@ -5,17 +5,16 @@ namespace Scrutor;
 
 internal struct TypeFactoryMap
 {
-    public TypeFactoryMap(Func<IServiceProvider, object> implementationFactory, IEnumerable<Type> serviceTypes, Type implementationType)
+    public TypeFactoryMap(Type implementationType, Func<IServiceProvider, object> implementationFactory, IEnumerable<Type> serviceTypes)
     {
+        ImplementationType = implementationType;
         ImplementationFactory = implementationFactory;
         ServiceTypes = serviceTypes;
-        ImplementationType = implementationType;
     }
+
+    public Type ImplementationType { get; }
 
     public Func<IServiceProvider, object> ImplementationFactory { get; }
 
     public IEnumerable<Type> ServiceTypes { get; }
-
-    public Type ImplementationType { get; }
-
 }

@@ -71,7 +71,7 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 
         return AddSelector(
             Types.Select(t => new TypeMap(t, new[] { t })),
-            Types.Select(t => new TypeFactoryMap(x => x.GetRequiredService(t), Selector(t, predicate), t)));
+            Types.Select(t => new TypeFactoryMap(t, x => x.GetRequiredService(t), Selector(t, predicate))));
 
         static IEnumerable<Type> Selector(Type type, Func<Type, bool> predicate)
         {
@@ -209,11 +209,11 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 
     #endregion
 
-    internal void PropagateLifetime(Func<Type, ServiceLifetime> lifetime)
+    internal void PropagateLifetime(Func<Type, ServiceLifetime> selectorFn)
     {
         foreach (var selector in Selectors.OfType<LifetimeSelector>())
         {
-            selector.Lifetime = lifetime;
+            selector.SelectorFn = selectorFn;
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyModel;
@@ -55,151 +56,181 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
 
     #region Chain Methods
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromCallingAssembly()
     {
         return Inner.FromCallingAssembly();
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromExecutingAssembly()
     {
         return Inner.FromExecutingAssembly();
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromEntryAssembly()
     {
         return Inner.FromEntryAssembly();
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromApplicationDependencies()
     {
         return Inner.FromApplicationDependencies();
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromApplicationDependencies(Func<Assembly, bool> predicate)
     {
         return Inner.FromApplicationDependencies(predicate);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssemblyDependencies(Assembly assembly)
     {
         return Inner.FromAssemblyDependencies(assembly);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromDependencyContext(DependencyContext context)
     {
         return Inner.FromDependencyContext(context);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromDependencyContext(DependencyContext context, Func<Assembly, bool> predicate)
     {
         return Inner.FromDependencyContext(context, predicate);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssemblyOf<T>()
     {
         return Inner.FromAssemblyOf<T>();
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
     {
         return Inner.FromAssembliesOf(types);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
     {
         return Inner.FromAssembliesOf(types);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
     {
         return Inner.FromAssemblies(assemblies);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssemblies(IEnumerable<Assembly> assemblies)
     {
         return Inner.FromAssemblies(assemblies);
     }
 
+    [ExcludeFromCodeCoverage]
     public IServiceTypeSelector AddClasses()
     {
         return Inner.AddClasses();
     }
 
+    [ExcludeFromCodeCoverage]
     public IServiceTypeSelector AddClasses(bool publicOnly)
     {
         return Inner.AddClasses(publicOnly);
     }
 
+    [ExcludeFromCodeCoverage]
     public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action)
     {
         return Inner.AddClasses(action);
     }
 
+    [ExcludeFromCodeCoverage]
     public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action, bool publicOnly)
     {
         return Inner.AddClasses(action, publicOnly);
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector AsSelf()
     {
         return Inner.AsSelf();
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector As<T>()
     {
         return Inner.As<T>();
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector As(params Type[] types)
     {
         return Inner.As(types);
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector As(IEnumerable<Type> types)
     {
         return Inner.As(types);
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector AsImplementedInterfaces()
     {
         return Inner.AsImplementedInterfaces();
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector AsImplementedInterfaces(Func<Type, bool> predicate)
     {
         return Inner.AsImplementedInterfaces(predicate);
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector AsSelfWithInterfaces()
     {
         return Inner.AsSelfWithInterfaces();
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector AsSelfWithInterfaces(Func<Type, bool> predicate)
     {
         return Inner.AsSelfWithInterfaces(predicate);
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector AsMatchingInterface()
     {
         return Inner.AsMatchingInterface();
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector AsMatchingInterface(Action<Type, IImplementationTypeFilter> action)
     {
         return Inner.AsMatchingInterface(action);
     }
 
+    [ExcludeFromCodeCoverage]
     public ILifetimeSelector As(Func<Type, IEnumerable<Type>> selector)
     {
         return Inner.As(selector);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector UsingAttributes()
     {
         return Inner.UsingAttributes();
     }
 
+    [ExcludeFromCodeCoverage]
     public IServiceTypeSelector UsingRegistrationStrategy(RegistrationStrategy registrationStrategy)
     {
         return Inner.UsingRegistrationStrategy(registrationStrategy);

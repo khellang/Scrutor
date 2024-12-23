@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,66 +54,79 @@ internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelect
 
     #region Chain Methods
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromCallingAssembly()
     {
         return Inner.FromCallingAssembly();
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromExecutingAssembly()
     {
         return Inner.FromExecutingAssembly();
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromEntryAssembly()
     {
         return Inner.FromEntryAssembly();
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromApplicationDependencies()
     {
         return Inner.FromApplicationDependencies();
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromApplicationDependencies(Func<Assembly, bool> predicate)
     {
         return Inner.FromApplicationDependencies(predicate);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssemblyDependencies(Assembly assembly)
     {
         return Inner.FromAssemblyDependencies(assembly);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromDependencyContext(DependencyContext context)
     {
         return Inner.FromDependencyContext(context);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromDependencyContext(DependencyContext context, Func<Assembly, bool> predicate)
     {
         return Inner.FromDependencyContext(context, predicate);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssemblyOf<T>()
     {
         return Inner.FromAssemblyOf<T>();
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssembliesOf(params Type[] types)
     {
         return Inner.FromAssembliesOf(types);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssembliesOf(IEnumerable<Type> types)
     {
         return Inner.FromAssembliesOf(types);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssemblies(params Assembly[] assemblies)
     {
         return Inner.FromAssemblies(assemblies);
     }
 
+    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromAssemblies(IEnumerable<Assembly> assemblies)
     {
         return Inner.FromAssemblies(assemblies);

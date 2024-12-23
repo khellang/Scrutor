@@ -147,9 +147,9 @@ internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelect
         }
     }
 
-    private IServiceTypeSelector AddSelector(IEnumerable<Type> types)
+    private IServiceTypeSelector AddSelector(ISet<Type> types)
     {
-        var selector = new ServiceTypeSelector(this, types.ToHashSet());
+        var selector = new ServiceTypeSelector(this, types);
 
         Selectors.Add(selector);
 

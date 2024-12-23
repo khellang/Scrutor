@@ -571,7 +571,7 @@ public class DecorationTests : TestBase
     public sealed class MyEvent : IEvent
     { }
 
-    internal sealed class MyEvent1Handler : IEventHandler<MyEvent>
+    public sealed class MyEvent1Handler : IEventHandler<MyEvent>
     {
         private int _callCount;
 
@@ -581,7 +581,7 @@ public class DecorationTests : TestBase
         }
     }
 
-    internal sealed class MyEvent2Handler : IEventHandler<MyEvent>
+    public sealed class MyEvent2Handler : IEventHandler<MyEvent>
     {
         private int _callCount;
 
@@ -591,7 +591,7 @@ public class DecorationTests : TestBase
         }
     }
 
-    internal sealed class MyEvent3Handler : IEventHandler<MyEvent>
+    public sealed class MyEvent3Handler : IEventHandler<MyEvent>
     {
         private int _callCount;
 
@@ -601,7 +601,7 @@ public class DecorationTests : TestBase
         }
     }
 
-    internal sealed class MyEventHandlerDecorator<TEvent> : IEventHandler<TEvent>, IHandlerDecorator where TEvent : class, IEvent
+    public sealed class MyEventHandlerDecorator<TEvent> : IEventHandler<TEvent>, IHandlerDecorator where TEvent : class, IEvent
     {
         public readonly IEventHandler<TEvent> Handler;
 

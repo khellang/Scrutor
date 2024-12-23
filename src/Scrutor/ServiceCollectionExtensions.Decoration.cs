@@ -252,7 +252,7 @@ public static partial class ServiceCollectionExtensions
         {
             var serviceDescriptor = services[i];
 
-            if (IsDecorated(serviceDescriptor) || !strategy.CanDecorate(serviceDescriptor))
+            if (serviceDescriptor.IsDecorated() || !strategy.CanDecorate(serviceDescriptor))
             {
                 continue;
             }
@@ -275,6 +275,14 @@ public static partial class ServiceCollectionExtensions
         return decorated;
     }
 
+    /// <summary>
+    /// Returns <c>true</c> if the specified service is decorated.
+    /// </summary>
+    /// <param name="descriptor">The service descriptor.</param>
+    public static bool IsDecorated(this ServiceDescriptor descriptor) =>
+        descriptor.ServiceKey is string stringKey
+        && stringKey.EndsWith(DecoratedServiceKeySuffix, StringComparison.Ordinal);
+
     private static string? GetDecoratorKey(ServiceDescriptor descriptor)
     {
         var uniqueId = Guid.NewGuid().ToString("n");
@@ -291,8 +299,4 @@ public static partial class ServiceCollectionExtensions
 
         return null;
     }
-
-    private static bool IsDecorated(ServiceDescriptor descriptor) =>
-        descriptor.ServiceKey is string stringKey
-            && stringKey.EndsWith(DecoratedServiceKeySuffix, StringComparison.Ordinal);
 }

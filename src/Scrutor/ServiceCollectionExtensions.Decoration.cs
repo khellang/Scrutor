@@ -30,6 +30,23 @@ public static partial class ServiceCollectionExtensions
     /// using the specified type <typeparamref name="TDecorator"/>.
     /// </summary>
     /// <param name="services">The services to add to.</param>
+    /// <param name="serviceKey">The <see cref="ServiceDescriptor.ServiceKey"/> of the service.</param>
+    /// <exception cref="DecorationException">If no service of the type <typeparamref name="TService"/> has been registered.</exception>
+    /// <exception cref="ArgumentNullException">If the <paramref name="services"/> argument is <c>null</c>.</exception>
+    public static IServiceCollection DecorateKeyed<TService, TDecorator>(this IServiceCollection services, string serviceKey)
+        where TDecorator : TService
+    {
+        Preconditions.NotNull(services, nameof(services));
+        Preconditions.NotNull(serviceKey, nameof(serviceKey));
+
+        return services.Decorate(DecorationStrategy.WithType(typeof(TService), serviceKey, typeof(TDecorator)));
+    }
+
+    /// <summary>
+    /// Decorates all registered services of type <typeparamref name="TService"/>
+    /// using the specified type <typeparamref name="TDecorator"/>.
+    /// </summary>
+    /// <param name="services">The services to add to.</param>
     /// <exception cref="ArgumentNullException">If the <paramref name="services"/> argument is <c>null</c>.</exception>
     public static bool TryDecorate<TService, TDecorator>(this IServiceCollection services)
         where TDecorator : TService

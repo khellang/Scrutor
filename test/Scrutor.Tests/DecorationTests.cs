@@ -85,6 +85,26 @@ public class DecorationTests : TestBase
     }
 
     [Fact]
+    public void ShouldNotDecorateKeyedServiceWithNonKeyedDecorator()
+    {
+        var services = new ServiceCollection();
+
+        services.AddKeyedSingleton<IDecoratedService, OtherDecorated>(KeyedService.AnyKey);
+        services.AddSingleton<IDecoratedService, Decorated>();
+
+        services.Decorate<IDecoratedService, Decorator>();
+
+        var descriptors = services.GetDescriptors<IDecoratedService>();
+
+        Assert.Equal(3, descriptors.Length);
+
+        var nondecorated = descriptors.SingleOrDefault(x => x.IsKeyedService && x.KeyedImplementationType == typeof(OtherDecorated));
+
+        Assert.NotNull(nondecorated);
+        Assert.Equal(KeyedService.AnyKey, nondecorated.ServiceKey);
+    }
+
+    [Fact]
     public void CanDecorateExistingInstance()
     {
         var existing = new Decorated();

@@ -16,11 +16,8 @@ public abstract class DecorationStrategy
     public string? ServiceKey { get; }
 
     public virtual bool CanDecorate(ServiceDescriptor descriptor) =>
-        (
-            ReferenceEquals(ServiceKey, descriptor.ServiceKey)
-            || descriptor.ServiceKey is string serviceKey
-                && string.Equals(ServiceKey, serviceKey, StringComparison.Ordinal)
-        ) && CanDecorate(descriptor.ServiceType);
+        // object.Equals is used to support decorating services with object keys (e.g., KeyedService.AnyKey).
+        Equals(ServiceKey, descriptor.ServiceKey) && CanDecorate(descriptor.ServiceType);
 
     protected abstract bool CanDecorate(Type serviceType);
 

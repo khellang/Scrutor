@@ -36,7 +36,7 @@ internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelect
 
     public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action)
     {
-        return AddClasses(action, publicOnly: true);
+        return AddClasses(action, publicOnly: false);
     }
 
     public IServiceTypeSelector AddClasses(Action<IImplementationTypeFilter> action, bool publicOnly)

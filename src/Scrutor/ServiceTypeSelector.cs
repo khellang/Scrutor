@@ -122,16 +122,6 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
 
     #region Chain Methods
 
-    public IImplementationTypeSelector FromCallingAssembly()
-    {
-        return Inner.FromCallingAssembly();
-    }
-
-    public IImplementationTypeSelector FromExecutingAssembly()
-    {
-        return Inner.FromExecutingAssembly();
-    }
-
     public IImplementationTypeSelector FromEntryAssembly()
     {
         return Inner.FromEntryAssembly();

@@ -55,18 +55,6 @@ internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelect
     #region Chain Methods
 
     [ExcludeFromCodeCoverage]
-    public IImplementationTypeSelector FromCallingAssembly()
-    {
-        return Inner.FromCallingAssembly();
-    }
-
-    [ExcludeFromCodeCoverage]
-    public IImplementationTypeSelector FromExecutingAssembly()
-    {
-        return Inner.FromExecutingAssembly();
-    }
-
-    [ExcludeFromCodeCoverage]
     public IImplementationTypeSelector FromEntryAssembly()
     {
         return Inner.FromEntryAssembly();

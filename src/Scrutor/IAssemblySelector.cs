@@ -8,16 +8,6 @@ namespace Scrutor;
 public interface IAssemblySelector : IFluentInterface
 {
     /// <summary>
-    /// Will scan for types from the calling assembly.
-    /// </summary>
-    IImplementationTypeSelector FromCallingAssembly();
-
-    /// <summary>
-    /// Will scan for types from the currently executing assembly.
-    /// </summary>
-    IImplementationTypeSelector FromExecutingAssembly();
-
-    /// <summary>
     /// Will scan for types from the entry assembly.
     /// </summary>
     IImplementationTypeSelector FromEntryAssembly();

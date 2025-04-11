@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Scrutor;
 
@@ -12,6 +13,8 @@ internal class ImplementationTypeFilter : IImplementationTypeFilter
     }
 
     internal ISet<Type> Types { get; private set; }
+
+    internal ISet<Type> CompilerGeneratedBases { get; private set; } = new HashSet<Type>();
 
     public IImplementationTypeFilter AssignableTo<T>()
     {
@@ -37,6 +40,22 @@ internal class ImplementationTypeFilter : IImplementationTypeFilter
         Preconditions.NotNull(types, nameof(types));
 
         return Where(t => types.Any(t.IsBasedOn));
+    }
+
+    public IImplementationTypeFilter IncludeCompilerGeneratedSubclassesOf(params Type[] types)
+    {
+        Preconditions.NotNull(types, nameof(types));
+
+        return IncludeCompilerGeneratedSubclassesOf(types.AsEnumerable());
+    }
+
+    public IImplementationTypeFilter IncludeCompilerGeneratedSubclassesOf(IEnumerable<Type> types)
+    {
+        Preconditions.NotNull(types, nameof(types));
+
+        var typesList = types.ToList();
+        typesList.ForEach(t => CompilerGeneratedBases.Add(t));
+        return Where(t => !t.HasAttribute<CompilerGeneratedAttribute>() || typesList.Any(t.IsBasedOn));
     }
 
     public IImplementationTypeFilter WithAttribute<T>() where T : Attribute

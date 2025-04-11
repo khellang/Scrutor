@@ -9,7 +9,7 @@ namespace Scrutor;
 
 internal static class ReflectionExtensions
 {
-    public static bool IsNonAbstractClass(this Type type, bool publicOnly)
+    public static bool IsNonAbstractClass(this Type type, bool publicOnly, bool includeCompilerGenerated)
     {
         if (type.IsSpecialName)
         {
@@ -18,7 +18,7 @@ internal static class ReflectionExtensions
 
         if (type.IsClass && !type.IsAbstract)
         {
-            if (type.HasAttribute<CompilerGeneratedAttribute>())
+            if (!includeCompilerGenerated && type.HasAttribute<CompilerGeneratedAttribute>())
             {
                 return false;
             }

@@ -29,7 +29,7 @@ internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelect
 
     public IServiceTypeSelector AddClasses(bool publicOnly)
     {
-        var classes = GetNonAbstractClasses(publicOnly);
+        var classes = GetNonAbstractClasses(publicOnly, includeCompilerGenerated: false);
 
         return AddSelector(classes);
     }
@@ -43,11 +43,14 @@ internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelect
     {
         Preconditions.NotNull(action, nameof(action));
 
-        var classes = GetNonAbstractClasses(publicOnly);
+        var classes = GetNonAbstractClasses(publicOnly, includeCompilerGenerated: true);
 
         var filter = new ImplementationTypeFilter(classes);
 
         action(filter);
+
+        if (!filter.CompilerGeneratedBases.Any())
+            filter.IncludeCompilerGeneratedSubclassesOf(Enumerable.Empty<Type>());
 
         return AddSelector(filter.Types);
     }
@@ -144,8 +147,8 @@ internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelect
         return selector;
     }
 
-    private ISet<Type> GetNonAbstractClasses(bool publicOnly)
+    private ISet<Type> GetNonAbstractClasses(bool publicOnly, bool includeCompilerGenerated)
     {
-        return Types.Where(t => t.IsNonAbstractClass(publicOnly)).ToHashSet();
+        return Types.Where(t => t.IsNonAbstractClass(publicOnly, includeCompilerGenerated)).ToHashSet();
     }
 }

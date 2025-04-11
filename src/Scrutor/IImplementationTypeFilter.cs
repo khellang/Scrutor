@@ -31,6 +31,22 @@ public interface IImplementationTypeFilter : IFluentInterface
     /// <param name="types">The types that should be assignable from the matching types.</param>
     /// <exception cref="ArgumentNullException">If the <paramref name="types"/> argument is <c>null</c>.</exception>
     IImplementationTypeFilter AssignableToAny(IEnumerable<Type> types);
+    
+    /// <summary>
+    /// Will include all compiler-generated types that derive from any of the specified <paramref name="types"/>.
+    /// This can be useful to include statically-compiled views with some UI frameworks.
+    /// </summary>
+    /// <param name="types">The base types for which to allow compiler-generated subclasses</param>
+    /// <returns></returns>
+    IImplementationTypeFilter IncludeCompilerGeneratedSubclassesOf(params Type[] types);
+    
+    /// <summary>
+    /// Will include all compiler-generated types that derive from any of the specified <paramref name="types"/>.
+    /// This can be useful to include statically-compiled views with some UI frameworks.
+    /// </summary>
+    /// <param name="types">The base types for which to allow compiler-generated subclasses</param>
+    /// <returns></returns>
+    IImplementationTypeFilter IncludeCompilerGeneratedSubclassesOf(IEnumerable<Type> types);
 
     /// <summary>
     /// Will match all types that has an attribute of type <typeparamref name="T"/> defined.

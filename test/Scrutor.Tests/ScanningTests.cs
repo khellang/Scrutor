@@ -569,6 +569,25 @@ namespace Scrutor.Tests
                     .WithSingletonLifetime());
             });
         }
+
+        [Fact]
+        public void ScanShouldIncludeAllowedCompilerGeneratedClasses()
+        {
+            var provider = ConfigureProvider(services =>
+            {
+                services.Scan(scan => scan
+                    .FromAssemblyOf<AllowedCompilerGeneratedSubclass>()
+                    .AddClasses(classes => classes
+                        .AssignableTo<AllowedCompilerGeneratedBase>()
+                        .IncludeCompilerGeneratedSubclassesOf(typeof(AllowedCompilerGeneratedBase))
+                    )
+                    .AsSelf()
+                    .WithTransientLifetime());
+            });
+            
+            var partialClassInstance = provider.GetService<AllowedCompilerGeneratedSubclass>();
+            Assert.NotNull(partialClassInstance);
+        }
     }
 
     // ReSharper disable UnusedTypeParameter
@@ -664,6 +683,11 @@ namespace Scrutor.Tests
     [ServiceDescriptor(typeof(IMixedAttribute), ServiceLifetime.Scoped)]
     [ServiceDescriptor<IMixedAttribute>(ServiceLifetime.Singleton)]
     public class MixedAttribute : IMixedAttribute { }
+
+    public abstract class AllowedCompilerGeneratedBase { }
+
+    [CompilerGenerated]
+    public class AllowedCompilerGeneratedSubclass : AllowedCompilerGeneratedBase { }
 }
 
 namespace Scrutor.Tests.ChildNamespace

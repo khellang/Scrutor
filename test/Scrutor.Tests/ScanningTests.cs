@@ -571,7 +571,7 @@ namespace Scrutor.Tests
         }
 
         [Fact]
-        public void ScanShouldIncludeAllowedCompilerGeneratedClasses()
+        public void ScanShouldIncludeSpecifiedCompilerGeneratedClasses()
         {
             var provider = ConfigureProvider(services =>
             {
@@ -585,8 +585,8 @@ namespace Scrutor.Tests
                     .WithTransientLifetime());
             });
             
-            var partialClassInstance = provider.GetService<AllowedCompilerGeneratedSubclass>();
-            Assert.NotNull(partialClassInstance);
+            var compilerGeneratedSubclass = provider.GetService<AllowedCompilerGeneratedSubclass>();
+            Assert.NotNull(compilerGeneratedSubclass);
         }
     }
 

@@ -571,15 +571,15 @@ namespace Scrutor.Tests
         }
 
         [Fact]
-        public void ScanShouldIncludeSpecifiedCompilerGeneratedClasses()
+        public void ShouldAllowOptInToCompilerGeneratedTypes()
         {
             var provider = ConfigureProvider(services =>
             {
                 services.Scan(scan => scan
                     .FromAssemblyOf<AllowedCompilerGeneratedSubclass>()
                     .AddClasses(classes => classes
+                        .WithAttribute<CompilerGeneratedAttribute>()
                         .AssignableTo<AllowedCompilerGeneratedBase>()
-                        .IncludeCompilerGeneratedSubclassesOf(typeof(AllowedCompilerGeneratedBase))
                     )
                     .AsSelf()
                     .WithTransientLifetime());

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyModel;
 
@@ -49,8 +50,8 @@ internal class ImplementationTypeSelector : IImplementationTypeSelector, ISelect
 
         action(filter);
 
-        if (!filter.CompilerGeneratedBases.Any())
-            filter.IncludeCompilerGeneratedSubclassesOf(Enumerable.Empty<Type>());
+        if (!filter.IncludeCompilerGeneratedTypes)
+            filter.WithoutAttribute<CompilerGeneratedAttribute>();
 
         return AddSelector(filter.Types);
     }

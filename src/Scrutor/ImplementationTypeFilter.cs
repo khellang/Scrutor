@@ -14,7 +14,7 @@ internal class ImplementationTypeFilter : IImplementationTypeFilter
 
     internal ISet<Type> Types { get; private set; }
 
-    internal ISet<Type> CompilerGeneratedBases { get; private set; } = new HashSet<Type>();
+    internal bool IncludeCompilerGeneratedTypes { get; private set; }
 
     public IImplementationTypeFilter AssignableTo<T>()
     {
@@ -42,22 +42,6 @@ internal class ImplementationTypeFilter : IImplementationTypeFilter
         return Where(t => types.Any(t.IsBasedOn));
     }
 
-    public IImplementationTypeFilter IncludeCompilerGeneratedSubclassesOf(params Type[] types)
-    {
-        Preconditions.NotNull(types, nameof(types));
-
-        return IncludeCompilerGeneratedSubclassesOf(types.AsEnumerable());
-    }
-
-    public IImplementationTypeFilter IncludeCompilerGeneratedSubclassesOf(IEnumerable<Type> types)
-    {
-        Preconditions.NotNull(types, nameof(types));
-
-        var typesList = types.ToList();
-        typesList.ForEach(t => CompilerGeneratedBases.Add(t));
-        return Where(t => !t.HasAttribute<CompilerGeneratedAttribute>() || typesList.Any(t.IsBasedOn));
-    }
-
     public IImplementationTypeFilter WithAttribute<T>() where T : Attribute
     {
         return WithAttribute(typeof(T));
@@ -67,6 +51,7 @@ internal class ImplementationTypeFilter : IImplementationTypeFilter
     {
         Preconditions.NotNull(attributeType, nameof(attributeType));
 
+        IncludeCompilerGeneratedTypes |= attributeType == typeof(CompilerGeneratedAttribute);
         return Where(t => t.HasAttribute(attributeType));
     }
 

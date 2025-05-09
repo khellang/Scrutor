@@ -66,6 +66,25 @@ collection.Scan(scan => scan
             .AsImplementedInterfaces());
 ```
 
+#### Scanning compiled view (UI) types
+By default, Scrutor excludes compiler-generated types from the `.AddClasses()` type filters. When loading views from a framework such as [Avalonia UI](https://avaloniaui.net/), we need to opt in to compiler-generated types, like this:
+
+```csharp
+.AddClasses(classes => classes
+    // Opt-in to compiler-generated types
+    .WithAttribute<CompilerGeneratedAttribute>()
+    // Optionally filter types to reduce number of service registrations.
+    .InNamespaces("MyApp.Desktop.Views")
+    .AssignableToAny(
+        typeof(Window),
+        typeof(UserControl)
+    )
+    .AsSelf()
+    .WithSingletonLifetime()
+```
+
+With some UI frameworks, these compiler-generated views implement quite a few interfaces, so unless you need them, it's probably best to register these classes `.AsSelf()`; in other words, be very precise with your filters that accept compiler generated types.
+
 ### Decoration
 
 ```csharp

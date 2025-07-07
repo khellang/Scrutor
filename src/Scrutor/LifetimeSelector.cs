@@ -245,7 +245,11 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
 
                 var lifetime = GetOrAddLifetime(lifetimes, implementationType);
 
-                var descriptor = new ServiceDescriptor(serviceType, implementationType, lifetime);
+                ServiceKeyAttribute? attr = implementationType.GetCustomAttribute<ServiceKeyAttribute>();
+
+                ServiceDescriptor descriptor = attr != null
+                                ? new ServiceDescriptor(serviceType, attr.Name, implementationType, lifetime)
+                                : new ServiceDescriptor(serviceType, implementationType, lifetime);
 
                 strategy.Apply(services, descriptor);
             }

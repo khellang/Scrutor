@@ -584,9 +584,34 @@ namespace Scrutor.Tests
                     .AsSelf()
                     .WithTransientLifetime());
             });
-            
+
             var compilerGeneratedSubclass = provider.GetService<AllowedCompilerGeneratedSubclass>();
             Assert.NotNull(compilerGeneratedSubclass);
+        }
+
+
+        [Fact]
+        public void KeyedTransientService()
+        {
+            ServiceProvider provider = ConfigureProvider(services =>
+            {
+                services.Scan(scan => scan
+                    .FromAssemblyOf<INamedService>()
+                    .AddClasses(classes => classes.AssignableTo<INamedService>())
+                    .AsImplementedInterfaces()
+                    .WithTransientLifetime());
+
+                var namedServices = services.GetDescriptors<INamedService>();
+
+                Assert.Equal(2, namedServices.Count(x => x.ServiceType == typeof(INamedService)));
+            });
+
+            var transientKeyedService1 = provider.GetKeyedService<INamedService>("t1");
+            Assert.NotNull(transientKeyedService1);
+
+            var transientKeyedService2 = provider.GetKeyedService<INamedService>("t1");
+            Assert.NotNull(transientKeyedService2);
+
         }
     }
 
@@ -596,6 +621,7 @@ namespace Scrutor.Tests
 
     [ServiceDescriptor(typeof(ITransientService))]
     public class TransientService1 : ITransientService { }
+
 
     public class TransientService2 : ITransientService, IOtherInheritance { }
 
@@ -671,7 +697,7 @@ namespace Scrutor.Tests
     [CompilerGenerated]
     public class CompilerGenerated { }
 
-    public class CombinedService2: IDefault1, IDefault2, IDefault3Level2 { }
+    public class CombinedService2 : IDefault1, IDefault2, IDefault3Level2 { }
 
     public interface IGenericAttribute { }
 
@@ -688,6 +714,15 @@ namespace Scrutor.Tests
 
     [CompilerGenerated]
     public class AllowedCompilerGeneratedSubclass : AllowedCompilerGeneratedBase { }
+
+
+    public interface INamedService { }
+
+    [ServiceKey("t1")]
+    public class NameService1 : INamedService { }
+
+    [ServiceKey("t2")]
+    public class NameService2 : INamedService { }
 }
 
 namespace Scrutor.Tests.ChildNamespace

@@ -42,6 +42,10 @@ internal class ImplementationTypeFilter : IImplementationTypeFilter
         return Where(t => types.Any(t.IsBasedOn));
     }
 
+
+    public IImplementationTypeFilter WithKeyName()
+        => WithAttribute<ServiceKeyAttribute>();
+
     public IImplementationTypeFilter WithAttribute<T>() where T : Attribute
     {
         return WithAttribute(typeof(T));
@@ -52,7 +56,7 @@ internal class ImplementationTypeFilter : IImplementationTypeFilter
         Preconditions.NotNull(attributeType, nameof(attributeType));
 
         IncludeCompilerGeneratedTypes |= attributeType == typeof(CompilerGeneratedAttribute);
-        return Where(t => t.HasAttribute(attributeType));
+        return Where(t => t.HasAttribute(attributeType) );
     }
 
     public IImplementationTypeFilter WithAttribute<T>(Func<T, bool> predicate) where T : Attribute

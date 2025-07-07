@@ -33,6 +33,12 @@ public interface IImplementationTypeFilter : IFluentInterface
     IImplementationTypeFilter AssignableToAny(IEnumerable<Type> types);
 
     /// <summary>
+    /// Will match all types that are assignable to ServiceKeyAttribute />.
+    /// </summary>
+    /// <returns></returns>
+    IImplementationTypeFilter WithKeyName();
+
+    /// <summary>
     /// Will match all types that has an attribute of type <typeparamref name="T"/> defined.
     /// </summary>
     /// <typeparam name="T">The type of attribute that needs to be defined.</typeparam>

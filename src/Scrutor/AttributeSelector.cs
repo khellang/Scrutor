@@ -37,7 +37,7 @@ internal class AttributeSelector : ISelector
 
                 foreach (var serviceType in serviceTypes)
                 {
-                    var descriptor = new ServiceDescriptor(serviceType, type, attribute.Lifetime);
+                    var descriptor = new ServiceDescriptor(serviceType, attribute.ServiceKey, type, attribute.Lifetime);
 
                     strategy.Apply(services, descriptor);
                 }

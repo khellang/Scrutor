@@ -13,15 +13,20 @@ public class ServiceDescriptorAttribute : Attribute
 
     public ServiceDescriptorAttribute(Type? serviceType) : this(serviceType, ServiceLifetime.Transient) { }
 
-    public ServiceDescriptorAttribute(Type? serviceType, ServiceLifetime lifetime)
+    public ServiceDescriptorAttribute(Type? serviceType, ServiceLifetime lifetime) : this(serviceType, lifetime, null) { }
+
+    public ServiceDescriptorAttribute(Type? serviceType, ServiceLifetime lifetime, object? serviceKey)
     {
         ServiceType = serviceType;
         Lifetime = lifetime;
+        ServiceKey = serviceKey;
     }
 
     public Type? ServiceType { get; }
 
     public ServiceLifetime Lifetime { get; }
+
+    public object? ServiceKey { get; }
 
     public IEnumerable<Type> GetServiceTypes(Type fallbackType)
     {
@@ -60,4 +65,8 @@ public sealed class ServiceDescriptorAttribute<TService> : ServiceDescriptorAttr
     public ServiceDescriptorAttribute() : base(typeof(TService)) { }
 
     public ServiceDescriptorAttribute(ServiceLifetime lifetime) : base(typeof(TService), lifetime) { }
+
+    public ServiceDescriptorAttribute(object? serviceKey) : base(typeof(TService), ServiceLifetime.Transient, serviceKey) { }
+
+    public ServiceDescriptorAttribute(ServiceLifetime lifetime, object? serviceKey) : base(typeof(TService), lifetime, serviceKey) { }
 }

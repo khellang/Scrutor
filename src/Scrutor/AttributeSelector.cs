@@ -37,7 +37,9 @@ internal class AttributeSelector : ISelector
 
                 foreach (var serviceType in serviceTypes)
                 {
-                    var descriptor = new ServiceDescriptor(serviceType, attribute.ServiceKey, type, attribute.Lifetime);
+                    var descriptor = attribute.ServiceKey is null
+                        ? new ServiceDescriptor(serviceType, type, attribute.Lifetime)
+                        : new ServiceDescriptor(serviceType, attribute.ServiceKey, type, attribute.Lifetime);
 
                     strategy.Apply(services, descriptor);
                 }
@@ -47,6 +49,6 @@ internal class AttributeSelector : ISelector
 
     private static IEnumerable<ServiceDescriptorAttribute> GetDuplicates(IEnumerable<ServiceDescriptorAttribute> attributes)
     {
-        return attributes.GroupBy(s => s.ServiceType).SelectMany(grp => grp.Skip(1));
+        return attributes.GroupBy(s => new { s.ServiceType, s.ServiceKey }).SelectMany(grp => grp.Skip(1));
     }
 }

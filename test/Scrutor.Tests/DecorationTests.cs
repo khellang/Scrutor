@@ -44,6 +44,33 @@ public class DecorationTests : TestBase
     }
 
     [Fact]
+    public void CanDecorateMultipleLevelsAndReturnDecoratedServiceHandles()
+    {
+        DecoratedService<IDecoratedService> decorated1 = null;
+        DecoratedService<IDecoratedService> decorated2 = null;
+
+        var provider = ConfigureProvider(services =>
+        {
+            services.AddSingleton<IDecoratedService, Decorated>();
+
+            services.Decorate<IDecoratedService, Decorator>(out decorated1);
+            services.Decorate<IDecoratedService, Decorator>(out decorated2);
+        });
+
+        var instance = provider.GetRequiredService<IDecoratedService>();
+
+        var outerDecorator = Assert.IsType<Decorator>(instance);
+        var innerDecorator = Assert.IsType<Decorator>(outerDecorator.Inner);
+        _ = Assert.IsType<Decorated>(innerDecorator.Inner);
+
+        var underlying1 = provider.GetRequiredDecoratedService(decorated1);
+        var underlying2 = provider.GetRequiredDecoratedService(decorated2);
+
+        Assert.Equal(innerDecorator, underlying2);
+        Assert.Equal(innerDecorator.Inner, underlying1);
+    }
+
+    [Fact]
     public void CanDecorateDifferentServices()
     {
         var provider = ConfigureProvider(services =>
@@ -60,6 +87,33 @@ public class DecorationTests : TestBase
 
         Assert.Equal(2, instances.Length);
         Assert.All(instances, x => Assert.IsType<Decorator>(x));
+    }
+
+    [Fact]
+    public void CanDecorateDifferentServicesAndReturnDecoratedServiceHandles()
+    {
+        DecoratedService<IDecoratedService> decorated = null;
+
+        var provider = ConfigureProvider(services =>
+        {
+            services.AddSingleton<IDecoratedService, Decorated>();
+            services.AddSingleton<IDecoratedService, OtherDecorated>();
+
+            services.Decorate<IDecoratedService, Decorator>(out decorated);
+        });
+
+        var instances = provider
+            .GetRequiredService<IEnumerable<IDecoratedService>>()
+            .ToArray();
+
+        Assert.Equal(2, instances.Length);
+        Assert.All(instances, x => Assert.IsType<Decorator>(x));
+
+        var underlyings = provider.GetDecoratedServices(decorated).ToArray();
+
+        Assert.Equal(2, underlyings.Length);
+        Assert.IsType<Decorated>(underlyings[0]);
+        Assert.IsType<OtherDecorated>(underlyings[1]);
     }
 
     [Fact]

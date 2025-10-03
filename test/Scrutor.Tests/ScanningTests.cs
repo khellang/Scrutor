@@ -584,9 +584,69 @@ namespace Scrutor.Tests
                     .AsSelf()
                     .WithTransientLifetime());
             });
-            
+
             var compilerGeneratedSubclass = provider.GetService<AllowedCompilerGeneratedSubclass>();
             Assert.NotNull(compilerGeneratedSubclass);
+        }
+
+        [Fact]
+        public void CanRegisterWithServiceKey()
+        {
+            Collection.Scan(scan => scan
+                .FromTypes<TransientService1, TransientService2>()
+                    .AsImplementedInterfaces(x => x != typeof(IOtherInheritance))
+                    .WithServiceKey("my-key")
+                    .WithSingletonLifetime());
+
+            Assert.Equal(2, Collection.Count);
+
+            Assert.All(Collection, x =>
+            {
+                Assert.Equal(ServiceLifetime.Singleton, x.Lifetime);
+                Assert.Equal(typeof(ITransientService), x.ServiceType);
+                Assert.True(x.IsKeyedService);
+                Assert.Equal("my-key", x.ServiceKey);
+            });
+        }
+
+        [Fact]
+        public void CanRegisterWithServiceKeySelector()
+        {
+            Collection.Scan(scan => scan
+                .FromTypes<TransientService1, TransientService2>()
+                    .AsImplementedInterfaces(x => x != typeof(IOtherInheritance))
+                    .WithServiceKey(type => type.Name)
+                    .WithSingletonLifetime());
+
+            Assert.Equal(2, Collection.Count);
+
+            var service1 = Collection.First(x => x.ServiceKey as string == nameof(TransientService1));
+            Assert.Equal(typeof(ITransientService), service1.ServiceType);
+            Assert.Equal(ServiceLifetime.Singleton, service1.Lifetime);
+            Assert.True(service1.IsKeyedService);
+
+            var service2 = Collection.First(x => x.ServiceKey as string == nameof(TransientService2));
+            Assert.Equal(typeof(ITransientService), service2.ServiceType);
+            Assert.Equal(ServiceLifetime.Singleton, service2.Lifetime);
+            Assert.True(service2.IsKeyedService);
+        }
+
+        [Fact]
+        public void CanResolveKeyedServices()
+        {
+            Collection.Scan(scan => scan
+                .FromTypes<TransientService1, TransientService2>()
+                    .AsSelf()
+                    .WithServiceKey(type => type.Name)
+                    .WithTransientLifetime());
+
+            var provider = Collection.BuildServiceProvider();
+
+            var service1 = provider.GetRequiredKeyedService<TransientService1>(nameof(TransientService1));
+            var service2 = provider.GetRequiredKeyedService<TransientService2>(nameof(TransientService2));
+
+            Assert.NotNull(service1);
+            Assert.NotNull(service2);
         }
     }
 
@@ -671,7 +731,7 @@ namespace Scrutor.Tests
     [CompilerGenerated]
     public class CompilerGenerated { }
 
-    public class CombinedService2: IDefault1, IDefault2, IDefault3Level2 { }
+    public class CombinedService2 : IDefault1, IDefault2, IDefault3Level2 { }
 
     public interface IGenericAttribute { }
 

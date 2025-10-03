@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyModel;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyModel;
 
 namespace Scrutor;
 
@@ -204,6 +204,14 @@ internal class ServiceTypeSelector : IServiceTypeSelector, ISelector
         foreach (var selector in Selectors.OfType<LifetimeSelector>())
         {
             selector.SelectorFn = selectorFn;
+        }
+    }
+
+    internal void PropagateServiceKey(Func<Type, object?> selectorFn)
+    {
+        foreach (var selector in Selectors.OfType<LifetimeSelector>())
+        {
+            selector.ServiceKeySelectorFn = selectorFn;
         }
     }
 

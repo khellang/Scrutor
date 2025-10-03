@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyModel;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyModel;
 
 namespace Scrutor;
 
@@ -23,6 +23,8 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
     private IEnumerable<TypeFactoryMap> TypeFactoryMaps { get; }
 
     public Func<Type, ServiceLifetime>? SelectorFn { get; set; }
+
+    public Func<Type, object?>? ServiceKeySelectorFn { get; set; }
 
     public IImplementationTypeSelector WithSingletonLifetime()
     {
@@ -50,6 +52,22 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
         Preconditions.NotNull(selector, nameof(selector));
 
         Inner.PropagateLifetime(selector);
+
+        return this;
+    }
+
+    public ILifetimeSelector WithServiceKey(object serviceKey)
+    {
+        Preconditions.NotNull(serviceKey, nameof(serviceKey));
+
+        return WithServiceKey(_ => serviceKey);
+    }
+
+    public ILifetimeSelector WithServiceKey(Func<Type, object?> selector)
+    {
+        Preconditions.NotNull(selector, nameof(selector));
+
+        Inner.PropagateServiceKey(selector);
 
         return this;
     }
@@ -231,6 +249,7 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
         strategy ??= RegistrationStrategy.Append;
 
         var lifetimes = new Dictionary<Type, ServiceLifetime>();
+        var serviceKeys = new Dictionary<Type, object?>();
 
         foreach (var typeMap in TypeMaps)
         {
@@ -244,8 +263,10 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
                 }
 
                 var lifetime = GetOrAddLifetime(lifetimes, implementationType);
-
-                var descriptor = new ServiceDescriptor(serviceType, implementationType, lifetime);
+                var serviceKey = GetOrAddServiceKey(serviceKeys, implementationType);
+                var descriptor = serviceKey is not null
+                    ? new ServiceDescriptor(serviceType, serviceKey, implementationType, lifetime)
+                    : new ServiceDescriptor(serviceType, implementationType, lifetime);
 
                 strategy.Apply(services, descriptor);
             }
@@ -256,8 +277,11 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
             foreach (var serviceType in typeFactoryMap.ServiceTypes)
             {
                 var lifetime = GetOrAddLifetime(lifetimes, typeFactoryMap.ImplementationType);
+                var serviceKey = GetOrAddServiceKey(serviceKeys, typeFactoryMap.ImplementationType);
 
-                var descriptor = new ServiceDescriptor(serviceType, typeFactoryMap.ImplementationFactory, lifetime);
+                var descriptor = serviceKey is not null
+                    ? new ServiceDescriptor(serviceType, serviceKey, WrapImplementationFactory(typeFactoryMap.ImplementationFactory), lifetime)
+                    : new ServiceDescriptor(serviceType, typeFactoryMap.ImplementationFactory, lifetime);
 
                 strategy.Apply(services, descriptor);
             }
@@ -276,5 +300,24 @@ internal sealed class LifetimeSelector : ILifetimeSelector, ISelector
         lifetimes[implementationType] = lifetime;
 
         return lifetime;
+    }
+
+    private object? GetOrAddServiceKey(Dictionary<Type, object?> serviceKeys, Type implementationType)
+    {
+        if (serviceKeys.TryGetValue(implementationType, out var serviceKey))
+        {
+            return serviceKey;
+        }
+
+        serviceKey = ServiceKeySelectorFn?.Invoke(implementationType);
+
+        serviceKeys[implementationType] = serviceKey;
+
+        return serviceKey;
+    }
+
+    private static Func<IServiceProvider, object?, object> WrapImplementationFactory(Func<IServiceProvider, object> factory)
+    {
+        return (sp, _) => factory(sp);
     }
 }

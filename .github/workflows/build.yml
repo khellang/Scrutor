@@ -79,8 +79,7 @@ jobs:
             - name: Authenticate to NuGet.org with OIDC
               uses: NuGet/login@v1
               with:
-                  name: nuget.org
-                  service-endpoint: https://api.nuget.org/v3/index.json
+                  user: khellang
 
             - name: Push to NuGet.org
               run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate

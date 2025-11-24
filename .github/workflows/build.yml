@@ -78,8 +78,9 @@ jobs:
 
             - name: Authenticate to NuGet.org with OIDC
               uses: NuGet/login@v1
+              id: login
               with:
                   user: khellang
 
             - name: Push to NuGet.org
-              run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
+              run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate

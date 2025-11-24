@@ -21,14 +21,17 @@ jobs:
               with:
                   dotnet-version: "10.x"
 
-            - name: Test
-              run: dotnet test --coverage --coverage-output-format cobertura
+            - name: Install dotnet-coverage
+              run: dotnet tool install -g dotnet-coverage
+
+            - name: Test with coverage
+              run: dotnet-coverage collect --output coverage.cobertura.xml --output-format cobertura "dotnet test"
 
             - name: Update codecov
               if: startsWith(github.repository, 'khellang/')
               uses: codecov/codecov-action@v5
               with:
-                  files: '**/TestResults/**/coverage.cobertura.xml'
+                  files: coverage.cobertura.xml
                   fail_ci_if_error: true
               env:
                   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

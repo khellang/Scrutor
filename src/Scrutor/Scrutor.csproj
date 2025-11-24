@@ -25,6 +25,9 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!-- Only increase this value in case of incompatible API changes. -->
     <AssemblyVersion>6.0.0.0</AssemblyVersion>
+    <!-- Deterministic builds -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>

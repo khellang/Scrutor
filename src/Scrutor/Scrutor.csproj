@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Register services using assembly scanning and a fluent API.</Description>
-    <!-- MinVer will calculate version from Git tags. VersionPrefix is fallback when no tags exist. -->
-    <VersionPrefix>6.1.0</VersionPrefix>
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <Authors>Kristian Hellang</Authors>
     <TargetFrameworks>net462;netstandard2.0;net8.0;net10.0</TargetFrameworks>

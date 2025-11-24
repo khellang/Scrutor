@@ -35,3 +35,16 @@ jobs:
                   files: coverage.cobertura.xml
                   token: ${{ secrets.CODECOV_TOKEN }}
                   fail_ci_if_error: false
+
+            - name: Pack NuGet package
+              run: dotnet pack src/Scrutor/Scrutor.csproj --configuration Release --output ./artifacts
+
+            - name: Upload NuGet package artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: nuget-packages
+                  path: ./artifacts/*.nupkg
+
+            - name: Push to GitHub Packages
+              if: github.event_name == 'push' && startsWith(github.repository, 'khellang/')
+              run: dotnet nuget push ./artifacts/*.nupkg --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate

@@ -26,4 +26,9 @@ jobs:
 
             - name: Update codecov
               if: startsWith(github.repository, 'khellang/')
-              uses: codecov/codecov-action@v1
+              uses: codecov/codecov-action@v5
+              with:
+                  files: '**/TestResults/**/coverage.cobertura.xml'
+                  fail_ci_if_error: true
+              env:
+                  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

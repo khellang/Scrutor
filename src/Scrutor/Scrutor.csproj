@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Register services using assembly scanning and a fluent API.</Description>
+    <!-- MinVer will calculate version from Git tags. VersionPrefix is fallback when no tags exist. -->
     <VersionPrefix>6.1.0</VersionPrefix>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
     <Authors>Kristian Hellang</Authors>
     <TargetFrameworks>net462;netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
@@ -35,6 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="All" />
     <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />

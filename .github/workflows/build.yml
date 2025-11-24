@@ -22,7 +22,7 @@ jobs:
                   dotnet-version: "10.x"
 
             - name: Test
-              run: dotnet test --collect:"XPlat Code Coverage"
+              run: dotnet test --coverage --coverage-output-format cobertura
 
             - name: Update codecov
               if: startsWith(github.repository, 'khellang/')

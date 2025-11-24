@@ -50,3 +50,37 @@ jobs:
             - name: Push to GitHub Packages
               if: github.event_name == 'push' && startsWith(github.repository, 'khellang/')
               run: dotnet nuget push ./artifacts/*.*nupkg --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+
+    publish:
+        runs-on: ubuntu-latest
+        needs: build
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && startsWith(github.repository, 'khellang/')
+        permissions:
+            id-token: write
+            contents: read
+
+        env:
+            DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+            DOTNET_CLI_TELEMETRY_OPTOUT: 1
+            DOTNET_NOLOGO: true
+
+        steps:
+            - name: Download NuGet package artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: nuget-packages
+                  path: ./artifacts
+
+            - name: Setup .NET 10 SDK
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: "10.x"
+
+            - name: Authenticate to NuGet.org with OIDC
+              uses: NuGet/login@v1
+              with:
+                  name: nuget.org
+                  service-endpoint: https://api.nuget.org/v3/index.json
+
+            - name: Push to NuGet.org
+              run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate

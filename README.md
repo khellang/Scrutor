@@ -30,6 +30,18 @@ The library adds two extension methods to `IServiceCollection`:
 
 See **Examples** below for usage examples.
 
+### Source Generation (AOT Support)
+
+Scrutor includes an optional source generator for AOT compatibility and improved startup performance. Enable it in your project file:
+
+```xml
+<PropertyGroup>
+  <ScrutorGenerateServices>true</ScrutorGenerateServices>
+</PropertyGroup>
+```
+
+When enabled, your `Scan()` calls are analyzed at compile time and replaced with static registrations - no code changes required. See [Source Generation Documentation](docs/source-generation.md) for details.
+
 ## Examples
 
 ### Scanning

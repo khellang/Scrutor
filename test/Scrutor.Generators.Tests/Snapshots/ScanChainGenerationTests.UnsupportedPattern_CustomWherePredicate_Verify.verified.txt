@@ -1,0 +1,30 @@
+﻿{
+  Diagnostics: [
+    {
+      Location: /*
+var services = new ServiceCollection();
+services.Scan(scan => scan
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+    .FromAssemblyOf<MyService>()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    .AddClasses(c => c.Where(t => t.Name.StartsWith("Service")))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    .AsSelf());
+^^^^^^^^^^^^^^
+*/
+ TestSource.cs: (6,0)-(9,14),
+      Message: The Scan() configuration uses an unsupported pattern for AOT generation: Custom Where() predicate in type filter. This registration will be skipped in generated code.,
+      Severity: Warning,
+      WarningLevel: 1,
+      Descriptor: {
+        Id: SCRUT001,
+        Title: Unsupported Scrutor pattern,
+        Description: Some Scrutor patterns like delegate-based type selectors or dynamic assembly loading cannot be resolved at compile time.,
+        MessageFormat: The Scan() configuration uses an unsupported pattern for AOT generation: {0}. This registration will be skipped in generated code.,
+        Category: Scrutor.Generators,
+        DefaultSeverity: Warning,
+        IsEnabledByDefault: true
+      }
+    }
+  ]
+}

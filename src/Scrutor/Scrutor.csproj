@@ -34,6 +34,18 @@
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <!-- Source Generator -->
+  <ItemGroup>
+    <ProjectReference Include="..\Scrutor.Generators\Scrutor.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- Pack generator and MSBuild files -->
+  <ItemGroup>
+    <None Include="..\Scrutor.Generators\bin\$(Configuration)\netstandard2.0\Scrutor.Generators.dll" Pack="true" PackagePath="analyzers\dotnet\cs" Visible="false" />
+    <None Include="..\Scrutor.Generators\build\Scrutor.Generators.props" Pack="true" PackagePath="build" Visible="false" />
+    <None Include="..\Scrutor.Generators\build\Scrutor.Generators.targets" Pack="true" PackagePath="build" Visible="false" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="All" />
     <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" PrivateAssets="All" />

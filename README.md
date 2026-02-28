@@ -1,3 +1,34 @@
+
+<div align="right">
+  <details>
+    <summary >🌐 Language</summary>
+    <div>
+      <div align="center">
+        <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=khellang&project=Scrutor&lang=id">Bahasa Indonesia</a>
+      </div>
+    </div>
+  </details>
+</div>
+
 # Scrutor [![Build status](https://ci.appveyor.com/api/projects/status/j00uyvqnm54rdlkb?svg=true)](https://ci.appveyor.com/project/khellang/scrutor) [![NuGet Package](https://img.shields.io/nuget/v/Scrutor.svg)](https://www.nuget.org/packages/Scrutor)
 
 > Scrutor - I search or examine thoroughly; I probe, investigate or scrutinize  
